@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import type { Color } from './boardLayout';
 import { COLORS } from './boardLayout';
+import { gameAudio, triggerHaptic } from '../../utils/gameAudio';
 
 interface AnimatedTokenProps {
   color: Color;
@@ -44,6 +45,9 @@ export const AnimatedToken: React.FC<AnimatedTokenProps> = ({
 
   useEffect(() => {
     if (isCaptured) {
+      gameAudio.play('capture');
+      triggerHaptic.heavy();
+      
       scale.value = withSequence(
         withSpring(1.5, { damping: 8 }),
         withTiming(0, { duration: 200 })
@@ -54,6 +58,9 @@ export const AnimatedToken: React.FC<AnimatedTokenProps> = ({
         }
       });
     } else {
+      gameAudio.play('hop');
+      triggerHaptic.light();
+      
       const targetX = endX * cellSize + cellSize / 2;
       const targetY = endY * cellSize + cellSize / 2;
       

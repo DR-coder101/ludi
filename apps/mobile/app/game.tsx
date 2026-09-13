@@ -18,6 +18,7 @@ import { GameBoard } from '../src/components/board/GameBoard';
 import { Dice } from '../src/components/Dice';
 import { TurnIndicator } from '../src/components/TurnIndicator';
 import { WinBanner } from '../src/components/WinBanner';
+import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
 
 export default function GameScreen() {
   const router = useRouter();
@@ -52,6 +53,31 @@ export default function GameScreen() {
     tokenIndex: number;
     pos: TokenPos;
   } | null>(null);
+  
+  const [previousTurn, setPreviousTurn] = useState<Color | null>(null);
+
+  useEffect(() => {
+    gameAudio.initialize();
+    gameAudio.loadSounds();
+    
+    return () => {
+      gameAudio.cleanup();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (gameState.turn !== previousTurn && previousTurn !== null) {
+      triggerHaptic.medium();
+    }
+    setPreviousTurn(gameState.turn);
+  }, [gameState.turn]);
+
+  useEffect(() => {
+    if (gameState.phase === 'finished') {
+      gameAudio.play('win');
+      triggerHaptic.success();
+    }
+  }, [gameState.phase]);
 
   const legalMovesArray = useMemo(() => {
     if (gameState.phase !== 'awaiting_move') return [];
@@ -154,12 +180,13 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#1a1a1a',
   },
   container: {
     flexGrow: 1,
     padding: 16,
     alignItems: 'center',
+    backgroundColor: '#1a1a1a',
   },
   header: {
     width: '100%',
@@ -168,6 +195,14 @@ const styles = StyleSheet.create({
   },
   boardContainer: {
     marginVertical: 16,
+    borderRadius: 12,
+    backgroundColor: '#2a2a2a',
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 8,
   },
   controls: {
     marginTop: 20,
