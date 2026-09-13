@@ -16,8 +16,11 @@ import {
   computePath,
   getDistanceFromStart,
   legalMoves,
+  rollDice,
+  applyMove,
   type Color,
   type GameConfig,
+  type GameState,
 } from "./index";
 
 describe("Game Types and Configuration", () => {
@@ -849,5 +852,773 @@ describe("Legal Moves - M1 Step 1.2", () => {
 
       expect(moves).toEqual([]);
     });
+  });
+});
+
+describe("Roll Dice - M1 Step 1.3", () => {
+  const baseConfig: GameConfig = {
+    playerColors: ["red", "green", "yellow", "blue"],
+    houseRules: {
+      maxConsecutiveSixes: 2,
+      extraRollOnCapture: false,
+      blockadeCanMoveTogether: false,
+      exactFinishBonus: false,
+      playForPlacements: false,
+    },
+  };
+
+  it("should roll dice and transition to awaiting_move phase", () => {
+    const game = createGame(baseConfig);
+    
+    // Put a token on track so moves exist
+    game.tokens[0].pos = { zone: "track", cell: 5 };
+    
+    const rng = () => 0.5; // Will produce 4
+
+    const result = rollDice(game, rng);
+
+    expect(result.value).toBe(4);
+    expect(result.state.dice).toBe(4);
+    expect(result.state.phase).toBe("awaiting_move");
+  });
+
+  it("should roll 6 and allow extra turn potential", () => {
+    const game = createGame(baseConfig);
+    const rng = () => 5 / 6; // Will produce 6
+
+    const result = rollDice(game, rng);
+
+    expect(result.value).toBe(6);
+    expect(result.state.dice).toBe(6);
+  });
+
+  it("should auto-pass when no legal moves exist", () => {
+    const game = createGame(baseConfig);
+    const rng = () => 0.2; // Will produce 2
+
+    const result = rollDice(game, rng);
+
+    expect(result.state.phase).toBe("awaiting_roll");
+    expect(result.state.turn).toBe("green");
+    expect(result.state.dice).toBeNull();
+  });
+
+  it("should handle third consecutive six forfeit (edge case 2)", () => {
+    const game = createGame(baseConfig);
+    
+    // Token on track so moves exist
+    game.tokens[0].pos = { zone: "track", cell: 5 };
+    
+    // Simulate two consecutive sixes already happened
+    const stateAfterTwoSixes = {
+      ...game,
+      consecutiveSixes: 2,
+      phase: "awaiting_roll" as const,
+      dice: null,
+    };
+
+    const rng = () => 5 / 6; // Will produce 6 (third consecutive)
+
+    const result = rollDice(stateAfterTwoSixes, rng);
+
+    expect(result.value).toBe(6);
+    expect(result.state.turn).toBe("green");
+    expect(result.state.phase).toBe("awaiting_roll");
+    expect(result.state.consecutiveSixes).toBe(0);
+  });
+
+  it("should not forfeit when maxConsecutiveSixes is unlimited", () => {
+    const game = createGame({
+      ...baseConfig,
+      houseRules: {
+        ...baseConfig.houseRules,
+        maxConsecutiveSixes: "unlimited",
+      },
+    });
+
+    game.tokens[0].pos = { zone: "track", cell: 5 };
+
+    const stateAfterTwoSixes = {
+      ...game,
+      consecutiveSixes: 2,
+      phase: "awaiting_roll" as const,
+      dice: null,
+    };
+
+    const rng = () => 5 / 6; // Third 6
+
+    const result = rollDice(stateAfterTwoSixes, rng);
+
+    expect(result.state.phase).toBe("awaiting_move");
+    expect(result.state.turn).toBe("red");
+  });
+});
+
+describe("Apply Move - M1 Step 1.3", () => {
+  const baseConfig: GameConfig = {
+    playerColors: ["red", "green", "yellow", "blue"],
+    houseRules: {
+      maxConsecutiveSixes: 2,
+      extraRollOnCapture: false,
+      blockadeCanMoveTogether: false,
+      exactFinishBonus: false,
+      playForPlacements: false,
+    },
+  };
+
+  describe("Edge Case 2: Third consecutive 6 forfeit", () => {
+    it("should be handled in rollDice, not applyMove", () => {
+      // This is tested in rollDice tests above
+      expect(true).toBe(true);
+    });
+  });
+
+  describe("Edge Case 3: Landing on opponent single token captures", () => {
+    it("should capture opponent token on non-safe cell", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 7 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      expect(result.state.tokens[4].pos).toEqual({ zone: "yard" });
+      
+      const captureEvent = result.events.find((e) => e.type === "captured");
+      expect(captureEvent).toBeDefined();
+      expect(captureEvent?.capturedColor).toBe("green");
+    });
+
+    it("should not capture on opponent blockade", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+      game.tokens[5].pos = { zone: "track", cell: 8 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const moves = legalMoves(stateWithDice);
+      const blockedMove = moves.find(m => m.tokenIndex === 0);
+
+      expect(blockedMove).toBeUndefined();
+    });
+  });
+
+  describe("Edge Case 7: Safe cell multi-color coexistence", () => {
+    it("should allow multiple colors on safe cells", () => {
+      const game = createGame(baseConfig);
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+      game.tokens[8].pos = { zone: "track", cell: 8 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 8 });
+      expect(result.state.tokens[4].pos).toEqual({ zone: "track", cell: 8 });
+      expect(result.state.tokens[8].pos).toEqual({ zone: "track", cell: 8 });
+      
+      const captureEvent = result.events.find((e) => e.type === "captured");
+      expect(captureEvent).toBeUndefined();
+    });
+  });
+
+  describe("Edge Case 8: Coming out onto opponent on start cell is safe", () => {
+    it("should not capture when coming out onto opponent on own start cell", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[4].pos = { zone: "track", cell: 0 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 6,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 0 });
+      expect(result.state.tokens[4].pos).toEqual({ zone: "track", cell: 0 });
+      
+      const captureEvent = result.events.find((e) => e.type === "captured");
+      expect(captureEvent).toBeUndefined();
+
+      const cameOutEvent = result.events.find((e) => e.type === "came_out");
+      expect(cameOutEvent).toBeDefined();
+    });
+
+    it("should capture opponent normally when not coming out", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      // Regular capture on non-safe cell 7
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 7 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 7 });
+      expect(result.state.tokens[4].pos).toEqual({ zone: "yard" });
+      
+      const captureEvent = result.events.find((e) => e.type === "captured");
+      expect(captureEvent).toBeDefined();
+    });
+  });
+
+  describe("Edge Case 9: All 4 tokens stacked forms blockade", () => {
+    it("should treat 4 stacked tokens as blockade", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+      game.tokens[5].pos = { zone: "track", cell: 8 };
+      game.tokens[6].pos = { zone: "track", cell: 8 };
+      game.tokens[7].pos = { zone: "track", cell: 8 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const moves = legalMoves(stateWithDice);
+      const blockedMove = moves.find(m => m.tokenIndex === 0);
+
+      expect(blockedMove).toBeUndefined();
+    });
+  });
+
+  describe("Edge Case 11: 2-player and 3-player games", () => {
+    it("should work correctly in 2-player game", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "yellow"],
+      });
+
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 8 });
+      expect(result.state.turn).toBe("yellow");
+    });
+
+    it("should work correctly in 3-player game", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "green", "blue"],
+      });
+
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 8 });
+      expect(result.state.turn).toBe("green");
+    });
+  });
+
+  describe("Edge Case 12: Turn timeout handled by server", () => {
+    it("should allow any legal move selection", () => {
+      const game = createGame(baseConfig);
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[1].pos = { zone: "track", cell: 6 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const moves = legalMoves(stateWithDice);
+      
+      expect(moves.length).toBeGreaterThan(0);
+      
+      // Server can pick any legal move (simulating random selection)
+      const result = applyMove(stateWithDice, moves[0].tokenIndex);
+      
+      expect(result.state.phase).toBe("awaiting_roll");
+    });
+  });
+
+  describe("Blockade formation and breaking", () => {
+    it("should emit blockade_formed when moving onto own token", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[1].pos = { zone: "track", cell: 3 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const result = applyMove(stateWithDice, 1);
+
+      const blockadeEvent = result.events.find((e) => e.type === "blockade_formed");
+      expect(blockadeEvent).toBeDefined();
+    });
+
+    it("should emit blockade_broken when moving off blockade", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[1].pos = { zone: "track", cell: 5 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const blockadeEvent = result.events.find((e) => e.type === "blockade_broken");
+      expect(blockadeEvent).toBeDefined();
+    });
+  });
+
+  describe("Extra turn logic", () => {
+    it("should grant extra turn on rolling 6", () => {
+      const game = createGame(baseConfig);
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 6,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const extraTurnEvent = result.events.find((e) => e.type === "extra_turn");
+      expect(extraTurnEvent).toBeDefined();
+      expect(result.state.turn).toBe("red");
+      expect(result.state.phase).toBe("awaiting_roll");
+    });
+
+    it("should grant extra turn on capture when house rule enabled", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "green"],
+        houseRules: {
+          ...baseConfig.houseRules,
+          extraRollOnCapture: true,
+        },
+      });
+
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 7 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const extraTurnEvent = result.events.find((e) => e.type === "extra_turn");
+      expect(extraTurnEvent).toBeDefined();
+    });
+
+    it("should not grant extra turn on capture when house rule disabled", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "green"],
+      });
+
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 7 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const turnPassedEvent = result.events.find((e) => e.type === "turn_passed");
+      expect(turnPassedEvent).toBeDefined();
+      expect(result.state.turn).toBe("green");
+    });
+
+    it("should grant extra turn when getting token home with exactFinishBonus", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "green"],
+        houseRules: {
+          ...baseConfig.houseRules,
+          exactFinishBonus: true,
+        },
+      });
+
+      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 1,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const extraTurnEvent = result.events.find((e) => e.type === "extra_turn");
+      expect(extraTurnEvent).toBeDefined();
+    });
+  });
+
+  describe("Win detection and placements", () => {
+    it("should detect win when all tokens reach home", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "green"],
+      });
+
+      game.tokens[0].pos = { zone: "home" };
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "homeColumn", step: 6 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 1,
+      };
+
+      const result = applyMove(stateWithDice, 3);
+
+      expect(result.state.winner).toBe("red");
+      expect(result.state.phase).toBe("finished");
+      expect(result.state.placements).toEqual(["red"]);
+
+      const gameOverEvent = result.events.find((e) => e.type === "game_over");
+      expect(gameOverEvent).toBeDefined();
+    });
+
+    it("should continue for placements when house rule enabled", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "green", "yellow"],
+        houseRules: {
+          ...baseConfig.houseRules,
+          playForPlacements: true,
+        },
+      });
+
+      game.tokens[0].pos = { zone: "home" };
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "homeColumn", step: 6 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 1,
+      };
+
+      const result = applyMove(stateWithDice, 3);
+
+      expect(result.state.winner).toBeNull();
+      expect(result.state.phase).toBe("awaiting_roll");
+      expect(result.state.placements).toEqual(["red"]);
+      expect(result.state.turn).toBe("green");
+    });
+
+    it("should end game when only one player remains in playForPlacements mode", () => {
+      const game = createGame({
+        ...baseConfig,
+        playerColors: ["red", "green"],
+        houseRules: {
+          ...baseConfig.houseRules,
+          playForPlacements: true,
+        },
+      });
+
+      game.tokens[0].pos = { zone: "home" };
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "homeColumn", step: 6 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 1,
+      };
+
+      const result = applyMove(stateWithDice, 3);
+
+      expect(result.state.winner).toBe("red");
+      expect(result.state.phase).toBe("finished");
+      expect(result.state.placements).toEqual(["red", "green"]);
+    });
+  });
+
+  describe("Movement events", () => {
+    it("should emit came_out event when leaving yard", () => {
+      const game = createGame(baseConfig);
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 6,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const event = result.events.find((e) => e.type === "came_out");
+      expect(event).toBeDefined();
+    });
+
+    it("should emit entered_home_column event", () => {
+      const game = createGame(baseConfig);
+
+      game.tokens[0].pos = { zone: "track", cell: 51 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 1,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const event = result.events.find((e) => e.type === "entered_home_column");
+      expect(event).toBeDefined();
+    });
+
+    it("should emit got_home event", () => {
+      const game = createGame(baseConfig);
+
+      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 1,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const event = result.events.find((e) => e.type === "got_home");
+      expect(event).toBeDefined();
+    });
+
+    it("should emit moved event for regular moves", () => {
+      const game = createGame(baseConfig);
+
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const result = applyMove(stateWithDice, 0);
+
+      const event = result.events.find((e) => e.type === "moved");
+      expect(event).toBeDefined();
+    });
+  });
+});
+
+describe("Property-based invariant tests - M1 Step 1.3", () => {
+  const baseConfig: GameConfig = {
+    playerColors: ["red", "green", "yellow", "blue"],
+    houseRules: {
+      maxConsecutiveSixes: 2,
+      extraRollOnCapture: false,
+      blockadeCanMoveTogether: false,
+      exactFinishBonus: false,
+      playForPlacements: false,
+    },
+  };
+
+  it("should never have two opposing tokens on same non-safe track cell", () => {
+    let state = createGame(baseConfig);
+    
+    const rng = (() => {
+      let seed = 42;
+      return () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+    })();
+
+    for (let turn = 0; turn < 100 && state.phase !== "finished"; turn++) {
+      if (state.phase === "awaiting_roll") {
+        const rollResult = rollDice(state, rng);
+        state = rollResult.state;
+      } else if (state.phase === "awaiting_move") {
+        const moves = legalMoves(state);
+        if (moves.length > 0) {
+          const moveIndex = Math.floor(rng() * moves.length);
+          const result = applyMove(state, moves[moveIndex].tokenIndex);
+          state = result.state;
+        }
+      }
+
+      // Check invariant: no two opposing tokens on same non-safe cell
+      for (let i = 0; i < state.tokens.length; i++) {
+        const token1 = state.tokens[i];
+        if (token1.pos.zone !== "track") continue;
+
+        for (let j = i + 1; j < state.tokens.length; j++) {
+          const token2 = state.tokens[j];
+          if (token2.pos.zone !== "track") continue;
+
+          if (token1.pos.cell === token2.pos.cell) {
+            if (token1.color !== token2.color && !isSafeCell(token1.pos.cell)) {
+              throw new Error(
+                `Invariant violated: opposing tokens ${token1.color} and ${token2.color} on non-safe cell ${token1.pos.cell}`
+              );
+            }
+          }
+        }
+      }
+    }
+
+    expect(true).toBe(true);
+  });
+
+  it("should never have token pass through blockade", () => {
+    let state = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+    
+    state.tokens[4].pos = { zone: "track", cell: 10 };
+    state.tokens[5].pos = { zone: "track", cell: 10 };
+    state.tokens[0].pos = { zone: "track", cell: 5 };
+
+    const rng = (() => {
+      let seed = 123;
+      return () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+    })();
+
+    for (let turn = 0; turn < 50 && state.phase !== "finished"; turn++) {
+      const blockadeCell = 10;
+      const tokenBefore = state.tokens.find(
+        (t) => t.pos.zone === "track" && t.pos.cell === blockadeCell
+      );
+
+      if (state.phase === "awaiting_roll") {
+        const rollResult = rollDice(state, rng);
+        state = rollResult.state;
+      } else if (state.phase === "awaiting_move") {
+        const moves = legalMoves(state);
+        if (moves.length > 0) {
+          const moveIndex = Math.floor(rng() * moves.length);
+          const result = applyMove(state, moves[moveIndex].tokenIndex);
+          state = result.state;
+        }
+      }
+
+      // Check: red token should never get past cell 10 while blockade exists
+      const greenBlockade = state.tokens.filter(
+        (t) => t.color === "green" && t.pos.zone === "track" && t.pos.cell === 10
+      );
+
+      if (greenBlockade.length >= 2) {
+        const redToken = state.tokens.find((t) => t.color === "red");
+        if (redToken && redToken.pos.zone === "track") {
+          const distance = (redToken.pos.cell - 5 + 52) % 52;
+          if (distance > 5 && distance < 52 - 5) {
+            throw new Error(
+              `Invariant violated: red token passed blockade at cell 10, now at ${redToken.pos.cell}`
+            );
+          }
+        }
+      }
+    }
+
+    expect(true).toBe(true);
+  });
+
+  it("should maintain valid game state through random play", () => {
+    let state = createGame(baseConfig);
+    
+    const rng = (() => {
+      let seed = 999;
+      return () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+    })();
+
+    for (let turn = 0; turn < 200 && state.phase !== "finished"; turn++) {
+      if (state.phase === "awaiting_roll") {
+        const rollResult = rollDice(state, rng);
+        state = rollResult.state;
+      } else if (state.phase === "awaiting_move") {
+        const moves = legalMoves(state);
+        if (moves.length > 0) {
+          const moveIndex = Math.floor(rng() * moves.length);
+          const result = applyMove(state, moves[moveIndex].tokenIndex);
+          state = result.state;
+        }
+      }
+
+      // Basic invariants
+      expect(state.config.playerColors).toContain(state.turn);
+      
+      if (state.phase === "awaiting_move") {
+        expect(state.dice).not.toBeNull();
+        expect(state.dice).toBeGreaterThanOrEqual(1);
+        expect(state.dice).toBeLessThanOrEqual(6);
+      }
+
+      // All tokens should have valid positions
+      for (const token of state.tokens) {
+        if (token.pos.zone === "track") {
+          expect(token.pos.cell).toBeGreaterThanOrEqual(0);
+          expect(token.pos.cell).toBeLessThan(52);
+        } else if (token.pos.zone === "homeColumn") {
+          expect(token.pos.step).toBeGreaterThanOrEqual(1);
+          expect(token.pos.step).toBeLessThanOrEqual(6);
+        }
+      }
+    }
+
+    expect(true).toBe(true);
   });
 });
