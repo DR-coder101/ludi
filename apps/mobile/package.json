@@ -14,6 +14,8 @@
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",
     "expo": "~52.0.0",
+    "expo-av": "^16.0.8",
+    "expo-haptics": "^57.0.3",
     "expo-router": "~4.0.0",
     "react": "18.3.1",
     "react-native": "0.76.5",

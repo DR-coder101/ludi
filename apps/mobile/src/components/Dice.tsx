@@ -6,8 +6,10 @@ import Animated, {
   withSpring,
   withSequence,
   withTiming,
+  withRepeat,
   Easing,
 } from 'react-native-reanimated';
+import { gameAudio, triggerHaptic } from '../utils/gameAudio';
 
 interface DiceProps {
   value: number | null;
@@ -16,32 +18,85 @@ interface DiceProps {
 }
 
 export const Dice: React.FC<DiceProps> = ({ value, onRoll, disabled }) => {
-  const rotation = useSharedValue(0);
+  const rotateX = useSharedValue(0);
+  const rotateY = useSharedValue(0);
+  const rotateZ = useSharedValue(0);
   const scale = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
 
   useEffect(() => {
     if (value !== null) {
-      rotation.value = withSequence(
-        withTiming(360, { duration: 300, easing: Easing.out(Easing.cubic) }),
+      rotateX.value = withSequence(
+        withRepeat(
+          withTiming(360, { duration: 100, easing: Easing.linear }),
+          3,
+          false
+        ),
         withTiming(0, { duration: 0 })
       );
-      scale.value = withSequence(
-        withTiming(1.2, { duration: 150 }),
-        withSpring(1, { damping: 10, stiffness: 100 })
+      rotateY.value = withSequence(
+        withRepeat(
+          withTiming(360, { duration: 120, easing: Easing.linear }),
+          3,
+          false
+        ),
+        withTiming(0, { duration: 0 })
       );
+      rotateZ.value = withSequence(
+        withRepeat(
+          withTiming(360, { duration: 80, easing: Easing.linear }),
+          4,
+          false
+        ),
+        withTiming(0, { duration: 0 })
+      );
+      
+      scale.value = withSequence(
+        withTiming(1.3, { duration: 150 }),
+        withSpring(1, { damping: 8, stiffness: 120 })
+      );
+
+      translateX.value = withSequence(
+        withTiming(5, { duration: 50 }),
+        withTiming(-5, { duration: 50 }),
+        withTiming(4, { duration: 50 }),
+        withTiming(-3, { duration: 50 }),
+        withTiming(0, { duration: 50 })
+      );
+
+      translateY.value = withSequence(
+        withTiming(-8, { duration: 100 }),
+        withTiming(3, { duration: 100 }),
+        withTiming(-2, { duration: 80 }),
+        withTiming(0, { duration: 70 })
+      );
+
+      gameAudio.play('roll');
+      triggerHaptic.medium();
     }
   }, [value]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ rotate: `${rotation.value}deg` }, { scale: scale.value }],
+    transform: [
+      { perspective: 1000 },
+      { rotateX: `${rotateX.value}deg` },
+      { rotateY: `${rotateY.value}deg` },
+      { rotateZ: `${rotateZ.value}deg` },
+      { scale: scale.value },
+      { translateX: translateX.value },
+      { translateY: translateY.value },
+    ],
   }));
 
   const handlePress = () => {
     if (!disabled) {
-      rotation.value = withSequence(
-        withTiming(720, { duration: 400, easing: Easing.out(Easing.cubic) }),
-        withTiming(0, { duration: 0 })
+      rotateZ.value = withTiming(360, { duration: 300, easing: Easing.out(Easing.cubic) });
+      scale.value = withSequence(
+        withTiming(0.9, { duration: 100 }),
+        withSpring(1, { damping: 10 })
       );
+      triggerHaptic.light();
       onRoll();
     }
   };
@@ -80,13 +135,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: '#D4AF37',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 8,
-    borderWidth: 2,
-    borderColor: '#333',
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 10,
+    borderWidth: 3,
+    borderColor: '#D4AF37',
   },
   diceDisabled: {
     opacity: 0.5,
@@ -94,12 +149,12 @@ const styles = StyleSheet.create({
   diceText: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1a1a1a',
   },
   tapText: {
     marginTop: 8,
     fontSize: 12,
-    color: '#666',
-    fontWeight: '500',
+    color: '#D4AF37',
+    fontWeight: '600',
   },
 });

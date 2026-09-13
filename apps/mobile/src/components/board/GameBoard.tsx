@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, memo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Svg, { Rect, Circle, Polygon } from 'react-native-svg';
 import type { GameState, TokenPos } from '@ludi/rules';
@@ -16,6 +16,7 @@ import {
 } from './boardLayout';
 import { Token } from './Token';
 import { AnimatedToken } from './AnimatedToken';
+import { gameAudio, triggerHaptic } from '../../utils/gameAudio';
 
 interface GameBoardProps {
   width: number;
@@ -35,6 +36,37 @@ interface GameBoardProps {
 }
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
+
+const MemoizedTrackCell = memo<{
+  cell: CellPosition;
+  index: number;
+  cellSize: number;
+  isSafe: boolean;
+  isStart: boolean;
+}>(({ cell, index, cellSize, isSafe, isStart }) => (
+  <React.Fragment key={`track-${index}`}>
+    <Rect
+      x={cell.col * cellSize}
+      y={cell.row * cellSize}
+      width={cellSize}
+      height={cellSize}
+      fill={isSafe ? '#FFD700' : isStart ? '#FFA500' : '#2a2a2a'}
+      stroke="#4a4a4a"
+      strokeWidth={1}
+    />
+    {isSafe && (
+      <Circle
+        cx={cell.col * cellSize + cellSize / 2}
+        cy={cell.row * cellSize + cellSize / 2}
+        r={cellSize * 0.15}
+        fill="#FFD700"
+        opacity={0.8}
+      />
+    )}
+  </React.Fragment>
+));
+
+MemoizedTrackCell.displayName = 'MemoizedTrackCell';
 
 function getTokenCoordinates(pos: TokenPos, color: Color): CellPosition | null {
   if (pos.zone === 'yard') {
@@ -186,25 +218,14 @@ export const GameBoard: React.FC<GameBoardProps> = ({
       const isStart = Object.values(START_CELLS).includes(index);
 
       return (
-        <React.Fragment key={`track-${index}`}>
-          <Rect
-            x={cell.col * cellSize}
-            y={cell.row * cellSize}
-            width={cellSize}
-            height={cellSize}
-            fill={isSafe ? '#FFD700' : isStart ? '#FFA500' : '#fff'}
-            stroke="#888"
-            strokeWidth={1}
-          />
-          {isSafe && (
-            <Circle
-              cx={cell.col * cellSize + cellSize / 2}
-              cy={cell.row * cellSize + cellSize / 2}
-              r={cellSize * 0.15}
-              fill="#fff"
-            />
-          )}
-        </React.Fragment>
+        <MemoizedTrackCell
+          key={`track-${index}`}
+          cell={cell}
+          index={index}
+          cellSize={cellSize}
+          isSafe={isSafe}
+          isStart={isStart}
+        />
       );
     });
   };
@@ -326,6 +347,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#2a2a2a',
+    borderRadius: 8,
   },
 });
