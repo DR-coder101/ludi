@@ -1,0 +1,24 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ludi/protocol": "workspace:*",
+    "@ludi/rules": "workspace:*",
+    "express": "^4.19.0",
+    "socket.io": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "tsx": "^4.15.0",
+    "typescript": "^5.5.0"
+  }
+}
