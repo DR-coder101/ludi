@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { createGame, legalMoves } from './index';
+import type { GameConfig } from './types';
 
 describe('rules package exports', () => {
   it('should export createGame', () => {
@@ -11,10 +12,10 @@ describe('rules package exports', () => {
   });
 
   it('should create a valid initial game state', () => {
-    const config = {
-      playerColors: ['red', 'green'] as const,
+    const config: GameConfig = {
+      playerColors: ['red', 'green'],
       houseRules: {
-        maxConsecutiveSixes: 2 as const,
+        maxConsecutiveSixes: 2,
         extraRollOnCapture: false,
         blockadeCanMoveTogether: false,
         exactFinishBonus: false,

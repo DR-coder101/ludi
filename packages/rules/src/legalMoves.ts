@@ -90,7 +90,7 @@ function isPathClear(
     return true;
   }
 
-  let currentPos = origin;
+  let currentPos: TokenPos = origin;
   for (let i = 1; i <= steps; i++) {
     const nextPos = advancePosition(currentPos, 1, movingColor);
     if (nextPos === null) {
