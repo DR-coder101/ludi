@@ -9,3 +9,5 @@ export * from "./types";
 export * from "./topology";
 export * from "./game";
 export * from "./legalMoves";
+export * from "./rollDice";
+export * from "./applyMove";
