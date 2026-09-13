@@ -27,10 +27,6 @@ export function rollDice(state: GameState, rng: RngFunction): RollDiceResult {
     throw new Error("Cannot roll dice: not in awaiting_roll phase");
   }
 
-  if (state.phase === "finished") {
-    throw new Error("Cannot roll dice: game is finished");
-  }
-
   // Roll the dice (1-6)
   const value = Math.floor(rng() * 6) + 1;
 
