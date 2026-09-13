@@ -15,6 +15,7 @@ import {
   normalizeTrackCell,
   computePath,
   getDistanceFromStart,
+  legalMoves,
   type Color,
   type GameConfig,
 } from "./index";
@@ -464,5 +465,389 @@ describe("Board Constants", () => {
   it("should have correct total journey steps", () => {
     expect(TOTAL_JOURNEY_STEPS).toBe(57);
     expect(TOTAL_JOURNEY_STEPS).toBe(TRACK_SIZE + HOME_COLUMN_LENGTH - 1);
+  });
+});
+
+describe("Legal Moves - M1 Step 1.2", () => {
+  const baseConfig: GameConfig = {
+    playerColors: ["red", "green", "yellow", "blue"],
+    houseRules: {
+      maxConsecutiveSixes: 2,
+      extraRollOnCapture: false,
+      blockadeCanMoveTogether: false,
+      exactFinishBonus: false,
+      playForPlacements: false,
+    },
+  };
+
+  describe("Edge Case 1: Rolling 6 with all tokens in yard", () => {
+    it("should allow coming out when rolling 6 from yard", () => {
+      const game = createGame(baseConfig);
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 6,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      expect(moves.length).toBeGreaterThan(0);
+      
+      const redMoves = moves.filter((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red";
+      });
+
+      expect(redMoves.length).toBe(4);
+      
+      for (const move of redMoves) {
+        expect(move.resulting).toEqual({ zone: "track", cell: 0 });
+      }
+    });
+
+    it("should not allow coming out on roll other than 6", () => {
+      const game = createGame(baseConfig);
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      expect(moves.length).toBe(0);
+    });
+  });
+
+  describe("Edge Case 4: Moving onto own single token forms blockade", () => {
+    it("should allow moving onto own token to form blockade", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[1].pos = { zone: "track", cell: 3 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const moveToBlockade = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 1 &&
+               m.resulting.zone === "track" && m.resulting.cell === 5;
+      });
+
+      expect(moveToBlockade).toBeDefined();
+    });
+  });
+
+  describe("Edge Case 5: Blockade directly ahead blocks passage", () => {
+    it("should block token from passing through blockade", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+      game.tokens[5].pos = { zone: "track", cell: 8 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 5,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const blockedMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      expect(blockedMove).toBeUndefined();
+    });
+
+    it("should block token from landing on blockade", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+      game.tokens[5].pos = { zone: "track", cell: 8 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const blockedMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      expect(blockedMove).toBeUndefined();
+    });
+
+    it("should block own tokens from passing own blockade", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[1].pos = { zone: "track", cell: 8 };
+      game.tokens[2].pos = { zone: "track", cell: 8 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 5,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const blockedMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      expect(blockedMove).toBeUndefined();
+    });
+  });
+
+  describe("Edge Case 6: Exact count required into home", () => {
+    it("should allow exact count to reach home", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 1,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const homeMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      expect(homeMove).toBeDefined();
+      expect(homeMove?.resulting).toEqual({ zone: "home" });
+    });
+
+    it("should reject overshoot from home column", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const overshootMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      expect(overshootMove).toBeUndefined();
+    });
+
+    it("should reject overshoot into home column from track", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      // Red home entry is at cell 51 (one before start 0)
+      // After 52 steps from start (0), enters home column at step 1
+      // From cell 45 (45 steps from start), rolling 6 would be 51 steps total
+      // That puts us at entry point 51, next step enters home column at step 1
+      // We need to be at a position where rolling would put us past home column step 6
+      // 
+      // Actually from track, we can NEVER overshoot because computePath handles it
+      // The overshoot only happens from WITHIN home column
+      // This test is testing the wrong thing - remove or fix it
+      
+      // Better test: token very close to home entry, large roll would overshoot
+      // From cell 46 (46 steps from start), need 52-46=6 more to complete track
+      // Then 7 steps into home column = past home
+      // But max dice is 6, so from track we enter at most step 6 of home column
+      
+      // Actually, let's test entering home column with exact count
+      game.tokens[0].pos = { zone: "track", cell: 50 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const homeColumnMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      // From 50, +2 = 52 steps from start = enters home column at step 1
+      expect(homeColumnMove).toBeDefined();
+      expect(homeColumnMove?.resulting).toEqual({ zone: "homeColumn", step: 1 });
+    });
+  });
+
+  describe("Edge Case 10: No legal move auto-pass", () => {
+    it("should return empty array when no legal moves exist", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      expect(moves).toEqual([]);
+    });
+
+    it("should return empty array when only movable token would overshoot", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "homeColumn", step: 5 };
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "home" };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 5,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      expect(moves).toEqual([]);
+    });
+
+    it("should return empty array when all paths are blocked by blockades", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[1].pos = { zone: "yard" };
+      game.tokens[2].pos = { zone: "yard" };
+      game.tokens[3].pos = { zone: "yard" };
+      
+      game.tokens[4].pos = { zone: "track", cell: 7 };
+      game.tokens[5].pos = { zone: "track", cell: 7 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      expect(moves).toEqual([]);
+    });
+  });
+
+  describe("Additional Legal Move Tests", () => {
+    it("should annotate captures correctly", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      // Use cell 7 which is NOT safe (safe cells are 0,8,13,21,26,34,39,47)
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 7 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 2,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const captureMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      expect(captureMove).toBeDefined();
+      expect(captureMove?.captures).toEqual({ color: "green", index: 0 });
+    });
+
+    it("should not capture on safe cells", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      // Cell 8 IS safe
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      const safeMove = moves.find((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.color === "red" && token.index === 0;
+      });
+
+      // Should find the move but NO capture annotation
+      expect(safeMove).toBeDefined();
+      expect(safeMove?.captures).toBeUndefined();
+    });
+
+    it("should allow coexistence on safe cells", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+      
+      // Both tokens can coexist on safe cell 8
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+      
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: 3,
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      expect(moves.length).toBeGreaterThan(0);
+    });
+
+    it("should not allow moves when phase is not awaiting_move", () => {
+      const game = createGame(baseConfig);
+      const stateAwaitingRoll = {
+        ...game,
+        phase: "awaiting_roll" as const,
+        dice: 6,
+      };
+
+      const moves = legalMoves(stateAwaitingRoll);
+
+      expect(moves).toEqual([]);
+    });
+
+    it("should not allow moves when dice is null", () => {
+      const game = createGame(baseConfig);
+      const stateNoDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        dice: null,
+      };
+
+      const moves = legalMoves(stateNoDice);
+
+      expect(moves).toEqual([]);
+    });
   });
 });

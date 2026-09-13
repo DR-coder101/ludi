@@ -8,3 +8,4 @@
 export * from "./types";
 export * from "./topology";
 export * from "./game";
+export * from "./legalMoves";
