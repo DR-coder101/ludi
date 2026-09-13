@@ -1,493 +1,521 @@
-# Ludi Prompt Pack
+# LUDI — Cursor Prompt Pack
 
-Ordered development milestones and prompts for building Ludi. Each prompt represents a discrete, testable task. Complete one phase before moving to the next.
+**Rules of engagement:**
+- One prompt = one task (30min–2hr target).
+- Test after each (all tests green before next prompt).
+- Commit after green (one logical commit per prompt completion).
+- Read `GAME_RULES.md` before touching `packages/rules`.
+- Read `ARCHITECTURE.md` for system design context.
 
-## Philosophy
-
-- **One prompt = One task**: Each prompt should take 30 minutes to 2 hours
-- **Test after each**: Every phase must pass tests before moving forward
-- **Incremental complexity**: Build foundation before adding features
-- **Monorepo awareness**: Changes may touch multiple packages
+---
 
 ## Phase 0: Scaffold ✅
 
-**Status**: Complete
-
 ### 0.1: Monorepo Setup ✅
-**Prompt**: Scaffold Phase 0.1 for Dean's Caribbean/Jamaican Ludo mobile game. Create pnpm workspace monorepo with apps/mobile (Expo SDK 52+), server (Node + Express + Socket.IO), packages/rules (pure TS + vitest), packages/protocol (shared types). Hello-world Socket.IO: client connects, server replies pong. Include docs/ARCHITECTURE.md, docs/GAME_RULES.md, docs/PROMPT_PACK.md. TypeScript strict mode.
+**Prompt:** Scaffold Phase 0.1 for Dean's Caribbean/Jamaican Ludo mobile game on this repo. Monorepo skeleton only — no full game logic yet. There is already a README.md on main — keep/extend it, do not wipe history.
 
-**Done when**:
-- `pnpm install` succeeds
-- `pnpm test:rules` passes
-- Server connects to client and sends pong
-- All docs present
+Layout (pnpm workspaces) at repo root:
+```
+apps/mobile/          # Expo SDK 52+, expo-router, TypeScript strict
+server/               # Node + Express + Socket.IO, TypeScript strict
+packages/rules/       # pure TS + vitest (hello + one smoke test)
+packages/protocol/    # shared types placeholder
+docs/
+  GAME_RULES.md
+  ARCHITECTURE.md
+  PROMPT_PACK.md
+package.json          # workspaces + scripts: dev:server, dev:mobile, test, test:rules, lint
+pnpm-workspace.yaml
+README.md
+```
+
+Wire workspaces: server and apps/mobile depend on packages/rules and packages/protocol. Hello-world Socket.IO: client connects, server replies `pong`. No game events yet. packages/rules: export tiny `hello()` + one passing vitest. TypeScript strict. Node 20+, pnpm 9+.
+
+**Done when:** pnpm install works, pnpm test:rules passes, README explains how to run server + mobile, docs present.
+
+### 0.2: Verify End-to-End Connection
+**Prompt:** Verify Phase 0 scaffold works end-to-end. Start server (pnpm dev:server), start mobile (pnpm dev:mobile in iOS simulator), confirm mobile UI shows "Connected" status and displays pong message from server in connection log. If issues found, fix them. Document any manual setup steps (e.g., SERVER_URL for physical device testing) in README troubleshooting section.
+
+**Done when:** Clean run from `pnpm install` → server start → mobile start → connection established with no errors.
 
 ---
 
-## Phase 1: Rules Engine
+## Phase 1: Rules Engine (M1)
 
-**Goal**: Build pure TypeScript game logic in `packages/rules`. Dependency-free, fully tested, shared by client and server.
+**Goal:** Implement `packages/rules` per `GAME_RULES.md` §11 API contract. Pure functions, 100% immutable, injected RNG, zero dependencies.
 
 ### 1.1: Core Types and Game Initialization
-**Prompt**: Implement core types in @ludi/rules: GameState, Player, Token, BoardState, HouseRules. Create `createGame(config)` function that initializes a new 4-player game. All players start with 4 tokens in yard. Board has 52-cell track + 4 home columns. Add tests for initialization.
+**Prompt:** Implement core types in `packages/rules/src/types.ts`:
 
-**Acceptance Criteria**:
-- `createGame({ players: ['red', 'green', 'yellow', 'blue'] })` returns valid GameState
-- All tokens start in yard (position: -1)
-- Board positions 0-51 on main track, 52-56 home columns per player
-- House rules have sensible defaults
-- 10+ tests covering initialization edge cases
+```ts
+export type Color = "red" | "green" | "yellow" | "blue";
 
-**Files**:
-- `packages/rules/src/types.ts`
-- `packages/rules/src/engine.ts`
-- `packages/rules/src/engine.test.ts`
+export interface GameConfig {
+  playerColors: Color[];  // 2–4 colours
+  houseRules: {
+    maxConsecutiveSixes: 2 | 3 | "unlimited";
+    extraRollOnCapture: boolean;
+    blockadeCanMoveTogether: boolean;
+    exactFinishBonus: boolean;
+    playForPlacements: boolean;
+  };
+}
+
+export type TokenPos =
+  | { zone: "yard" }
+  | { zone: "track"; cell: number }       // 0–51 absolute
+  | { zone: "homeColumn"; step: number }  // 1–6
+  | { zone: "home" };
+
+export interface TokenState {
+  color: Color;
+  index: 0 | 1 | 2 | 3;
+  pos: TokenPos;
+}
+
+export interface GameState {
+  config: GameConfig;
+  tokens: TokenState[];  // 4 per active colour (8–16 total)
+  turn: Color;
+  phase: "awaiting_roll" | "awaiting_move" | "finished";
+  dice: number | null;
+  consecutiveSixes: number;
+  winner: Color | null;
+  placements: Color[];  // ordered finish positions
+}
+```
+
+Then implement `packages/rules/src/engine.ts`:
+
+```ts
+export function createGame(config: GameConfig): GameState {
+  // Initialize game: all tokens in yard, turn = first color, phase = awaiting_roll
+}
+```
+
+Add tests in `packages/rules/src/engine.test.ts`:
+- 4-player game initializes with 16 tokens in yard.
+- 2-player game initializes with 8 tokens.
+- House rules are stored correctly.
+- Turn order starts with first color (Red if 4-player).
+- Phase is `awaiting_roll`, dice is `null`.
+
+**Done when:** 10+ tests pass, `pnpm test:rules` green, types exported from `packages/rules/src/index.ts`.
 
 ### 1.2: Dice Rolling and Turn Management
-**Prompt**: Implement dice rolling in @ludi/rules. Add `rollDice(state, rng)` that accepts injected RNG, updates lastRoll, handles consecutive sixes tracking, and manages turn phase transitions (awaiting_roll → rolled). Add `passTurn(state)` to advance currentPlayerIndex. Test with deterministic RNG.
+**Prompt:** Implement dice rolling in `packages/rules/src/dice.ts`:
 
-**Acceptance Criteria**:
-- `rollDice(state, () => 0.5)` produces roll of 3 (deterministic)
-- Rolling a 6 increments consecutiveSixes
-- Rolling non-6 resets consecutiveSixes
-- Max consecutive sixes enforced (default 2, configurable)
-- Turn phase transitions correctly
-- 15+ tests including edge cases (triple six forfeit)
+```ts
+export function rollDice(
+  state: GameState,
+  rng: () => number  // returns [0, 1), caller supplies crypto.randomInt wrapper
+): { state: GameState; value: number } {
+  // Roll die (1–6), update state.dice, increment consecutiveSixes if 6
+  // If 3rd consecutive 6 (and maxConsecutiveSixes=2), forfeit turn (phase=awaiting_roll, next player)
+  // Otherwise phase=awaiting_move
+}
 
-**Files**:
-- `packages/rules/src/dice.ts`
-- `packages/rules/src/dice.test.ts`
-- Update `packages/rules/src/index.ts` exports
+export function passTurn(state: GameState): GameState {
+  // Advance turn to next color in playerColors, reset consecutiveSixes=0, phase=awaiting_roll, dice=null
+}
+```
+
+Add tests in `packages/rules/src/dice.test.ts`:
+- Deterministic RNG test: `rng = () => 0.5` produces roll of 4.
+- Rolling 6 increments `consecutiveSixes`.
+- Rolling non-6 resets `consecutiveSixes` to 0.
+- Third consecutive 6 with `maxConsecutiveSixes=2` forfeits turn (turn advances, phase=awaiting_roll).
+- Third consecutive 6 with `maxConsecutiveSixes=3` is allowed.
+- `"unlimited"` allows any number of consecutive sixes.
+
+**Done when:** 15+ tests pass, `pnpm test:rules` green.
 
 ### 1.3: Token Movement and Validation
-**Prompt**: Implement token movement in @ludi/rules. Add `legalMoves(state): Move[]` to calculate all valid moves for current player. Add `applyMove(state, move): GameState` to execute a move. Handle: coming out on 6, forward movement, track wrapping, home column entry, exact finish. No captures or blockades yet.
+**Prompt:** Implement movement in `packages/rules/src/movement.ts`:
 
-**Acceptance Criteria**:
-- `legalMoves()` returns empty array if no valid moves
-- Coming out requires roll of 6 and empty start cell
-- Tokens advance correct number of cells
-- Home column entry at correct cell (Red: 51→52, etc.)
-- Exact count required for finishing (no overshoot)
-- 20+ tests covering movement scenarios
+```ts
+export interface Move {
+  tokenIndex: number;  // index into state.tokens array
+  resulting: TokenPos;
+  captures?: { color: Color; index: number };  // if capturing opponent
+}
 
-**Files**:
-- `packages/rules/src/movement.ts`
-- `packages/rules/src/movement.test.ts`
-- `packages/rules/src/validation.ts`
-- `packages/rules/src/validation.test.ts`
+export function legalMoves(state: GameState): Move[] {
+  // Return all legal moves for current player
+  // Must be in awaiting_move phase
+  // Rules:
+  // - Coming out: dice=6 only, start cell must not have own blockade
+  // - Track movement: advance dice steps, cannot land on/pass blockade, cannot overshoot home column
+  // - Home column: exact count to reach home
+  // - Captures: single opponent on non-safe cell → legal + mark capture
+  // - No legal moves → return []
+}
+
+export function applyMove(state: GameState, tokenIndex: number): { state: GameState; events: string[] } {
+  // Apply move, return new state + event list
+  // Events: "came_out", "moved", "captured", "blockade_formed", "blockade_broken", "entered_home_column", "got_home"
+  // Update token pos, handle captures (send opponent to yard), check blockade formation
+  // If got_home and all 4 tokens home → winner, phase=finished
+  // Else determine extra turn: dice=6 or (captured + extraRollOnCapture) → phase=awaiting_roll same player
+  // Else passTurn
+}
+```
+
+Helpers in `packages/rules/src/board.ts`:
+```ts
+export function getStartCell(color: Color): number { /* Red=0, Green=13, Yellow=26, Blue=39 */ }
+export function isSafeCell(cell: number): boolean { /* 0,13,26,39,8,21,34,47 */ }
+export function getHomeEntryCell(color: Color): number { /* Red=51, Green=12, Yellow=25, Blue=38 */ }
+export function isBlockade(state: GameState, pos: TokenPos): boolean { /* ≥2 same-colour tokens on pos */ }
+```
+
+Add tests in `packages/rules/src/movement.test.ts`:
+- Coming out on 6: legal if start cell empty or has <2 own tokens.
+- Coming out blocked by own blockade on start cell: no legal move for coming out.
+- Track movement: token advances correct cells.
+- Blockade ahead: move blocked (not in legal moves).
+- Capture single opponent on non-safe cell: legal, move includes capture.
+- Safe cell: opponent present but no capture.
+- Home column entry: correct cell triggers entry.
+- Exact count to home: legal; overshoot not legal.
+- All tokens home: winner set, phase=finished.
+
+**Done when:** 25+ tests pass (covering edge cases 1,3,4,5,6,7,8,10 from GAME_RULES.md §10), `pnpm test:rules` green.
 
 ### 1.4: Captures, Blockades, and Win Conditions
-**Prompt**: Complete @ludi/rules with captures and blockades. Implement: capturing opponent tokens (return to yard), safe cells (start + star cells), blockade formation (2 same-color tokens), blockade impassability. Add `isGameOver(state)` and `getWinner(state)`. Handle all 12 edge cases from GAME_RULES.md.
+**Prompt:** Complete `packages/rules` with full blockade logic and win detection.
 
-**Acceptance Criteria**:
-- Capturing returns opponent token to yard
-- Safe cells (0,13,26,39,8,21,34,47) prevent captures
-- Blockades block opponent movement through cell
-- All 12 edge cases from GAME_RULES.md pass
-- `isGameOver()` returns true when player has 4 tokens home
-- 30+ tests covering all capture/blockade scenarios
+Update `packages/rules/src/movement.ts` to handle:
+- **Blockade impassability:** A token cannot move through or onto a cell with ≥2 same-colour opponent tokens (even if different from moving token's colour). Exception: own blockade still blocks own other tokens.
+- **Blockade formation:** Moving onto own single token forms blockade → emit "blockade_formed".
+- **Blockade breaking:** Moving one token off a blockade cell → emit "blockade_broken".
+- **Safe cells with multiple colours:** Multiple tokens of different colours coexist on safe cells; still no captures.
+- **Home column:** Blockades don't apply in home columns (each token moves independently to home).
 
-**Files**:
-- `packages/rules/src/captures.ts`
-- `packages/rules/src/captures.test.ts`
-- `packages/rules/src/blockades.ts`
-- `packages/rules/src/blockades.test.ts`
-- `packages/rules/src/game-over.ts`
-- `packages/rules/src/game-over.test.ts`
+Add `packages/rules/src/game-over.ts`:
+```ts
+export function checkWinner(state: GameState): Color | null {
+  // Return colour if all 4 tokens at { zone: "home" }
+}
+
+export function updatePlacements(state: GameState): GameState {
+  // If playForPlacements=true and winner just finished, add to placements array
+  // If all colours finished → phase=finished
+}
+```
+
+Add tests in `packages/rules/src/blockades.test.ts`:
+- Blockade (2 same-colour tokens) blocks all opponents' movement through cell.
+- Blockade blocks owner's other tokens (case 4 from GAME_RULES.md §10).
+- 4 tokens stacked = still blockade (case 9).
+- Safe cell blockade: still impassable but no captures possible.
+- Blockade on start cell: coming out attempt returns empty legalMoves (case 3 variant).
+
+Add tests in `packages/rules/src/game-over.test.ts`:
+- First player to get 4 tokens home wins.
+- If `playForPlacements=false`, game ends immediately (phase=finished, placements=[winner]).
+- If `playForPlacements=true`, game continues for 2nd/3rd/4th places.
+
+**Acceptance:** All 12 edge cases from GAME_RULES.md §10 covered by tests. 40+ total tests in `packages/rules`, all green.
+
+**Done when:** `pnpm test:rules` shows 40+ passing tests, 100% coverage of core logic (use `vitest --coverage` to verify).
 
 ---
 
-## Phase 2: Local Gameplay
+## Phase 2: Local UI (M2)
 
-**Goal**: Build board UI and local game loop (single device, no multiplayer yet).
+**Goal:** Build board + token rendering + local game loop (single device, no network).
 
 ### 2.1: Board SVG Rendering
-**Prompt**: Create board UI in apps/mobile using react-native-svg. Render 15x15 grid with 52-cell track, 4 start positions, star cells, and home columns. Use colors from GAME_RULES.md. Board should be responsive and fill screen. No tokens yet, just static board.
+**Prompt:** Create `apps/mobile/components/Board.tsx` using `react-native-svg`. Render a 15×15 grid representing the 52-cell track, 4 start positions (cells 0,13,26,39), 4 star cells (8,21,34,47), and 4 home columns (6 cells each leading to centre). Use colours from GAME_RULES.md: Red=#E53E3E, Green=#38A169, Yellow=#D69E2E, Blue=#3182CE. Board should be responsive (fit screen width with padding). No tokens yet, just static board.
 
-**Acceptance Criteria**:
-- Board renders on iOS and Android
-- All 52 track cells visible and correctly positioned
-- Start cells (0,13,26,39) highlighted in player colors
-- Star cells (8,21,34,47) marked with star icons
-- Home columns clearly distinguished
-- Responsive layout (works on different screen sizes)
+**Acceptance:**
+- Board renders on iOS and Android.
+- All 52 track cells visible and correctly positioned in cross shape.
+- Start cells highlighted in player colours.
+- Star cells marked with star icons or distinct styling.
+- Home columns clearly distinguished (colour gradients or borders).
 
-**Files**:
-- `apps/mobile/components/Board.tsx`
-- `apps/mobile/components/Cell.tsx`
+**Done when:** Board displays correctly in simulator, no layout issues on different screen sizes (iPhone SE to iPad).
 
 ### 2.2: Token Rendering and Animation
-**Prompt**: Add token rendering to board. Display 4 tokens per player in yard or on board based on GameState. Use Reanimated 3 for smooth movement animations (300ms ease-out). Add token selection (scale up, glow effect). Tokens should stack if multiple on same cell (offset slightly).
+**Prompt:** Create `apps/mobile/components/Token.tsx` using `react-native-svg` for token shape (circle with colour fill) and `react-native-reanimated` for movement. Token should accept `pos: TokenPos` prop and animate smoothly (300ms ease-out) when pos changes. Add selection state (scale up + glow effect). If multiple tokens on same cell, stack them with slight offset.
 
-**Acceptance Criteria**:
-- All 16 tokens (4 players × 4 tokens) render correctly
-- Tokens in yard appear in designated area
-- Tokens on board positioned correctly on cells
-- Movement animates smoothly (no jank)
-- Selection state visually clear
-- Multiple tokens on same cell stack neatly
+Create `apps/mobile/components/GameBoard.tsx` that combines `Board` and renders all tokens from a `GameState` prop. Use `@ludi/rules` types.
 
-**Files**:
-- `apps/mobile/components/Token.tsx`
-- `apps/mobile/hooks/useTokenAnimation.ts`
+**Acceptance:**
+- 16 tokens (4 colours × 4 tokens) render correctly in yards initially.
+- Tokens move smoothly when pos changes (no jank at 60 FPS).
+- Selection highlight works (tap to select, shows glow).
+- Multiple tokens on same cell stack neatly (offset by 5px).
 
-### 2.3: Dice UI and Roll Animation
-**Prompt**: Create dice component with roll animation. Show current roll value, animate rolling (1-6 cycling, 500ms). Add roll button that triggers animation then reveals result. Disable button when not current player's turn or during awaiting_move phase.
+**Done when:** Tokens render and animate smoothly in simulator.
 
-**Acceptance Criteria**:
-- Dice shows current roll value
-- Roll button triggers animation
-- Animation cycles through 1-6 before settling
-- Button disabled during opponent turns
-- Button disabled during awaiting_move phase
-- Accessible (screen reader support)
+### 2.3: Local Game Loop
+**Prompt:** Implement local game loop in `apps/mobile/app/local-game.tsx`. Use Zustand store (`apps/mobile/stores/localGameStore.ts`) to hold current `GameState` from `@ludi/rules`. Integrate dice UI (`components/Dice.tsx` with roll button + animation) and token selection. Flow: tap Roll → animate dice → show legal moves (highlight tokens) → tap token → apply move → animate → next turn. Use `@ludi/rules` functions: `rollDice`, `legalMoves`, `applyMove`.
 
-**Files**:
-- `apps/mobile/components/Dice.tsx`
-- `apps/mobile/components/RollButton.tsx`
+Add turn indicator banner ("Red's Turn") and game-over modal (show winner + placements).
 
-### 2.4: Local Game Loop Integration
-**Prompt**: Wire up local game in apps/mobile. Use Zustand + Immer for state management. Integrate @ludi/rules for game logic. Implement full turn cycle: roll → select token → move → next turn. Add turn indicator, legal move highlighting, current player banner. Game runs entirely client-side (no server yet).
+**Acceptance:**
+- Complete 4-player game playable on one device (pass phone around).
+- Roll button enabled only during `awaiting_roll` phase for current player.
+- Legal moves highlighted after roll.
+- Tapping legal token moves it and advances turn.
+- Tapping illegal token shows error toast.
+- Game detects winner and shows victory screen.
+- "New Game" button restarts.
 
-**Acceptance Criteria**:
-- Complete game playable with 4 human players on one device
-- Turn indicator shows current player
-- Legal moves highlighted when dice rolled
-- Selecting valid token moves it and passes turn
-- Illegal moves rejected with visual feedback
-- Game detects winner and shows victory screen
-- Can start new game after finishing
-
-**Files**:
-- `apps/mobile/store/gameStore.ts`
-- `apps/mobile/screens/GameScreen.tsx`
-- `apps/mobile/hooks/useGameLogic.ts`
+**Done when:** Full game playable locally with no bugs, smooth 60 FPS animations.
 
 ---
 
-## Phase 3: Online Multiplayer
+## Phase 3: Online Multiplayer (M3)
 
-**Goal**: Implement server-authoritative multiplayer with Socket.IO.
+**Goal:** Implement server-authoritative multiplayer via Socket.IO.
 
-### 3.1: Server Game Manager
-**Prompt**: Build game manager on server. Implement room creation, joining (by invite code), player ready checks. Store active games in memory (Map<roomId, GameState>). Add Socket.IO event handlers for room:create, room:join, room:ready. Validate player actions server-side using @ludi/rules.
+### 3.1: Server Room Management
+**Prompt:** Implement room management in `server/src/managers/RoomManager.ts`. Store active rooms in memory (`Map<roomId, Room>`). Add Socket.IO handlers in `server/src/handlers/room.ts`:
 
-**Acceptance Criteria**:
-- `room:create` generates unique 6-character invite code
-- `room:join` adds player to room (max 4)
-- `room:ready` tracks player ready state
-- Game starts when all 4 players ready
-- Server validates all moves via @ludi/rules
-- Full state broadcast on every change
+**Events to handle:**
+- `room:create { houseRules }` → generate roomId (UUID), inviteCode (6-char alphanumeric), return to client.
+- `room:join { inviteCode }` → find room, add player (max 4), assign colour (first available in Red/Green/Yellow/Blue order), broadcast `room:state`.
+- `room:ready { ready: boolean }` → mark player ready, broadcast `room:state`. If all 4 ready → transition to COUNTDOWN (3s), then IN_PROGRESS, emit `game:state` with `createGame()`.
+- `room:leave` → remove player, broadcast `room:state`. If host leaves → assign new host or close room.
 
-**Files**:
-- `server/src/game-manager.ts`
-- `server/src/room-manager.ts`
-- `server/src/handlers/room-handlers.ts`
-- `server/src/handlers/game-handlers.ts`
+**Acceptance:**
+- Create room returns `{ roomId, inviteCode }`.
+- Join room with valid code adds player, assigns colour.
+- Join room with invalid code returns error.
+- Join full room (4 players) returns error.
+- All-ready triggers game start (server emits `game:state` with initial GameState).
 
-### 3.2: Client Socket.IO Integration
-**Prompt**: Replace local game logic with Socket.IO client in apps/mobile. Connect to server, emit game actions, listen for state updates. Implement optimistic updates (predict locally, rollback if server rejects). Show connection status. Handle disconnects gracefully.
+**Done when:** Manual test with 2 clients (browser Socket.IO client or Postman) can create room, join, ready-up, and receive initial game state.
 
-**Acceptance Criteria**:
-- Client connects to server on app launch
-- Connection status indicator (green=connected, red=disconnected)
-- User can create or join room via UI
-- Optimistic UI updates for smooth UX
-- Server rejections rollback client state
-- Reconnection within 60s resumes game
+### 3.2: Server Game Loop
+**Prompt:** Implement game event handlers in `server/src/handlers/game.ts`:
 
-**Files**:
-- `apps/mobile/services/socket.ts`
-- `apps/mobile/hooks/useSocket.ts`
-- `apps/mobile/store/connectionStore.ts`
-- Update `apps/mobile/store/gameStore.ts` for server sync
+**Events to handle:**
+- `game:roll` → validate (current player + awaiting_roll phase), call `rollDice(state, () => Math.random())`, emit `game:diceRolled { playerId, value }` + `game:state`.
+- `game:move { tokenIndex }` → validate (current player + awaiting_move phase + tokenIndex in legalMoves), call `applyMove(state, tokenIndex)`, emit `game:tokenMoved { ... }` + `game:state`. If move rejected → emit `error { code: "MOVE_REJECTED", message: "..." }`.
 
-### 3.3: Room and Lobby UI
-**Prompt**: Create lobby screens for room creation and joining. Room creation shows invite code (shareable). Room lobby shows 4 player slots, ready checkboxes, house rules configuration. Host can kick players and configure rules. Start button enabled when all ready.
+Add turn timeout logic: 30s timer per phase, auto-roll or auto-move if timeout expires.
 
-**Acceptance Criteria**:
-- Create room flow: tap button → see invite code → share code
-- Join room flow: enter code → join lobby
-- Lobby shows all players with avatars/names
-- Ready checkboxes for each player
-- Host can configure house rules (toggle switches)
-- Start button only enabled when all 4 players ready
+**Acceptance:**
+- Client can roll dice, server responds with dice value.
+- Client can move token (valid), server applies move and broadcasts new state.
+- Client attempts invalid move → server rejects with error event.
+- Turn timeout → server auto-actions after 30s.
 
-**Files**:
-- `apps/mobile/screens/LobbyScreen.tsx`
-- `apps/mobile/screens/CreateRoomScreen.tsx`
-- `apps/mobile/screens/JoinRoomScreen.tsx`
-- `apps/mobile/components/RoomLobby.tsx`
-- `apps/mobile/components/HouseRules.tsx`
+**Done when:** 2 mobile clients can play a full match over network (create room → join → play to completion).
 
-### 3.4: Chat and Player Status
-**Prompt**: Add chat system (text messages during game). Show player connection status (green dot = online, gray = disconnected). Add "player disconnected" overlay with 60s countdown. Persist messages during session.
+### 3.3: Client Socket Integration
+**Prompt:** Replace local game loop in `apps/mobile` with Socket.IO client. Create `apps/mobile/services/socket.ts` with typed Socket.IO client (use `@ludi/protocol` types). Update `apps/mobile/stores/gameStore.ts` to sync from server `game:state` events. Implement optimistic updates: predict move locally (using `@ludi/rules`), then rollback if server rejects.
 
-**Acceptance Criteria**:
-- Chat input at bottom of game screen
-- Messages show sender name and timestamp
-- Chat scrolls automatically to newest message
-- Connection status dots for each player
-- Disconnection overlay shows countdown (60s → forfeit)
-- Chat messages persist during disconnection
+Add connection status indicator (green dot = connected, red = disconnected). Handle reconnection: on disconnect → show "Reconnecting..." overlay; on reconnect → server sends full `game:state` resync.
 
-**Files**:
-- `apps/mobile/components/Chat.tsx`
-- `apps/mobile/components/PlayerStatus.tsx`
-- `apps/mobile/store/chatStore.ts`
-- Update `server/src/handlers/chat-handlers.ts`
+**Acceptance:**
+- Mobile client connects to server on app launch.
+- Connection status indicator works.
+- Client can create/join room, send ready, roll dice, move token.
+- Optimistic UI updates (token moves immediately), rollback on server rejection.
+- Reconnect within 60s → game resumes from server state.
+
+**Done when:** 2 mobile clients can play online match with smooth UX (no noticeable lag on move, optimistic prediction works).
+
+### 3.4: Lobby UI and Chat
+**Prompt:** Create lobby screens:
+- `apps/mobile/app/lobby/create.tsx`: Create room form (house rules toggles), displays invite code after creation, shareable via Share API.
+- `apps/mobile/app/lobby/join.tsx`: Enter invite code input, join button.
+- `apps/mobile/app/lobby/[inviteCode].tsx`: Room lobby showing 4 player slots, ready checkboxes, house rules summary. Host can kick players (emit `room:kick { playerId }`). "Start Game" button visible to host when all ready.
+
+Add chat: `apps/mobile/components/Chat.tsx` (text input + message list). Emit `chat:send { message }`, listen for `chat:message { playerId, message, timestamp }`.
+
+**Acceptance:**
+- Create room flow: tap Create → configure house rules → see invite code → copy/share.
+- Join room flow: enter code → see lobby with other players.
+- Lobby shows ready states, host controls.
+- Chat works during match (messages broadcast to all players).
+
+**Done when:** Full multiplayer flow works: create → share code → friend joins → both ready → play match with chat.
 
 ---
 
-## Phase 4: Video Chat (LiveKit)
+## Phase 4: Video Chat (M4)
 
-**Goal**: Integrate LiveKit for real-time video and audio.
+**Goal:** Integrate LiveKit for real-time video + audio.
 
 ### 4.1: LiveKit Server Token Generation
-**Prompt**: Add LiveKit token generation to server. When game enters READY_CHECK, generate LiveKit room and tokens for all 4 players. Return tokens to clients. Room name = game roomId. Tokens valid for 2 hours.
+**Prompt:** Add LiveKit token generation in `server/src/services/livekit.ts`. Use `livekit-server-sdk`:
 
-**Acceptance Criteria**:
-- Server generates LiveKit room after ready check
-- Each player receives unique LiveKit token
-- Token payload includes player identity (name, color)
-- Tokens expire after 2 hours
-- Environment variables for LIVEKIT_API_KEY and LIVEKIT_API_SECRET
+```ts
+import { AccessToken } from 'livekit-server-sdk';
 
-**Files**:
-- `server/src/livekit/token-generator.ts`
-- Update `server/src/handlers/game-handlers.ts`
-- Update `.env.example`
+export function generateLivekitToken(roomName: string, userId: string, userName: string): string {
+  const at = new AccessToken(process.env.LIVEKIT_API_KEY, process.env.LIVEKIT_API_SECRET, {
+    identity: userId,
+    name: userName,
+  });
+  at.addGrant({ roomJoin: true, room: roomName, canPublish: true, canSubscribe: true });
+  return at.toJwt();
+}
+```
 
-### 4.2: LiveKit Mobile Integration
-**Prompt**: Integrate @livekit/react-native in apps/mobile. Connect to LiveKit room after countdown. Show 4 video tiles (grid layout). Add mute/unmute and camera on/off buttons. Handle permissions (camera, microphone). Show video connection quality indicators.
+In `server/src/handlers/game.ts`, when game transitions to IN_PROGRESS (after COUNTDOWN), generate tokens for all 4 players and emit `livekit:token { token, roomName }` to each.
 
-**Acceptance Criteria**:
-- Video chat starts after 3-2-1 countdown
-- 4 video tiles in grid (or picture-in-picture)
-- Audio works bidirectionally
-- Mute button mutes local audio
-- Camera button toggles local video
-- Permissions requested on first use
-- Graceful fallback if permissions denied
-- Connection quality indicator (green/yellow/red)
+**Acceptance:**
+- Server generates LiveKit tokens after ready check.
+- Each player receives unique token via `livekit:token` event.
+- Token includes identity (userId) and room name (`ludi-{roomId}`).
 
-**Files**:
-- `apps/mobile/components/VideoChat.tsx`
-- `apps/mobile/services/livekit.ts`
-- `apps/mobile/hooks/useVideoChat.ts`
-- Update `apps/mobile/app.json` for permissions
+**Done when:** Server emits valid LiveKit tokens (verify with LiveKit dashboard or token decoder).
 
-### 4.3: Video Layout and Picture-in-Picture
-**Prompt**: Improve video layout. Add picture-in-picture mode (small floating video tiles over game board). Add "focus mode" (large video, small board). Let users drag/resize video tiles. Add "hide video" option.
+### 4.2: LiveKit Client Integration
+**Prompt:** Integrate `@livekit/react-native` in `apps/mobile`. Create `apps/mobile/components/VideoChat.tsx`:
 
-**Acceptance Criteria**:
-- Default: side-by-side (board + video)
-- PiP mode: video tiles float over board (draggable)
-- Focus mode: video large, board small (swappable)
-- Hide video: collapse video section, audio continues
-- Layout preference persisted
-- Smooth transitions between layouts
+- Listen for `livekit:token` event from server.
+- Connect to LiveKit room using token.
+- Render 4 video tiles in grid layout (or PiP mode).
+- Add mute/unmute button (audio) and camera toggle button (video).
+- Request camera/microphone permissions on first use (use `expo-av` or native permission APIs).
 
-**Files**:
-- `apps/mobile/components/VideoLayout.tsx`
-- `apps/mobile/components/PiPVideo.tsx`
-- `apps/mobile/store/layoutStore.ts`
+Add video layout toggle: default side-by-side (board + video), PiP mode (floating video over board), focus mode (large video, small board).
+
+**Acceptance:**
+- Video chat starts after COUNTDOWN (all 4 players see each other).
+- Audio works bidirectionally.
+- Mute button mutes local audio.
+- Camera button toggles local video.
+- Permissions requested gracefully (fallback if denied).
+- Connection quality indicator (green/yellow/red based on LiveKit stats).
+
+**Done when:** 4 players in match can see/hear each other via LiveKit, controls work, no crashes on permission denial.
 
 ---
 
-## Phase 5: User Accounts and Persistence
+## Phase 5: Accounts & Persistence (M5)
 
-**Goal**: Add Supabase Auth and persist game data.
+**Goal:** Add Supabase Auth and persist match data.
 
-### 5.1: Supabase Auth Setup
-**Prompt**: Integrate Supabase Auth in apps/mobile. Support guest accounts (auto-generated) and full accounts (email/password, Google, Apple). Add login/signup screens. Store user token in secure storage. Send token to server on Socket.IO connection.
+### 5.1: Supabase Auth Integration
+**Prompt:** Integrate Supabase Auth in `apps/mobile`. Create `apps/mobile/services/auth.ts`:
 
-**Acceptance Criteria**:
-- Guest accounts created automatically on first launch
-- Users can upgrade to full account (email/password)
-- Social login (Google, Apple) works on native
-- User token stored securely (Expo SecureStore)
-- Token sent to server on Socket.IO auth
-- Server validates token with Supabase
+- On first launch: create guest account (anonymous sign-in via Supabase).
+- Add login/signup screens (`app/auth/login.tsx`, `app/auth/signup.tsx`): email/password, Google OAuth, Apple Sign-In.
+- Store user session in Zustand store (`apps/mobile/stores/authStore.ts`).
+- Send Supabase access token to server on Socket.IO connection (auth handshake).
 
-**Files**:
-- `apps/mobile/services/auth.ts`
-- `apps/mobile/screens/LoginScreen.tsx`
-- `apps/mobile/screens/SignupScreen.tsx`
-- `apps/mobile/store/authStore.ts`
-- Update `server/src/middleware/auth.ts`
+In `server/src/middleware/auth.ts`: validate Supabase JWT on Socket.IO connection, attach `userId` to socket.
 
-### 5.2: User Profiles
-**Prompt**: Create user profile screen in apps/mobile. Display: username, avatar, join date, total games, wins, favorite color. Add edit profile (username, avatar upload). Store profiles in Supabase.
+**Acceptance:**
+- Guest accounts created automatically on first launch.
+- Users can upgrade to full account (email/password or social).
+- Social login works on iOS/Android (use Expo AuthSession).
+- User token sent to server, server validates via Supabase client.
 
-**Acceptance Criteria**:
-- Profile screen shows user stats
-- Edit profile updates Supabase users table
-- Avatar upload to Supabase Storage
-- Avatar displayed in game lobby and video chat
-- Username validation (min 3 chars, alphanumeric)
+**Done when:** User can create account, log in, and server recognizes authenticated user (socket.userId populated).
 
-**Files**:
-- `apps/mobile/screens/ProfileScreen.tsx`
-- `apps/mobile/components/AvatarPicker.tsx`
-- Update `server/src/database/users.ts`
+### 5.2: Match Persistence
+**Prompt:** Persist completed matches to Supabase. In `server/src/database/matches.ts`:
 
-### 5.3: Database Persistence
-**Prompt**: Persist completed games to Supabase. When game ends, server writes to matches and match_players tables. Include final state, placements, stats (turns, captures). Add match history screen in app (list past games, view details).
+```ts
+export async function saveMatch(matchData: {
+  roomId: string;
+  houseRules: HouseRules;
+  winnerId: string;
+  players: { userId: string; color: Color; placement: number; stats: PlayerStats }[];
+  startedAt: Date;
+  endedAt: Date;
+  finalState: GameState;
+}): Promise<void> {
+  // Insert into matches table, then insert match_players rows
+}
+```
 
-**Acceptance Criteria**:
-- Completed games saved to Supabase matches table
-- Match players saved with placements and stats
-- Server handles database writes on game:over event
-- Match history screen shows past 20 games
-- Match detail view shows full game summary
-- Pagination for match history (20 per page)
+Call `saveMatch()` when game reaches `phase: "finished"`.
 
-**Files**:
-- `server/src/database/matches.ts`
-- `apps/mobile/screens/MatchHistoryScreen.tsx`
-- `apps/mobile/components/MatchCard.tsx`
-- Database migrations in `server/migrations/`
+Add match history screen in `apps/mobile/app/(tabs)/history.tsx`: fetch user's past matches from Supabase (`SELECT * FROM match_players WHERE user_id = ... ORDER BY match.ended_at DESC LIMIT 20`), display as list (opponent names, result, date). Tap match → detail view (full game summary, placements, stats).
 
-### 5.4: Reconnection with Persistence
-**Prompt**: Improve reconnection. When user disconnects, persist game state to Supabase (active_games table). On reconnect, check for active game and resume. Handle cases where user closed app mid-game.
+**Acceptance:**
+- Completed matches saved to Supabase.
+- Match history screen shows past 20 matches.
+- Match detail view shows winner, placements, house rules used.
+- Pagination works (load more button).
 
-**Acceptance Criteria**:
-- Active games saved to Supabase on state changes
-- Reconnection within 60s resumes from DB state
-- App re-launch checks for active game and prompts resume
-- If all players disconnect, game persists for 10 minutes
-- After 10 minutes, game archived as abandoned
-
-**Files**:
-- Update `server/src/database/games.ts`
-- Update `server/src/game-manager.ts` for persistence
-- Update `apps/mobile/services/socket.ts` for resume
+**Done when:** User can view full match history after playing multiple games.
 
 ---
 
-## Phase 6: Polish and Post-MVP
+## Phase 6: Polish & Launch (M6)
 
-**Goal**: Final polish, optional features, and launch prep.
+### 6.1: Sound Effects and Haptics
+**Prompt:** Add sound effects using `expo-av`. Create `apps/mobile/services/sound.ts`:
 
-### 6.1: Animations and Sound Effects
-**Prompt**: Add sound effects (dice roll, token move, capture, win). Add haptic feedback (iOS/Android). Improve animations (token hop on move, celebration on win). Add background music (toggleable).
+Sounds needed:
+- Dice roll (shake + settle)
+- Token move (hop sound)
+- Capture (opponent token sent home)
+- Win (fanfare)
 
-**Acceptance Criteria**:
-- Sound effects for all major actions
-- Sounds can be muted in settings
-- Haptic feedback on roll and move
-- Token hop animation on move
-- Confetti animation on win
-- Background music (looping, toggleable)
+Add haptic feedback using `expo-haptics`: light impact on roll, medium impact on capture, heavy impact on win.
 
-**Files**:
-- `apps/mobile/services/sound.ts`
-- `apps/mobile/services/haptics.ts`
-- `apps/mobile/assets/sounds/`
-- Update `apps/mobile/components/Token.tsx` for animations
+Add background music (looping, toggleable in settings). Add settings screen (`app/(tabs)/settings.tsx`) with toggles: sound FX on/off, music on/off, haptics on/off.
 
-### 6.2: Onboarding Tutorial
-**Prompt**: Create interactive tutorial for first-time users. Step-by-step guide covering: board layout, rolling dice, moving tokens, captures, winning. Use overlay hints and guided actions. Skippable.
+**Acceptance:**
+- Sound effects play for all major actions.
+- Sounds respect settings toggle (can be muted).
+- Haptic feedback works on iOS and Android.
+- Background music loops and respects settings toggle.
 
-**Acceptance Criteria**:
-- Tutorial launches on first app open
-- Step-by-step overlay guides user
-- User can skip tutorial
-- Tutorial replayable from settings
-- Tutorial covers all core mechanics
+**Done when:** Game feels polished with audio and haptic feedback.
 
-**Files**:
-- `apps/mobile/screens/TutorialScreen.tsx`
-- `apps/mobile/components/TutorialOverlay.tsx`
-- `apps/mobile/store/tutorialStore.ts`
+### 6.2: App Store Preparation
+**Prompt:** Prepare for app store submission:
 
-### 6.3: Settings and Preferences
-**Prompt**: Add settings screen. Options: sound on/off, music on/off, haptics on/off, video quality (auto/high/low), notification preferences, language (English only for MVP, but structure for i18n). Add about screen with credits and version.
+1. Generate app icons (all required sizes for iOS and Android) using `expo-icon` or Figma export. Place in `apps/mobile/assets/`.
+2. Create splash screens (iOS + Android) using `expo-splash-screen`.
+3. Take 5 screenshots per platform (iPhone 6.7", iPhone 6.5", iPad 12.9", Android phone, Android tablet): home screen, lobby, active game, video chat, match history.
+4. Write app store descriptions (short: 80 chars, long: 4000 chars) in `docs/APP_STORE.md`.
+5. Configure EAS build profiles in `apps/mobile/eas.json`: development (internal testing), preview (TestFlight/internal), production (App Store/Google Play).
+6. Add privacy policy and terms of service (web pages), link in app settings.
 
-**Acceptance Criteria**:
-- Settings screen accessible from main menu
-- All toggles persist (AsyncStorage)
-- Video quality setting applied to LiveKit
-- About screen shows version, credits, links (privacy, terms)
+**Acceptance:**
+- App icons present for all sizes (iOS 1024×1024, adaptive icon for Android).
+- Splash screens configured and display correctly.
+- Screenshots captured (5 per platform, landscape + portrait where relevant).
+- App store descriptions written.
+- EAS build profiles configured.
+- Privacy policy and terms accessible from app.
 
-**Files**:
-- `apps/mobile/screens/SettingsScreen.tsx`
-- `apps/mobile/screens/AboutScreen.tsx`
-- `apps/mobile/store/settingsStore.ts`
-
-### 6.4: App Store Preparation
-**Prompt**: Prepare for app store submission. Create app icons (all sizes), splash screens, screenshots (iOS + Android). Write app store descriptions. Configure EAS build profiles (production, preview). Add privacy policy and terms of service placeholders.
-
-**Acceptance Criteria**:
-- App icons generated for all required sizes
-- Splash screens for iOS and Android
-- 5 screenshots per platform (gameplay, lobby, video)
-- App store description (short + long)
-- EAS build profiles configured
-- Privacy policy and terms pages (web links)
-
-**Files**:
-- `apps/mobile/assets/` (icons, splash)
-- `apps/mobile/eas.json`
-- `docs/PRIVACY.md`
-- `docs/TERMS.md`
-- `docs/APP_STORE.md` (submission checklist)
+**Done when:** Ready to run `eas build --platform all --profile production` and submit to stores.
 
 ---
 
-## Post-MVP Prompts (Future)
+## Debugging Prompts (Use When Stuck)
 
-### Friends System
-**Prompt**: Add friend system. Send/accept friend requests. View friends list. Invite friends directly to games (bypass invite codes).
+### D1: State Desync Investigation
+**Prompt:** Client and server game states are out of sync. Add debug logging in `packages/rules` functions (log all inputs/outputs), enable verbose Socket.IO logging on server (`io.on('connection', (socket) => { socket.onAny((event, ...args) => console.log('[SOCKET]', event, args)); })`). Trace specific desync case: reproduce with 2 clients, log full state snapshots on every `game:state` emit/receive. Identify divergence point (which event caused states to differ). Fix root cause (likely missing state update or incorrect optimistic prediction).
 
-### AI Opponents
-**Prompt**: Implement AI player using Monte Carlo tree search. AI can fill empty slots in rooms. Difficulty levels: Easy, Medium, Hard.
+### D2: LiveKit Connection Failures
+**Prompt:** LiveKit video not connecting or dropping frequently. Check:
+1. LiveKit token expiry (default 1hr, increase to 2hr).
+2. Token permissions (canPublish, canSubscribe both true).
+3. Network: LiveKit requires UDP ports, some corporate networks block. Test on mobile data vs WiFi.
+4. Logs: enable LiveKit SDK debug logs (`livekit.setLogLevel('debug')`).
+5. Dashboard: check LiveKit cloud dashboard for connection attempts, errors.
 
-### Tournaments
-**Prompt**: Add tournament system. Create brackets, schedule matches, track standings. Public and private tournaments.
+Add connection quality indicator using LiveKit connection stats (ping, packet loss). Show warning if quality degrades. Implement reconnection logic (detect disconnect, attempt reconnect with same token).
 
-### Spectator Mode
-**Prompt**: Allow users to spectate ongoing games. Read-only Socket.IO connection. Live video feed (optional).
+### D3: Supabase RLS Policy Issues
+**Prompt:** Database queries failing with "permission denied" errors. Review Supabase RLS policies:
+1. `users` table: users can SELECT/UPDATE own row only.
+2. `matches` table: public read (anyone can view match history), server writes only (use service key).
+3. `match_players` table: users can SELECT own rows, server writes.
+4. `rooms` table: participants can SELECT, host can UPDATE, server writes.
 
-### Match Replay
-**Prompt**: Record match history with full move log. Add replay screen with scrubbing timeline. Share replays with friends.
-
-### Monetization
-**Prompt**: Add in-app purchases (cosmetic skins, premium rooms). Integrate Stripe or RevenueCat. No pay-to-win mechanics.
+Use Supabase SQL editor to test policies with `auth.uid()` context. Add policy tests (insert test rows, query as different users, verify access). Fix policies by adding correct `USING` clauses.
 
 ---
 
-## Usage Instructions
+**End of Prompt Pack**
 
-### For Developers
-1. Complete phases in order (0 → 1 → 2 → 3 → 4 → 5 → 6)
-2. Each prompt is a discrete PR or commit
-3. Test thoroughly before moving to next prompt
-4. Update this file if requirements change
-
-### For AI Assistants
-1. User will provide a prompt from this file (or custom derivative)
-2. Implement the feature described
-3. Write tests to verify acceptance criteria
-4. Do not skip ahead to future phases
-5. Ask clarifying questions if prompt is ambiguous
-
-## Testing Checklist
-
-After each phase, verify:
-- [ ] All tests pass (`pnpm test`)
-- [ ] TypeScript compiles (`pnpm lint`)
-- [ ] App runs on iOS simulator
-- [ ] App runs on Android emulator
-- [ ] Server starts without errors
-- [ ] Socket.IO connection works
-- [ ] No console errors or warnings
-
-## Notes
-
-- This is a living document — update as requirements evolve
-- Actual prompts may be adapted based on progress
-- Some prompts may be split or combined as needed
-- Community feedback may influence future phases
+Next prompt: Choose from Phase 1 (start with 1.1 if scaffold complete) or debugging prompts if issues arise.

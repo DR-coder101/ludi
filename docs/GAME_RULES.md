@@ -1,246 +1,118 @@
-# Caribbean/Jamaican Ludo Rules
+# LUDI — Game Rules (Jamaican / Caribbean Ludo)
+### Source of truth for the rules engine. Cursor agents: read this before touching `packages/rules`.
 
-Official rules specification for Ludi. This document is the single source of truth for game mechanics.
+> House rules vary by family and island. Anything marked **[HOUSE]** must be a configurable toggle in `RoomConfig.houseRules`. Everything else is fixed for MVP.
 
-## Overview
+---
 
-Caribbean/Jamaican Ludo is a variant of the classic Ludo/Parcheesi board game with regional rule variations. This implementation focuses on authentic Jamaican rules with configurable house rules.
+## 1. Board & Setup
 
-## Board Layout
+- Standard 15×15 cross board: **52-cell main track** (circular), 4 corner yards (bases), 4 home columns of 6 cells leading to centre.
+- 4 players, colours in clockwise turn order: **Red → Green → Yellow → Blue**. (2–3 player games use a subset in this order.)
+- Each player has **4 tokens**, all starting in their yard.
+- Player start cells are 13 track positions apart: Red=0, Green=13, Yellow=26, Blue=39 (absolute track indices).
+- A token's journey: leave yard → travel the full 52-cell track clockwise → enter own home column → reach centre (home). Total steps from start cell to home = **57**.
 
-### Dimensions
-- **Board Size**: 15×15 grid
-- **Main Track**: 52 cells forming a cross-shaped circuit
-- **Start Positions**: Cell 0 (Red), 13 (Green), 26 (Yellow), 39 (Blue)
-- **Home Columns**: 5 cells leading to each player's "home" area
+## 2. Starting & Turn Order
 
-### Player Order
-Players take turns clockwise in this order:
-1. **Red** (starts at cell 0)
-2. **Green** (starts at cell 13)
-3. **Yellow** (starts at cell 26)
-4. **Blue** (starts at cell 39)
+- Highest opening roll goes first **[HOUSE: or youngest/host choice]**; play proceeds clockwise.
+- On your turn: roll one die (1–6), then move one legal token exactly that many steps.
 
-### Special Cells
+## 3. Leaving the Yard ("Coming Out")
 
-#### Safe Cells (Cannot be Captured)
-- **Starting cells**: 0, 13, 26, 39 (each player's entry point)
-- **Star cells**: 8, 21, 34, 47 (marked with stars on the board)
+- A token may leave the yard **only on a roll of exactly 6**, and is placed on its colour's start cell.
+- The start cell is a **safe cell** while occupied by its own colour's newly-entered token(s).
+- **[HOUSE]** Some play that you cannot come out if your own start cell is occupied by an opponent blockade — standard: blockades block everyone (see §6).
 
-#### Home Column Entry Points
-- Red: Cell 51 → Red home column (5 cells)
-- Green: Cell 12 → Green home column (5 cells)
-- Yellow: Cell 25 → Yellow home column (5 cells)
-- Blue: Cell 38 → Blue home column (5 cells)
+## 4. Rolling a 6
 
-### Total Journey
-Each token must travel **57 cells total**:
-- 52 cells on main track (from start position to home entry)
-- 5 cells in home column
-- Exact count required to enter final "home" position
+- Rolling a 6 grants **another roll** after completing the move.
+- **[HOUSE — Jamaican standard]** Maximum **two consecutive sixes**: if you roll a third consecutive 6, the turn is forfeited (no move) and play passes on. Toggle: `maxConsecutiveSixes: 2 | 3 | unlimited`.
 
-## Game Components
+## 5. Capturing ("Licking" / sending home)
 
-### Tokens
-- Each player controls **4 tokens** of their color
-- Tokens start in the **yard** (off-board staging area)
-- Tokens must **come out** onto the starting cell before moving
+- Landing on a cell occupied by a **single** opponent token captures it: the opponent token returns to its yard, and your token takes the cell.
+- Capturing grants **no extra roll** in standard Jamaican play **[HOUSE: some families award an extra roll on capture — toggle `extraRollOnCapture`]**.
+- You **cannot** capture on a safe cell (see §7).
+- A token in its home column or centre can never be captured.
 
-### Dice
-- Single **6-sided die** per roll
-- Only the current player rolls
-- Rolls are server-authoritative (client cannot manipulate)
+## 6. Blockades ("Doubles")
 
-## Core Rules
+- **Two tokens of the same colour on one cell form a blockade.**
+- A blockade **cannot be captured** and **cannot be passed or landed on by any token** — including the blockade owner's other tokens and including tokens of the same colour not part of the blockade.
+- A blockade may be formed on safe cells and start cells.
+- **[HOUSE]** `blockadeCanMoveTogether: boolean` — some families allow a blockade to move as a pair when the dice value permits; standard Jamaican: **false**, each token moves individually and moving one off the cell breaks the blockade.
+- Three or four tokens stacked = still treated as a blockade (2-token unit); the extras are just stacked tokens and may leave individually, but the cell remains impassable while ≥2 same-colour tokens remain.
 
-### Starting the Game
+## 7. Safe Cells
 
-1. **Coming Out**: A token can only leave the yard and enter the starting cell by rolling a **6**
-2. **First Roll**: Players take turns rolling until someone rolls a 6 to bring out their first token
-3. **Multiple Tokens**: Players can have multiple tokens on the board simultaneously
+- The 4 **start cells** and the 4 **star-marked cells** (indices 8, 21, 34, 47 in standard layout) are safe: tokens of multiple colours may share them; **no captures** occur there.
+- Exception per §6: a blockade on a safe cell is still impassable.
 
-### Turn Structure
+## 8. Movement Rules
 
-1. **Roll**: Current player rolls the die (or server auto-rolls after 30s timeout)
-2. **Select Token**: Player selects which token to move (if multiple legal moves exist)
-3. **Move**: Server validates and applies the move
-4. **Extra Roll**: If the player rolled a 6, they get another roll immediately
-5. **Pass Turn**: If no legal moves or no extra roll earned, turn passes to next player
+- Tokens move **clockwise only** on the main track; no backward movement, ever.
+- You must move if you have any legal move. If no token can legally move (all blocked / overshooting home / blocked by blockades), the turn passes.
+- A token enters its home column after completing the full track; the home column requires **exact count** — an overshooting roll is not a legal move for that token.
+- Reaching the centre ("getting home") removes the token from play. **[HOUSE]** `exactFinishBonus` — some award an extra roll for bringing a token home; standard: no extra roll.
 
-### Movement Rules
+## 9. Winning
 
-1. **Forward Only**: Tokens move clockwise around the track
-2. **Exact Moves**: Must move the exact number rolled (cannot move fewer steps)
-3. **Track Completion**: After completing the 52-cell track, tokens enter their home column
-4. **Exact Finish**: Must roll the exact number to reach the final home position (no overshooting)
-5. **Blocked Moves**: If a move would land on an illegal cell, that token cannot be moved
+- First player to bring all 4 tokens home **wins the match**.
+- **[HOUSE]** `playForPlacements: boolean` — continue for 2nd/3rd place after a winner; standard Jamaican money games: winner takes all, match ends immediately.
 
-### Captures
+## 10. Edge Cases the Engine MUST Handle (test list)
 
-1. **Landing on Opponent**: If your token lands on an opponent's token (not on a safe cell), the opponent's token is captured
-2. **Capture Effect**: Captured token returns to its yard and must come out again with a 6
-3. **Safe Cells**: Tokens on starting cells (0, 13, 26, 39) or star cells (8, 21, 34, 47) cannot be captured
-4. **Own Tokens**: Landing on your own token is allowed (creates a blockade)
+1. Rolling 6 with all tokens in yard → must come out (no other move exists).
+2. Third consecutive 6 → forfeit, even if moves were available.
+3. Landing on opponent single token → capture; on opponent blockade → illegal move.
+4. Moving onto own single token → forms blockade.
+5. Blockade directly ahead → token cannot pass even with sufficient roll.
+6. Exact count required into home; overshoot = illegal for that token (other tokens may still move).
+7. Safe cell: two different colours coexist; third colour also fine.
+8. Capture on entry to track (coming out onto opponent's token on your start cell) — start cell is safe → NO capture.
+9. All 4 tokens of a colour stacked on one non-safe cell: opponent landing attempt is illegal (blockade present).
+10. No-legal-move auto-pass, including the case where the only movable token would overshoot home.
+11. 2-player and 3-player games: unused colours' cells are plain track cells.
+12. Turn timeout → server picks a random legal move (online mode only).
 
-### Blockades
+## 11. Engine API Contract (`packages/rules`)
 
-1. **Formation**: When **2 tokens of the same color** occupy the same cell, they form a **blockade**
-2. **Impassable**: Opponent tokens **cannot pass through** a blockade (move is illegal if it would pass through)
-3. **Breaking**: A blockade can only be broken when one of the two tokens moves away
-4. **Home Column**: Blockades do not exist in home columns (only on the main track)
+```ts
+type Color = "red" | "green" | "yellow" | "blue";
 
-### Extra Rolls
-
-1. **Rolling a 6**: Always grants an extra roll
-2. **Consecutive Sixes**: Limited by house rules (default: 2 consecutive sixes allowed, 3rd consecutive 6 forfeits turn)
-3. **Captures**: May grant extra roll depending on house rules (default: no extra roll on capture)
-4. **Entering Home**: No extra roll for reaching final home position (game ends or turn passes)
-
-### Winning
-
-1. **Primary Win Condition**: First player to get all 4 tokens into their home area wins
-2. **Placements**: Other players continue to determine 2nd, 3rd, 4th place (house rule toggle)
-3. **Exact Count**: Tokens must enter home with exact die roll (e.g., if 2 cells away, must roll a 2)
-
-## House Rules (Configurable Toggles)
-
-### 1. Max Consecutive Sixes
-- **Options**: 2 (default), 3, unlimited
-- **Effect**: After rolling N consecutive sixes, the Nth six is forfeited and turn passes
-- **Example**: With max=2, rolling 6-6-6 causes the 3rd roll to be ignored and turn ends
-
-### 2. Extra Roll on Capture
-- **Default**: `false` (no extra roll)
-- **Options**: `true` (capturing grants an extra roll like rolling a 6)
-- **Effect**: Adds strategic incentive to hunt opponent tokens
-
-### 3. Blockade Movement
-- **Default**: `false` (blockade must break apart to move)
-- **Options**: `true` (blockade can move together as a unit)
-- **Effect**: If true, both tokens in a blockade move together when either is selected
-
-### 4. Exact Finish Bonus
-- **Default**: `false` (no bonus)
-- **Options**: `true` (exact finish grants extra roll)
-- **Effect**: Landing exactly on home grants another roll, potentially speeding up endgame
-
-### 5. Play for Placements
-- **Default**: `false` (game ends when first player finishes)
-- **Options**: `true` (all players continue until placements determined)
-- **Effect**: Determines if only 1st place matters or if 2nd/3rd/4th are tracked
-
-## Edge Cases for Testing
-
-The rules engine must handle these scenarios correctly:
-
-1. **No Legal Moves**: Player has tokens on board but all moves are blocked → Turn passes automatically
-2. **All Tokens in Yard, No 6**: Player cannot come out → Turn passes automatically
-3. **Home Column with No Exact Roll**: Token 2 cells from home, rolls a 6 → Cannot move, turn passes (or moves another token)
-4. **Blockade Bypassing**: Opponent has blockade on cell 10, your token on cell 7 rolls a 4 → Move is illegal
-5. **Capture on Last Cell Before Home**: Opponent token on cell 51 (Red's home entry), Red rolls to land on 51 → Capture happens, Red enters home column
-6. **Triple Six with Max=2**: Rolls 6, 6, 6 → First two rolls valid, third forfeits turn
-7. **Fourth Token Finishing Exactly**: Player rolls exact number for 4th token → Player wins immediately
-8. **Safe Cell Stacking**: Multiple opponent tokens on same safe cell → All are safe, all can coexist
-9. **Blockade on Safe Cell**: Two tokens of same color on star cell → Still forms blockade, still safe from capture
-10. **Home Column Collision**: Two tokens of same color in home column → Both allowed, no blockade rules apply
-11. **Capture During Extra Roll Sequence**: Roll 6, move and capture, roll again → Extra roll from 6 continues (capture doesn't reset sequence)
-12. **Simultaneous Win**: Player finishes 4th token exactly when time limit expires → Player wins (server timestamp breaks tie)
-
-## Turn Timeouts
-
-- **Roll Phase**: 30 seconds to roll (or server auto-rolls)
-- **Move Phase**: 30 seconds to select token (or server auto-selects first legal move)
-- **Disconnection**: 60 seconds grace period before forfeit
-
-## Implementation Notes for Developers
-
-### Game State Structure
-
-```typescript
-interface GameState {
-  phase: 'LOBBY' | 'READY_CHECK' | 'IN_PROGRESS' | 'FINISHED';
-  players: Player[]; // Red, Green, Yellow, Blue
-  currentPlayerIndex: number;
-  turnPhase: 'awaiting_roll' | 'rolled' | 'awaiting_move';
-  lastRoll: number | null;
-  consecutiveSixes: number;
-  board: BoardState; // Token positions
-  houseRules: HouseRules;
-  winner: PlayerId | null;
-  placements: PlayerId[]; // Ordered 1st, 2nd, 3rd, 4th
-}
-```
-
-### Pure Function Design
-
-All rules logic must be **pure functions**:
-- No side effects (no network calls, no DB writes, no logging in logic)
-- Immutable (return new state, don't mutate input)
-- Deterministic (same input + RNG = same output)
-- Testable (inject RNG for reproducible tests)
-
-Example:
-```typescript
-// ❌ BAD: Mutates state, uses Math.random
-function rollDice(state: GameState): GameState {
-  state.lastRoll = Math.floor(Math.random() * 6) + 1;
-  return state;
-}
-
-// ✅ GOOD: Pure, injected RNG, returns new state
-function rollDice(state: GameState, rng: () => number): GameState {
-  return {
-    ...state,
-    lastRoll: Math.floor(rng() * 6) + 1,
+interface GameConfig {
+  playerColors: Color[];           // 2–4 colours
+  houseRules: {
+    maxConsecutiveSixes: 2 | 3 | "unlimited";
+    extraRollOnCapture: boolean;
+    blockadeCanMoveTogether: boolean;
+    exactFinishBonus: boolean;
+    playForPlacements: boolean;
   };
 }
-```
 
-### Server Authority
+interface TokenState { color: Color; index: 0|1|2|3; pos: TokenPos; }
+// TokenPos: { zone: "yard" } | { zone: "track"; cell: number } /* 0–51 absolute */
+//         | { zone: "homeColumn"; step: 1..6 } | { zone: "home" }
 
-```typescript
-// Client sends intent only
-socket.emit('game:move', { tokenIndex: 2 });
-
-// Server validates via @ludi/rules
-const legalMoves = getLegalMoves(gameState);
-if (!legalMoves.some(m => m.tokenIndex === 2)) {
-  socket.emit('error', { code: 'ILLEGAL_MOVE', message: 'That token cannot move' });
-  return;
+interface GameState {
+  config: GameConfig;
+  tokens: TokenState[];            // 4 per active colour
+  turn: Color;
+  phase: "awaiting_roll" | "awaiting_move" | "finished";
+  dice: number | null;
+  consecutiveSixes: number;
+  winner: Color | null;
+  placements: Color[];
 }
 
-// Server applies move and broadcasts result
-const newState = applyMove(gameState, { tokenIndex: 2 });
-io.to(roomId).emit('game:state', newState);
+createGame(config): GameState
+rollDice(state, rng): { state, value }        // server supplies rng
+legalMoves(state): { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[]
+applyMove(state, tokenIndex): { state, events: GameEvent[] }
+// GameEvent: "moved" | "came_out" | "captured" | "blockade_formed" | "blockade_broken"
+//          | "entered_home_column" | "got_home" | "extra_turn" | "turn_passed" | "game_over"
 ```
 
-## Visual Design Notes
-
-### Board Colors
-- **Red**: #E53E3E (Chakra red.500)
-- **Green**: #38A169 (Chakra green.500)
-- **Yellow**: #D69E2E (Chakra yellow.600)
-- **Blue**: #3182CE (Chakra blue.500)
-
-### Cell Types
-- **Normal**: White/light gray
-- **Start**: Player's color, thick border
-- **Star**: Gold star icon, safe cell indicator
-- **Home Column**: Player's color gradient
-- **Home (final)**: Player's color, checkered flag icon
-
-### Tokens
-- Circular pieces with player color
-- Drop shadow for depth
-- Smooth animations (Reanimated)
-- Scale up on hover/selection
-
-## References
-
-- [Ludo Wikipedia](https://en.wikipedia.org/wiki/Ludo_(board_game))
-- Caribbean/Jamaican variations collected from community gameplay
-- This document supersedes conflicting interpretations
-
-## Changelog
-
-- **v0.1.0** (Phase 0): Initial rules specification
+**Purity requirement:** no I/O, no Date, no Math.random — rng injected. Every function returns new state (immutable). 100% branch coverage target on this package.
