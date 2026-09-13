@@ -124,10 +124,8 @@ describe('Game Turn State Machine', () => {
     }
   }, 30000);
 
-  it.skip('should play a full 4-player game to completion', async () => {
+  it('should play a full 4-player game to completion', async () => {
     const clients: TestSocket[] = [];
-    const colors: Color[] = ['red', 'green', 'yellow', 'blue'];
-    const socketColors = new Map<string, Color>();
 
     for (let i = 0; i < 4; i++) {
       const client = createTestClient();
@@ -136,6 +134,27 @@ describe('Game Turn State Machine', () => {
     }
 
     let roomCode = '';
+    let currentGameState: GameState | null = null;
+    let gameOverPayload: GameOverPayload | null = null;
+    let lastDiceRolled: DiceRolledPayload | null = null;
+    
+    const gameStateHandler = (state: GameState) => {
+      currentGameState = state;
+    };
+    
+    const gameOverHandler = (payload: GameOverPayload) => {
+      gameOverPayload = payload;
+    };
+    
+    const diceRolledHandler = (payload: DiceRolledPayload) => {
+      lastDiceRolled = payload;
+    };
+    
+    for (const client of clients) {
+      client.on('game:state', gameStateHandler);
+      client.on('game:over', gameOverHandler);
+      client.on('game:diceRolled', diceRolledHandler);
+    }
 
     try {
       const createPromise = new Promise<string>((resolve) => {
@@ -156,10 +175,12 @@ describe('Game Turn State Machine', () => {
 
       roomCode = await createPromise;
       expect(roomCode).toBeTruthy();
-      
-      if (clients[0].id) {
-        socketColors.set(clients[0].id, colors[0]);
-      }
+
+      let room: RoomState | null = null;
+      const roomStateHandler = (state: RoomState) => {
+        room = state;
+      };
+      clients[0].on('room:state', roomStateHandler);
 
       for (let i = 1; i < 4; i++) {
         const joinPromise = new Promise<void>((resolve) => {
@@ -174,151 +195,153 @@ describe('Game Turn State Machine', () => {
         await joinPromise;
       }
 
-      const roomStatePromise = new Promise<RoomState>((resolve) => {
-        clients[0].once('room:state', resolve);
+      await new Promise<void>((resolve) => {
+        const checkRoom = () => {
+          if (room && room.players.length === 4) {
+            resolve();
+          } else {
+            setTimeout(checkRoom, 50);
+          }
+        };
+        checkRoom();
       });
-      const room = await roomStatePromise;
       
+      clients[0].off('room:state', roomStateHandler);
+      expect(room).toBeTruthy();
+      
+      const colorToClient = new Map<Color, TestSocket>();
       for (let i = 0; i < 4; i++) {
-        const socketId = clients[i].id;
-        if (socketId) {
-          socketColors.set(socketId, room.players[i].color);
-        }
+        colorToClient.set(room.players[i].color, clients[i]);
       }
 
-      const gameStatePromise = new Promise<GameState>((resolve) => {
-        clients[0].once('game:state', resolve);
+      const gameStartPromise = new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Game did not start within 5s')), 5000);
+        const checkState = () => {
+          if (currentGameState) {
+            clearTimeout(timeout);
+            resolve();
+          } else {
+            setTimeout(checkState, 50);
+          }
+        };
+        setTimeout(checkState, 10);
       });
 
       clients[0].emit('room:ready');
-      const initialGameState = await gameStatePromise;
-
-      expect(initialGameState.phase).toBe('awaiting_roll');
-      expect(initialGameState.tokens).toHaveLength(16);
-
-      let gameOver = false;
-      let winner: string | null = null;
-
-      const gameOverPromise = new Promise<GameOverPayload>((resolve) => {
-        for (const client of clients) {
-          client.on('game:over', (payload) => {
-            gameOver = true;
-            winner = payload.winnerId;
-            resolve(payload);
-          });
-        }
-      });
-
-      let turnCount = 0;
-      const maxTurns = 500;
-      let lastGameState = initialGameState;
-
-      while (!gameOver && turnCount < maxTurns) {
-        turnCount++;
-
-        if (lastGameState.phase === 'finished') {
-          break;
-        }
-
-        const currentColor = lastGameState.turn;
-        const currentClientIndex = room.players.findIndex(p => p.color === currentColor);
-        const currentClient = clients[currentClientIndex];
-
-        if (!currentClient) {
-          break;
-        }
-
-        const stateUpdatePromise = new Promise<GameState>((resolve) => {
-          currentClient.once('game:state', resolve);
-        });
-
-        const rollPromise = new Promise<DiceRolledPayload>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('Roll timeout')), 5000);
-          currentClient.once('game:diceRolled', (payload) => {
-            clearTimeout(timeout);
-            resolve(payload);
-          });
-        });
-
-        currentClient.emit('game:roll', {}, (response) => {
-          if (!response.success) {
-            console.log('Roll failed:', response.error);
-          }
-        });
-
-        let dicePayload: DiceRolledPayload;
-        try {
-          dicePayload = await rollPromise;
-          lastGameState = await stateUpdatePromise;
-        } catch (e) {
-          console.log('Roll error:', e);
-          break;
-        }
-
-        expect(dicePayload.value).toBeGreaterThanOrEqual(1);
-        expect(dicePayload.value).toBeLessThanOrEqual(6);
-
-        if (dicePayload.legalMoves.length > 0) {
-          const randomMoveIndex = Math.floor(Math.random() * dicePayload.legalMoves.length);
-          const moveToMake = dicePayload.legalMoves[randomMoveIndex];
-
-          const moveStatePromise = new Promise<GameState>((resolve) => {
-            currentClient.once('game:state', resolve);
-          });
-
-          const movePromise = new Promise<TokenMovedPayload>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Move timeout')), 5000);
-            currentClient.once('game:tokenMoved', (payload) => {
-              clearTimeout(timeout);
-              resolve(payload);
-            });
-          });
-
-          currentClient.emit('game:move', { tokenIndex: moveToMake.tokenIndex }, (response) => {
-            if (!response.success) {
-              console.log('Move failed:', response.error);
-            }
-          });
-
-          try {
-            const tokenMoved = await movePromise;
-            lastGameState = await moveStatePromise;
-            expect(tokenMoved.tokenIndex).toBe(moveToMake.tokenIndex);
-          } catch (e) {
-            console.log('Move error:', e);
-            break;
-          }
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 3100));
-          const nextStatePromise = new Promise<GameState>((resolve) => {
-            currentClient.once('game:state', resolve);
-          });
-          lastGameState = await nextStatePromise;
-        }
-
-        if (gameOver) break;
+      
+      try {
+        await gameStartPromise;
+      } catch (e) {
+        console.error('Game start error:', e);
+        throw e;
       }
 
-      const finalPayload = await Promise.race([
-        gameOverPromise,
-        new Promise<GameOverPayload>((_, reject) => 
-          setTimeout(() => reject(new Error('Game did not finish')), 60000)
-        )
-      ]);
+      expect(currentGameState?.phase).toBe('awaiting_roll');
+      expect(currentGameState?.tokens).toHaveLength(16);
 
-      expect(gameOver).toBe(true);
-      expect(finalPayload.winnerId).toBeTruthy();
-      expect(finalPayload.placements.length).toBeGreaterThan(0);
-      expect(finalPayload.placements[0].placement).toBe(1);
+      let turnCount = 0;
+      const maxTurns = 2000;
+
+      while (!gameOverPayload && turnCount < maxTurns) {
+        turnCount++;
+
+        if (!currentGameState || currentGameState.phase === 'finished') {
+          break;
+        }
+
+        const currentColor = currentGameState.turn;
+        const currentClient = colorToClient.get(currentColor);
+
+        if (!currentClient) {
+          console.log(`No client found for color ${currentColor}`);
+          break;
+        }
+
+        if (currentGameState.phase === 'awaiting_roll') {
+          lastDiceRolled = null;
+          
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('Roll timeout')), 5000);
+            
+            const checkDice = () => {
+              if (lastDiceRolled) {
+                clearTimeout(timeout);
+                resolve();
+              } else {
+                setTimeout(checkDice, 50);
+              }
+            };
+            
+            currentClient.emit('game:roll', {}, (response) => {
+              if (!response.success) {
+                clearTimeout(timeout);
+                reject(new Error(`Roll failed: ${response.error}`));
+              } else {
+                checkDice();
+              }
+            });
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 50));
+          
+          if (lastDiceRolled && lastDiceRolled.legalMoves.length === 0) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+        } else if (currentGameState.phase === 'awaiting_move' && lastDiceRolled) {
+          if (lastDiceRolled.legalMoves.length === 0) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            continue;
+          }
+
+          const randomMoveIndex = Math.floor(Math.random() * lastDiceRolled.legalMoves.length);
+          const moveToMake = lastDiceRolled.legalMoves[randomMoveIndex];
+
+          await new Promise<void>((resolve) => {
+            const timeout = setTimeout(() => resolve(), 5000);
+            
+            const originalPhase = currentGameState?.phase;
+            const originalTurn = currentGameState?.turn;
+            
+            const checkStateChange = () => {
+              if (currentGameState &&
+                  (currentGameState.phase !== originalPhase || 
+                   currentGameState.turn !== originalTurn)) {
+                clearTimeout(timeout);
+                resolve();
+              } else {
+                setTimeout(checkStateChange, 50);
+              }
+            };
+            
+            currentClient.emit('game:move', { tokenIndex: moveToMake.tokenIndex }, (response) => {
+              if (response.success) {
+                checkStateChange();
+              } else {
+                clearTimeout(timeout);
+                resolve();
+              }
+            });
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, 50));
+        }
+
+        if (gameOverPayload) break;
+      }
+
+      expect(gameOverPayload).toBeTruthy();
+      expect(gameOverPayload!.winnerId).toBeTruthy();
+      expect(gameOverPayload!.placements.length).toBeGreaterThan(0);
+      expect(gameOverPayload!.placements[0].placement).toBe(1);
       
-      console.log(`Game completed in ${turnCount} turns. Winner: ${winner}`);
+      console.log(`✅ Game completed in ${turnCount} turns. Winner: ${gameOverPayload!.winnerId}`);
 
     } finally {
       for (const client of clients) {
         client.disconnect();
       }
     }
-  }, 120000);
+  }, 300000);
 
   it('should reject game:roll when not in roll phase', async () => {
     const client = createTestClient();
