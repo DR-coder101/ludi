@@ -15,6 +15,7 @@
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",
     "express": "^4.19.0",
+    "livekit-server-sdk": "^2.19.0",
     "socket.io": "^4.7.0"
   },
   "devDependencies": {
