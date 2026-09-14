@@ -24,8 +24,23 @@ export interface GameManager {
   aiSubstitutes: Set<Color>;
 }
 
+export interface GameTimingConfig {
+  gracePeriodMs: number;
+  aiThinkDelayMs: number;
+}
+
+const DEFAULT_TIMING: GameTimingConfig = {
+  gracePeriodMs: 60000,
+  aiThinkDelayMs: 1000,
+};
+
 export class GameManagerRegistry {
   private games = new Map<string, GameManager>();
+  private timingConfig: GameTimingConfig;
+
+  constructor(timingConfig: GameTimingConfig = DEFAULT_TIMING) {
+    this.timingConfig = timingConfig;
+  }
 
   createGame(roomCode: string, config: GameConfig): GameState {
     const rulesState = createGame(config);
@@ -184,7 +199,7 @@ export class GameManagerRegistry {
     const timer = setTimeout(() => {
       game.disconnectGraces.delete(color);
       onGraceExpired();
-    }, 60000);
+    }, this.timingConfig.gracePeriodMs);
 
     game.disconnectGraces.set(color, {
       color,
@@ -217,6 +232,10 @@ export class GameManagerRegistry {
     const game = this.games.get(roomCode);
     if (!game) return false;
     return game.aiSubstitutes.has(color);
+  }
+
+  getAIThinkDelay(): number {
+    return this.timingConfig.aiThinkDelayMs;
   }
 
   clearTimers(game: GameManager): void {

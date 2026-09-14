@@ -20,9 +20,18 @@ import {
 } from '@ludi/protocol';
 import { RoomRegistry } from './RoomRegistry.js';
 import { RateLimiter } from './RateLimiter.js';
-import { GameManagerRegistry } from './GameManager.js';
+import { GameManagerRegistry, type GameTimingConfig } from './GameManager.js';
 
-export function createLudiServer(port: number = 3000) {
+export interface ServerConfig {
+  port?: number;
+  timingConfig?: GameTimingConfig;
+}
+
+export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
+  const config: ServerConfig = typeof portOrConfig === 'number' 
+    ? { port: portOrConfig } 
+    : portOrConfig;
+  const port = config.port ?? 3000;
   const app = express();
   const httpServer = createServer(app);
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
@@ -33,7 +42,7 @@ export function createLudiServer(port: number = 3000) {
   });
 
   const roomRegistry = new RoomRegistry();
-  const gameRegistry = new GameManagerRegistry();
+  const gameRegistry = new GameManagerRegistry(config.timingConfig);
   const rateLimiter = new RateLimiter(10, 1000);
   const socketToRoom = new Map<string, string>();
   const socketToColor = new Map<string, Color>();
@@ -98,7 +107,7 @@ export function createLudiServer(port: number = 3000) {
       } else {
         setTimeout(() => {
           handleAIMove(roomCode);
-        }, 1000);
+        }, gameRegistry.getAIThinkDelay());
       }
     }
   }
@@ -171,7 +180,7 @@ export function createLudiServer(port: number = 3000) {
       if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
         setTimeout(() => {
           handleAITurn(roomCode);
-        }, 1000);
+        }, gameRegistry.getAIThinkDelay());
       }
     }
   }
@@ -216,7 +225,7 @@ export function createLudiServer(port: number = 3000) {
       if (gameRegistry.isAISubstitute(roomCode, game.state.turn)) {
         setTimeout(() => {
           handleAITurn(roomCode);
-        }, 1000);
+        }, gameRegistry.getAIThinkDelay());
       }
     }
   }
@@ -288,7 +297,7 @@ export function createLudiServer(port: number = 3000) {
       if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
         setTimeout(() => {
           handleAITurn(roomCode);
-        }, 1000);
+        }, gameRegistry.getAIThinkDelay());
       }
     }
   }
@@ -655,11 +664,11 @@ export function createLudiServer(port: number = 3000) {
               if (currentGame.state.phase === 'awaiting_roll') {
                 setTimeout(() => {
                   handleAITurn(roomCode);
-                }, 1000);
+                }, gameRegistry.getAIThinkDelay());
               } else if (currentGame.state.phase === 'awaiting_move') {
                 setTimeout(() => {
                   handleAIMove(roomCode);
-                }, 1000);
+                }, gameRegistry.getAIThinkDelay());
               }
             }
           }
