@@ -33,10 +33,19 @@ pnpm start
 ## Environment Variables
 
 ```bash
-PORT=3000                # Server port (default: 3000)
-DATABASE_URL=...         # Postgres connection (Phase 5)
-LIVEKIT_API_KEY=...      # LiveKit credentials (Phase 4)
-LIVEKIT_API_SECRET=...   # LiveKit credentials (Phase 4)
+PORT=3000                          # Server port (default: 3000)
+
+# LiveKit (M4 - Video chat)
+LIVEKIT_API_KEY=...                # LiveKit API key
+LIVEKIT_API_SECRET=...             # LiveKit API secret
+LIVEKIT_URL=...                    # LiveKit server URL (e.g., wss://your-project.livekit.cloud)
+
+# Supabase (M5.1 - Auth & match history)
+SUPABASE_URL=...                   # Supabase project URL (e.g., https://xxxxx.supabase.co)
+SUPABASE_SERVICE_ROLE_KEY=...      # Supabase service role key (NEVER expose to client)
+
+# Note: The server will run without Supabase configured, but M5.1 features
+# (auth, profiles, match history) will be disabled.
 ```
 
 ## Endpoints

@@ -201,3 +201,80 @@ export interface ServerToClientEvents {
   'error': (message: string) => void;
   pong: (message: string) => void;
 }
+
+// Auth & Profile types (M5.1)
+
+export const GuestCreatePayloadSchema = z.object({
+  displayName: z.string().min(1).max(50).optional(),
+});
+export type GuestCreatePayload = z.infer<typeof GuestCreatePayloadSchema>;
+
+export interface AuthResponse {
+  success: boolean;
+  userId?: string;
+  accessToken?: string;
+  error?: string;
+}
+
+export const EmailSignUpPayloadSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  displayName: z.string().min(1).max(50).optional(),
+});
+export type EmailSignUpPayload = z.infer<typeof EmailSignUpPayloadSchema>;
+
+export const EmailSignInPayloadSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+export type EmailSignInPayload = z.infer<typeof EmailSignInPayloadSchema>;
+
+export const GuestUpgradePayloadSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+export type GuestUpgradePayload = z.infer<typeof GuestUpgradePayloadSchema>;
+
+export const UserProfileSchema = z.object({
+  id: z.string(),
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  isGuest: z.boolean(),
+  createdAt: z.string(),
+});
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
+export const UpdateProfilePayloadSchema = z.object({
+  displayName: z.string().min(1).max(50).optional(),
+  avatarUrl: z.string().url().nullable().optional(),
+});
+export type UpdateProfilePayload = z.infer<typeof UpdateProfilePayloadSchema>;
+
+export interface ProfileResponse {
+  success: boolean;
+  profile?: UserProfile;
+  error?: string;
+}
+
+// Match history types (M5.1)
+
+export const MatchHistorySchema = z.object({
+  id: z.string(),
+  startedAt: z.string(),
+  endedAt: z.string().nullable(),
+  winnerId: z.string().nullable(),
+  houseRules: HouseRulesSchema,
+  players: z.array(z.object({
+    userId: z.string(),
+    displayName: z.string(),
+    color: ColorSchema,
+    finalPosition: z.number().nullable(),
+  })),
+});
+export type MatchHistory = z.infer<typeof MatchHistorySchema>;
+
+export interface MatchHistoryResponse {
+  success: boolean;
+  matches?: MatchHistory[];
+  error?: string;
+}
