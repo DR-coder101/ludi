@@ -29,7 +29,7 @@ export const useRoomStore = create<RoomStore>()(
 
     updatePlayerConnection: (playerId, connected) => set((state) => {
       if (state.roomState) {
-        const player = state.roomState.players.find(p => p.id === playerId);
+        const player = state.roomState.players.find((p: Player) => p.id === playerId);
         if (player) {
           player.connected = connected;
         }

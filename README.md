@@ -91,7 +91,33 @@ This opens the Expo developer tools. You can then:
 - **Android Emulator**: Press `a` to open in Android Emulator  
 - **Physical Device**: Scan QR code with Expo Go app
 
-**Note**: Update `SERVER_URL` in `apps/mobile/app/index.tsx` if running on a physical device:
+**⚠️ Important: Video Chat Requires EAS Development Build**
+
+The LiveKit video chat feature (M4) requires native modules that **do NOT work in Expo Go**. To use video chat, you must create an EAS development build:
+
+```bash
+# Install EAS CLI globally
+npm install -g eas-cli
+
+# Log in to your Expo account
+eas login
+
+# Create a development build for your device
+cd apps/mobile
+eas build --profile development --platform ios    # or android
+```
+
+Once the build completes, install it on your physical device. Development builds include all native modules and can connect to your local server just like Expo Go.
+
+For more details, see: https://docs.expo.dev/develop/development-builds/create-a-build/
+
+**Environment Variables**:
+- `EXPO_PUBLIC_SERVER_URL`: Backend server URL (default: `http://localhost:3000`)
+- `EXPO_PUBLIC_LIVEKIT_URL`: LiveKit server URL (required for video chat)
+
+Update these in `apps/mobile/.env.local` or via EAS Secrets for development builds.
+
+**Note**: Update `SERVER_URL` if running on a physical device:
 - Use your local IP address (e.g., `http://192.168.1.100:3000`)
 - Or use a tunneling service like ngrok
 

@@ -16,13 +16,16 @@ import { useRoomStore } from '../../src/stores/roomStore';
 import { useGameStore } from '../../src/stores/gameStore';
 import { useConnectionStore } from '../../src/stores/connectionStore';
 import { useChatStore } from '../../src/stores/chatStore';
+import { useVideoStore } from '../../src/stores/videoStore';
 import { GameBoard } from '../../src/components/board/GameBoard';
 import { Dice } from '../../src/components/Dice';
 import { TurnIndicator } from '../../src/components/TurnIndicator';
 import { WinBanner } from '../../src/components/WinBanner';
 import { TurnDeadline } from '../../src/components/TurnDeadline';
 import { ChatPanel } from '../../src/components/ChatPanel';
+import { VideoGrid } from '../../src/components/video/VideoGrid';
 import { gameAudio, triggerHaptic } from '../../src/utils/gameAudio';
+import { fetchVideoToken } from '../../src/net/videoToken';
 
 export default function OnlineGameScreen() {
   const router = useRouter();
@@ -52,6 +55,10 @@ export default function OnlineGameScreen() {
 
   const addChatMessage = useChatStore((state) => state.addMessage);
 
+  const videoToken = useVideoStore((state) => state.token);
+  const setConnection = useVideoStore((state) => state.setConnection);
+  const resetVideo = useVideoStore((state) => state.reset);
+
   // Local UI state
   const [animatingToken, setAnimatingToken] = useState<{
     tokenIndex: number;
@@ -67,6 +74,9 @@ export default function OnlineGameScreen() {
   const [isRolling, setIsRolling] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
 
+  // LiveKit URL from environment
+  const livekitUrl = process.env.EXPO_PUBLIC_LIVEKIT_URL || '';
+
   // Initialize audio
   useEffect(() => {
     const init = async () => {
@@ -78,6 +88,35 @@ export default function OnlineGameScreen() {
       gameAudio.cleanup();
     };
   }, []);
+
+  // Fetch video token when game reaches READY_CHECK or later
+  useEffect(() => {
+    if (!roomState || !myPlayerId || !roomCode) return;
+
+    const shouldConnectVideo = 
+      roomState.status === 'ready_check' || 
+      roomState.status === 'countdown' || 
+      roomState.status === 'in_progress';
+
+    if (shouldConnectVideo && !videoToken) {
+      console.log('[Video] Fetching token for room:', roomCode);
+      
+      fetchVideoToken(roomCode, myPlayerId).then((result) => {
+        if (result.token) {
+          console.log('[Video] Token received, connecting to LiveKit');
+          setConnection(roomCode, result.token);
+        } else {
+          console.error('[Video] Failed to fetch token:', result.error);
+        }
+      });
+    }
+
+    return () => {
+      if (roomState.status === 'finished' || roomState.status === 'closed') {
+        resetVideo();
+      }
+    };
+  }, [roomState?.status, myPlayerId, roomCode, videoToken, setConnection, resetVideo]);
 
   // Socket event listeners
   useEffect(() => {
@@ -289,56 +328,73 @@ export default function OnlineGameScreen() {
   const boardWidth = Math.min(width - 32, 500);
   const isFinished = gameState.phase === 'finished';
 
+  const gameContent = (
+    <>
+      {isReconnecting && (
+        <View style={styles.reconnectingBanner}>
+          <Text style={styles.reconnectingText}>🔄 Reconnecting...</Text>
+        </View>
+      )}
+
+      {videoToken && livekitUrl && roomState && myPlayerId && (
+        <VideoGrid 
+          roomPlayers={roomState.players} 
+          myPlayerId={myPlayerId}
+        />
+      )}
+
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleLeave} style={styles.leaveButton}>
+          <Text style={styles.leaveButtonText}>← Leave</Text>
+        </TouchableOpacity>
+
+        <TurnIndicator
+          currentPlayer={gameState.turn}
+          lastRoll={gameState.dice}
+          phase={gameState.phase}
+        />
+        
+        {isMyTurn && turnDeadline && gameState.phase !== 'finished' && (
+          <TurnDeadline deadline={turnDeadline} />
+        )}
+      </View>
+
+      <View style={styles.boardContainer}>
+        <GameBoard
+          width={boardWidth}
+          gameState={gameState}
+          legalTokenIndices={isMyTurn ? legalTokenIndices : []}
+          onTokenPress={handleTokenPress}
+          animatingToken={animatingToken}
+          capturedToken={capturedToken}
+        />
+      </View>
+
+      <View style={styles.controls}>
+        <Dice
+          value={gameState.dice}
+          onRoll={handleRoll}
+          disabled={!isMyTurn || gameState.phase !== 'awaiting_roll' || isRolling}
+        />
+      </View>
+
+      {isFinished && gameState.winner && (
+        <WinBanner
+          winner={gameState.winner}
+          placements={gameState.placements}
+          onNewGame={handleNewGame}
+        />
+      )}
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-        {isReconnecting && (
-          <View style={styles.reconnectingBanner}>
-            <Text style={styles.reconnectingText}>🔄 Reconnecting...</Text>
-          </View>
-        )}
-
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleLeave} style={styles.leaveButton}>
-            <Text style={styles.leaveButtonText}>← Leave</Text>
-          </TouchableOpacity>
-
-          <TurnIndicator
-            currentPlayer={gameState.turn}
-            lastRoll={gameState.dice}
-            phase={gameState.phase}
-          />
-          
-          {isMyTurn && turnDeadline && gameState.phase !== 'finished' && (
-            <TurnDeadline deadline={turnDeadline} />
-          )}
-        </View>
-
-        <View style={styles.boardContainer}>
-          <GameBoard
-            width={boardWidth}
-            gameState={gameState}
-            legalTokenIndices={isMyTurn ? legalTokenIndices : []}
-            onTokenPress={handleTokenPress}
-            animatingToken={animatingToken}
-            capturedToken={capturedToken}
-          />
-        </View>
-
-        <View style={styles.controls}>
-          <Dice
-            value={gameState.dice}
-            onRoll={handleRoll}
-            disabled={!isMyTurn || gameState.phase !== 'awaiting_roll' || isRolling}
-          />
-        </View>
-
-        {isFinished && gameState.winner && (
-          <WinBanner
-            winner={gameState.winner}
-            placements={gameState.placements}
-            onNewGame={handleNewGame}
-          />
+        {videoToken && livekitUrl ? (
+          gameContent
+        ) : (
+          gameContent
         )}
       </ScrollView>
 

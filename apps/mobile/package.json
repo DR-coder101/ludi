@@ -11,6 +11,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@livekit/react-native": "^3.0.0",
+    "@livekit/react-native-webrtc": "^144.2.0",
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",
     "expo": "~52.0.0",
