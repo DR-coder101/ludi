@@ -1,64 +1,43 @@
-# Ludi Mobile
+# Ludi Mobile App
 
-React Native + Expo mobile app for Caribbean/Jamaican Ludo.
+## Environment Variables
 
-## Tech Stack
+Create a `.env` file in the `apps/mobile` directory with the following variables:
 
-- **Expo SDK 52+**: Modern React Native development
-- **expo-router**: File-based routing (v4)
-- **TypeScript**: Strict mode
-- **Socket.IO Client**: Real-time multiplayer
-- **@ludi/rules**: Game logic (client-side prediction)
-- **@ludi/protocol**: Type-safe Socket.IO events
+```bash
+# Server URL (default: http://localhost:3000)
+EXPO_PUBLIC_SOCKET_URL=http://localhost:3000
+
+# For development with a physical device on the same network:
+# EXPO_PUBLIC_SOCKET_URL=http://192.168.1.x:3000
+```
 
 ## Development
 
 ```bash
-# Start Expo dev server
+# Install dependencies
+pnpm install
+
+# Start the development server
 pnpm dev
 
-# Run on iOS simulator
-pnpm ios
-
-# Run on Android emulator
+# Run on Android
 pnpm android
 
-# Run in web browser (for testing)
-pnpm web
+# Run on iOS
+pnpm ios
 ```
 
-## Current Features (Phase 0.1)
+## Connecting to the Server
 
-- Socket.IO connection to server
-- Connection status display
-- Real-time message logging
-- Hello-world pong response
+1. **Local development (emulator/simulator):**
+   - Use `http://localhost:3000`
+   
+2. **Physical device on same network:**
+   - Find your computer's local IP address
+   - Use `http://<your-ip>:3000`
+   - Example: `http://192.168.1.10:3000`
 
-## Future Architecture
-
-### State Management
-- **Zustand + Immer**: Client game state
-- **React Query**: Server synchronization
-
-### UI Components
-- **Reanimated**: Smooth animations
-- **React Native SVG**: Board rendering
-- **Custom components**: Board, tokens, dice
-
-### Features by Phase
-- **Phase 2**: Local game UI (board, tokens, turns)
-- **Phase 3**: Online multiplayer (rooms, matchmaking)
-- **Phase 4**: Live video chat (LiveKit integration)
-- **Phase 5**: User accounts (Supabase Auth)
-
-## Configuration
-
-Update `SERVER_URL` in `app/index.tsx` to match your server location.
-
-For Expo Go development:
-- Use your local IP address (e.g., `http://192.168.1.100:3000`)
-- Or use ngrok for tunneling
-
-For EAS builds (Phase 4+):
-- Use production server URL
-- Configure environment variables in `eas.json`
+3. **Deployed server:**
+   - Use the deployed server URL
+   - Example: `https://ludi-server.railway.app`

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { Color } from '@ludi/rules';
+import { socketManager } from '../src/net/socket';
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
@@ -13,8 +14,18 @@ const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [mode, setMode] = useState<'online' | 'local' | null>(null);
+  
+  // Local game state
   const [playerCount, setPlayerCount] = useState<2 | 3 | 4>(2);
   const [selectedColors, setSelectedColors] = useState<Color[]>(['red', 'green']);
+
+  // Online game state
+  const [displayName, setDisplayName] = useState('');
+  const [roomCode, setRoomCode] = useState('');
+  const [isCreatingRoom, setIsCreatingRoom] = useState(false);
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+  const [error, setError] = useState('');
 
   const handlePlayerCountChange = (count: 2 | 3 | 4) => {
     setPlayerCount(count);
@@ -22,15 +33,194 @@ export default function HomeScreen() {
     setSelectedColors(colors);
   };
 
-  const handleStartGame = () => {
+  const handleStartLocalGame = () => {
     const colorsParam = selectedColors.join(',');
     router.push(`/game?colors=${colorsParam}`);
   };
 
+  const handleCreateRoom = async () => {
+    if (!displayName.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+
+    setError('');
+    setIsCreatingRoom(true);
+
+    try {
+      await socketManager.initialize();
+      const socket = socketManager.connect();
+
+      socket.emit('room:create', {
+        displayName: displayName.trim(),
+        houseRules: {
+          maxConsecutiveSixes: 2,
+          extraRollOnCapture: false,
+          blockadeCanMoveTogether: false,
+          exactFinishBonus: false,
+          playForPlacements: false,
+        },
+      }, (response) => {
+        setIsCreatingRoom(false);
+        
+        if (response.success && response.roomCode) {
+          router.push(`/lobby/${response.roomCode}`);
+        } else {
+          setError(response.error || 'Failed to create room');
+        }
+      });
+    } catch (err) {
+      setIsCreatingRoom(false);
+      setError('Connection failed. Check server is running.');
+      console.error('Create room error:', err);
+    }
+  };
+
+  const handleJoinRoom = async () => {
+    if (!displayName.trim()) {
+      setError('Please enter your name');
+      return;
+    }
+    if (!roomCode.trim() || roomCode.trim().length !== 6) {
+      setError('Please enter a valid 6-character room code');
+      return;
+    }
+
+    setError('');
+    setIsJoiningRoom(true);
+
+    try {
+      await socketManager.initialize();
+      const socket = socketManager.connect();
+
+      socket.emit('room:join', {
+        roomCode: roomCode.trim().toUpperCase(),
+        displayName: displayName.trim(),
+      }, (response) => {
+        setIsJoiningRoom(false);
+        
+        if (response.success) {
+          router.push(`/lobby/${roomCode.trim().toUpperCase()}`);
+        } else {
+          setError(response.error || 'Failed to join room');
+        }
+      });
+    } catch (err) {
+      setIsJoiningRoom(false);
+      setError('Connection failed. Check server is running.');
+      console.error('Join room error:', err);
+    }
+  };
+
+  if (mode === null) {
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>🎲 Ludi</Text>
+        <Text style={styles.subtitle}>Caribbean Ludo</Text>
+
+        <View style={styles.modeContainer}>
+          <TouchableOpacity
+            style={styles.modeButton}
+            onPress={() => setMode('online')}
+          >
+            <Text style={styles.modeButtonIcon}>🌐</Text>
+            <Text style={styles.modeButtonText}>Online Multiplayer</Text>
+            <Text style={styles.modeButtonSubtext}>Play with friends online</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.modeButton}
+            onPress={() => setMode('local')}
+          >
+            <Text style={styles.modeButtonIcon}>👥</Text>
+            <Text style={styles.modeButtonText}>Local Pass & Play</Text>
+            <Text style={styles.modeButtonSubtext}>Play on one device</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    );
+  }
+
+  if (mode === 'online') {
+    return (
+      <ScrollView contentContainerStyle={styles.container}>
+        <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.title}>🌐 Online Play</Text>
+
+        <View style={styles.setupCard}>
+          <Text style={styles.sectionTitle}>Your Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter your name"
+            placeholderTextColor="#888"
+            value={displayName}
+            onChangeText={setDisplayName}
+            maxLength={50}
+            autoCapitalize="words"
+          />
+
+          <TouchableOpacity
+            style={[styles.primaryButton, isCreatingRoom && styles.buttonDisabled]}
+            onPress={handleCreateRoom}
+            disabled={isCreatingRoom}
+          >
+            {isCreatingRoom ? (
+              <ActivityIndicator color="#1a1a1a" />
+            ) : (
+              <Text style={styles.primaryButtonText}>Create Room</Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>OR</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <Text style={styles.sectionTitle}>Join Room</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter 6-character room code"
+            placeholderTextColor="#888"
+            value={roomCode}
+            onChangeText={(text) => setRoomCode(text.toUpperCase())}
+            maxLength={6}
+            autoCapitalize="characters"
+          />
+
+          <TouchableOpacity
+            style={[styles.secondaryButton, isJoiningRoom && styles.buttonDisabled]}
+            onPress={handleJoinRoom}
+            disabled={isJoiningRoom}
+          >
+            {isJoiningRoom ? (
+              <ActivityIndicator color="#D4AF37" />
+            ) : (
+              <Text style={styles.secondaryButtonText}>Join Room</Text>
+            )}
+          </TouchableOpacity>
+
+          {error ? (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // Local mode
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>🎲 Ludi</Text>
-      <Text style={styles.subtitle}>Caribbean Ludo - Local Pass & Play</Text>
+      <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
+        <Text style={styles.backButtonText}>← Back</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.title}>👥 Local Play</Text>
 
       <View style={styles.setupCard}>
         <Text style={styles.sectionTitle}>Number of Players</Text>
@@ -71,8 +261,8 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        <TouchableOpacity style={styles.startButton} onPress={handleStartGame}>
-          <Text style={styles.startButtonText}>Start Game</Text>
+        <TouchableOpacity style={styles.primaryButton} onPress={handleStartLocalGame}>
+          <Text style={styles.primaryButtonText}>Start Game</Text>
         </TouchableOpacity>
       </View>
 
@@ -93,11 +283,21 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
+  backButton: {
+    alignSelf: 'flex-start',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  backButtonText: {
+    color: '#D4AF37',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   title: {
     fontSize: 40,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginTop: 40,
+    marginTop: 20,
     marginBottom: 8,
     color: '#D4AF37',
   },
@@ -107,6 +307,38 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 40,
     fontWeight: '500',
+  },
+  modeContainer: {
+    width: '100%',
+    maxWidth: 400,
+    gap: 16,
+  },
+  modeButton: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  modeButtonIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  modeButtonText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#D4AF37',
+    marginBottom: 4,
+  },
+  modeButtonSubtext: {
+    fontSize: 14,
+    color: '#ccc',
   },
   setupCard: {
     width: '100%',
@@ -128,6 +360,77 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: 16,
     color: '#D4AF37',
+  },
+  input: {
+    backgroundColor: '#3a3a3a',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    color: '#fff',
+    marginBottom: 16,
+    borderWidth: 2,
+    borderColor: '#4a4a4a',
+  },
+  primaryButton: {
+    backgroundColor: '#D4AF37',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  primaryButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+  },
+  secondaryButtonText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#D4AF37',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#4a4a4a',
+  },
+  dividerText: {
+    color: '#888',
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  errorContainer: {
+    marginTop: 16,
+    padding: 12,
+    backgroundColor: '#4a2020',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E53935',
+  },
+  errorText: {
+    color: '#ff6b6b',
+    fontSize: 14,
+    textAlign: 'center',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -183,22 +486,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#fff',
-  },
-  startButton: {
-    backgroundColor: '#D4AF37',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  startButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
   },
   infoCard: {
     width: '100%',
