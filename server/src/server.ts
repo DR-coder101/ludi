@@ -1,6 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import { AccessToken } from 'livekit-server-sdk';
 import type { 
   ClientToServerEvents, 
   ServerToClientEvents, 
@@ -11,12 +12,14 @@ import type {
   TurnChangedPayload,
   GameOverPayload,
   PlayerStatusChangedPayload,
+  VideoTokenResponse,
 } from '@ludi/protocol';
 import { 
   RoomCreatePayloadSchema, 
   RoomJoinPayloadSchema,
   GameRollPayloadSchema,
   GameMovePayloadSchema,
+  VideoTokenPayloadSchema,
 } from '@ludi/protocol';
 import { RoomRegistry } from './RoomRegistry.js';
 import { RateLimiter } from './RateLimiter.js';
@@ -49,6 +52,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
   const cleanupInterval = setInterval(() => rateLimiter.cleanup(), 10000);
 
+  app.use(express.json());
+
   app.get('/', (req, res) => {
     res.json({
       service: 'Ludi Server',
@@ -60,6 +65,90 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  app.post('/video-token', async (req, res) => {
+    const validationResult = VideoTokenPayloadSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      const response: VideoTokenResponse = {
+        success: false,
+        error: 'Invalid request payload',
+      };
+      res.status(400).json(response);
+      return;
+    }
+
+    const { roomCode, userId } = validationResult.data;
+
+    const room = roomRegistry.getRoom(roomCode);
+    if (!room) {
+      const response: VideoTokenResponse = {
+        success: false,
+        error: 'Room not found',
+      };
+      res.status(404).json(response);
+      return;
+    }
+
+    const player = room.players.find(p => p.id === userId);
+    if (!player) {
+      const response: VideoTokenResponse = {
+        success: false,
+        error: 'Player not seated in room',
+      };
+      res.status(403).json(response);
+      return;
+    }
+
+    const game = gameRegistry.getGame(roomCode);
+    if (!game) {
+      const response: VideoTokenResponse = {
+        success: false,
+        error: 'Game has not started yet (must be in READY_CHECK phase or later)',
+      };
+      res.status(403).json(response);
+      return;
+    }
+
+    const apiKey = process.env.LIVEKIT_API_KEY;
+    const apiSecret = process.env.LIVEKIT_API_SECRET;
+    const livekitUrl = process.env.LIVEKIT_URL;
+
+    if (!apiKey || !apiSecret || !livekitUrl) {
+      const response: VideoTokenResponse = {
+        success: false,
+        error: 'LiveKit configuration missing',
+      };
+      res.status(500).json(response);
+      return;
+    }
+
+    try {
+      const token = new AccessToken(apiKey, apiSecret, {
+        identity: userId,
+      });
+
+      token.addGrant({
+        room: roomCode,
+        roomJoin: true,
+        canPublish: true,
+        canSubscribe: true,
+      });
+
+      const jwt = await token.toJwt();
+
+      const response: VideoTokenResponse = {
+        success: true,
+        token: jwt,
+      };
+      res.json(response);
+    } catch (error) {
+      const response: VideoTokenResponse = {
+        success: false,
+        error: 'Failed to generate token',
+      };
+      res.status(500).json(response);
+    }
   });
 
   type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;

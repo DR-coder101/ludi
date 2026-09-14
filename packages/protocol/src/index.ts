@@ -161,6 +161,18 @@ export interface TurnChangedPayload {
   deadlineTs: number;
 }
 
+export const VideoTokenPayloadSchema = z.object({
+  roomCode: z.string().length(6),
+  userId: z.string().min(1),
+});
+export type VideoTokenPayload = z.infer<typeof VideoTokenPayloadSchema>;
+
+export interface VideoTokenResponse {
+  success: boolean;
+  token?: string;
+  error?: string;
+}
+
 export interface ClientToServerEvents {
   'room:create': (payload: RoomCreatePayload, callback: (response: RoomCreateResponse) => void) => void;
   'room:join': (payload: RoomJoinPayload, callback: (response: RoomJoinResponse) => void) => void;
