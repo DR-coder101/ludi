@@ -13,6 +13,9 @@ import type {
   GameOverPayload,
   PlayerStatusChangedPayload,
   VideoTokenResponse,
+  AuthResponse,
+  ProfileResponse,
+  MatchHistoryResponse,
 } from '@ludi/protocol';
 import { 
   RoomCreatePayloadSchema, 
@@ -20,14 +23,26 @@ import {
   GameRollPayloadSchema,
   GameMovePayloadSchema,
   VideoTokenPayloadSchema,
+  GuestCreatePayloadSchema,
+  EmailSignUpPayloadSchema,
+  EmailSignInPayloadSchema,
+  GuestUpgradePayloadSchema,
+  UpdateProfilePayloadSchema,
 } from '@ludi/protocol';
 import { RoomRegistry } from './RoomRegistry.js';
 import { RateLimiter } from './RateLimiter.js';
 import { GameManagerRegistry, type GameTimingConfig } from './GameManager.js';
+import { getSupabaseClient } from './db/supabase.js';
+import { createAuthService } from './services/auth.js';
+import { createProfileService } from './services/profile.js';
+import { createMatchHistoryService } from './services/matchHistory.js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from './db/types.js';
 
 export interface ServerConfig {
   port?: number;
   timingConfig?: GameTimingConfig;
+  supabase?: SupabaseClient<Database>;
 }
 
 export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
@@ -51,6 +66,27 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
   const socketToColor = new Map<string, Color>();
 
   const cleanupInterval = setInterval(() => rateLimiter.cleanup(), 10000);
+
+  let supabase: SupabaseClient<Database> | null = null;
+  let authService: ReturnType<typeof createAuthService> | null = null;
+  let profileService: ReturnType<typeof createProfileService> | null = null;
+  let matchHistoryService: ReturnType<typeof createMatchHistoryService> | null = null;
+
+  if (config.supabase) {
+    supabase = config.supabase;
+    authService = createAuthService(supabase);
+    profileService = createProfileService(supabase);
+    matchHistoryService = createMatchHistoryService(supabase);
+  } else {
+    try {
+      supabase = getSupabaseClient();
+      authService = createAuthService(supabase);
+      profileService = createProfileService(supabase);
+      matchHistoryService = createMatchHistoryService(supabase);
+    } catch (err) {
+      console.warn('Supabase not configured, M5.1 features disabled');
+    }
+  }
 
   app.use(express.json());
 
@@ -151,6 +187,144 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     }
   });
 
+  app.post('/auth/guest', async (req, res) => {
+    if (!authService) {
+      res.status(503).json({ success: false, error: 'Auth service not available' } as AuthResponse);
+      return;
+    }
+
+    const validationResult = GuestCreatePayloadSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      res.status(400).json({ success: false, error: 'Invalid payload' } as AuthResponse);
+      return;
+    }
+
+    try {
+      const result = await authService.createGuest(validationResult.data.displayName);
+      res.json({ success: true, userId: result.userId, accessToken: result.accessToken } as AuthResponse);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message } as AuthResponse);
+    }
+  });
+
+  app.post('/auth/signup', async (req, res) => {
+    if (!authService) {
+      res.status(503).json({ success: false, error: 'Auth service not available' } as AuthResponse);
+      return;
+    }
+
+    const validationResult = EmailSignUpPayloadSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      res.status(400).json({ success: false, error: 'Invalid payload' } as AuthResponse);
+      return;
+    }
+
+    try {
+      const { email, password, displayName } = validationResult.data;
+      const result = await authService.signUpWithEmail(email, password, displayName);
+      res.json({ success: true, userId: result.userId, accessToken: result.accessToken } as AuthResponse);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message } as AuthResponse);
+    }
+  });
+
+  app.post('/auth/signin', async (req, res) => {
+    if (!authService) {
+      res.status(503).json({ success: false, error: 'Auth service not available' } as AuthResponse);
+      return;
+    }
+
+    const validationResult = EmailSignInPayloadSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      res.status(400).json({ success: false, error: 'Invalid payload' } as AuthResponse);
+      return;
+    }
+
+    try {
+      const { email, password } = validationResult.data;
+      const result = await authService.signInWithEmail(email, password);
+      res.json({ success: true, userId: result.userId, accessToken: result.accessToken } as AuthResponse);
+    } catch (err: any) {
+      res.status(401).json({ success: false, error: err.message } as AuthResponse);
+    }
+  });
+
+  app.post('/auth/upgrade', async (req, res) => {
+    if (!authService) {
+      res.status(503).json({ success: false, error: 'Auth service not available' } as AuthResponse);
+      return;
+    }
+
+    const validationResult = GuestUpgradePayloadSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      res.status(400).json({ success: false, error: 'Invalid payload' } as AuthResponse);
+      return;
+    }
+
+    const guestUserId = req.headers.authorization?.replace('Bearer ', '');
+    if (!guestUserId) {
+      res.status(401).json({ success: false, error: 'Missing authorization' } as AuthResponse);
+      return;
+    }
+
+    try {
+      const { email, password } = validationResult.data;
+      const result = await authService.upgradeGuestToEmail(guestUserId, email, password);
+      res.json({ success: true, userId: result.userId, accessToken: result.accessToken } as AuthResponse);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message } as AuthResponse);
+    }
+  });
+
+  app.get('/profile/:userId', async (req, res) => {
+    if (!profileService) {
+      res.status(503).json({ success: false, error: 'Profile service not available' } as ProfileResponse);
+      return;
+    }
+
+    try {
+      const profile = await profileService.getProfile(req.params.userId);
+      res.json({ success: true, profile } as ProfileResponse);
+    } catch (err: any) {
+      res.status(404).json({ success: false, error: err.message } as ProfileResponse);
+    }
+  });
+
+  app.put('/profile/:userId', async (req, res) => {
+    if (!profileService) {
+      res.status(503).json({ success: false, error: 'Profile service not available' } as ProfileResponse);
+      return;
+    }
+
+    const validationResult = UpdateProfilePayloadSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      res.status(400).json({ success: false, error: 'Invalid payload' } as ProfileResponse);
+      return;
+    }
+
+    try {
+      const profile = await profileService.updateProfile(req.params.userId, validationResult.data);
+      res.json({ success: true, profile } as ProfileResponse);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message } as ProfileResponse);
+    }
+  });
+
+  app.get('/matches/:userId', async (req, res) => {
+    if (!matchHistoryService) {
+      res.status(503).json({ success: false, error: 'Match history service not available' } as MatchHistoryResponse);
+      return;
+    }
+
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
+      const matches = await matchHistoryService.getUserMatches(req.params.userId, limit);
+      res.json({ success: true, matches } as MatchHistoryResponse);
+    } catch (err: any) {
+      res.status(500).json({ success: false, error: err.message } as MatchHistoryResponse);
+    }
+  });
+
   type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
   function checkRateLimit(socket: TypedSocket): boolean {
@@ -159,6 +333,50 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       return false;
     }
     return true;
+  }
+
+  async function persistMatchHistory(
+    roomCode: string, 
+    gameState: GameState, 
+    placements: Array<{ playerId: string; color: Color; placement: number }>
+  ): Promise<void> {
+    if (!matchHistoryService) {
+      return;
+    }
+
+    const room = roomRegistry.getRoom(roomCode);
+    if (!room) {
+      return;
+    }
+
+    try {
+      const game = gameRegistry.getGame(roomCode);
+      if (!game) {
+        return;
+      }
+
+      const winnerId = placements.find(p => p.placement === 1)?.playerId;
+      if (!winnerId) {
+        return;
+      }
+
+      await matchHistoryService.saveMatch({
+        roomCode,
+        startedAt: new Date(Date.now() - 600000),
+        endedAt: new Date(),
+        winnerId,
+        houseRules: gameState.config.houseRules,
+        players: placements.map(p => ({
+          userId: p.playerId,
+          color: p.color,
+          finalPosition: p.placement,
+        })),
+      });
+
+      console.log(`Match history saved for room ${roomCode}`);
+    } catch (err) {
+      console.error(`Failed to save match history for room ${roomCode}:`, err);
+    }
   }
 
   function handleAITurn(roomCode: string): void {
@@ -201,7 +419,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     }
   }
 
-  function handleAIMove(roomCode: string): void {
+  async function handleAIMove(roomCode: string): Promise<void> {
     const game = gameRegistry.getGame(roomCode);
     if (!game) return;
 
@@ -255,6 +473,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         placements,
       };
       io.to(roomCode).emit('game:over', gameOverPayload);
+      
+      await persistMatchHistory(roomCode, updatedGame.state, placements);
     } else if (updatedGame.state.phase === 'awaiting_roll') {
       const nextPlayerSocket = room.players.find(p => p.color === updatedGame.state.turn)?.id;
       
@@ -319,7 +539,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     }
   }
 
-  function handleMoveTimeout(roomCode: string): void {
+  async function handleMoveTimeout(roomCode: string): Promise<void> {
     const game = gameRegistry.getGame(roomCode);
     if (!game) return;
     
@@ -371,6 +591,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         placements,
       };
       io.to(roomCode).emit('game:over', gameOverPayload);
+      
+      await persistMatchHistory(roomCode, updatedGame.state, placements);
     } else if (updatedGame.state.phase === 'awaiting_roll') {
       const nextPlayerSocket = Array.from(socketToColor.entries())
         .find(([_, color]) => color === updatedGame.state.turn)?.[0];
@@ -614,7 +836,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       }
     });
 
-    socket.on('game:move', (payload, callback) => {
+    socket.on('game:move', async (payload, callback) => {
       if (!checkRateLimit(socket)) {
         callback({ success: false, error: 'Rate limit exceeded' });
         return;
@@ -685,6 +907,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
             placements,
           };
           io.to(roomCode).emit('game:over', gameOverPayload);
+          
+          await persistMatchHistory(roomCode, updatedGame.state, placements);
         }
       } else if (updatedGame.state.phase === 'awaiting_roll') {
         const currentPlayerSocket = Array.from(socketToColor.entries())
