@@ -10,6 +10,7 @@ import type {
   DiceRolledPayload,
   TurnChangedPayload,
   GameOverPayload,
+  PlayerStatusChangedPayload,
 } from '@ludi/protocol';
 import { 
   RoomCreatePayloadSchema, 
@@ -19,9 +20,18 @@ import {
 } from '@ludi/protocol';
 import { RoomRegistry } from './RoomRegistry.js';
 import { RateLimiter } from './RateLimiter.js';
-import { GameManagerRegistry } from './GameManager.js';
+import { GameManagerRegistry, type GameTimingConfig } from './GameManager.js';
 
-export function createLudiServer(port: number = 3000) {
+export interface ServerConfig {
+  port?: number;
+  timingConfig?: GameTimingConfig;
+}
+
+export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
+  const config: ServerConfig = typeof portOrConfig === 'number' 
+    ? { port: portOrConfig } 
+    : portOrConfig;
+  const port = config.port ?? 3000;
   const app = express();
   const httpServer = createServer(app);
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
@@ -32,7 +42,7 @@ export function createLudiServer(port: number = 3000) {
   });
 
   const roomRegistry = new RoomRegistry();
-  const gameRegistry = new GameManagerRegistry();
+  const gameRegistry = new GameManagerRegistry(config.timingConfig);
   const rateLimiter = new RateLimiter(10, 1000);
   const socketToRoom = new Map<string, string>();
   const socketToColor = new Map<string, Color>();
@@ -60,6 +70,119 @@ export function createLudiServer(port: number = 3000) {
       return false;
     }
     return true;
+  }
+
+  function handleAITurn(roomCode: string): void {
+    const game = gameRegistry.getGame(roomCode);
+    if (!game) return;
+
+    const currentColor = game.state.turn;
+    if (!gameRegistry.isAISubstitute(roomCode, currentColor)) return;
+
+    if (game.state.phase === 'awaiting_roll') {
+      const result = gameRegistry.rollDice(roomCode);
+      if (!result.success) return;
+
+      const room = roomRegistry.getRoom(roomCode);
+      if (!room) return;
+
+      const currentPlayerSocket = room.players.find(p => p.color === currentColor)?.id;
+
+      io.to(roomCode).emit('game:state', game.state);
+
+      const moves = gameRegistry.getLegalMoves(roomCode);
+      if (currentPlayerSocket) {
+        const dicePayload: DiceRolledPayload = {
+          playerId: currentPlayerSocket,
+          value: result.value!,
+          legalMoves: moves,
+        };
+        io.to(roomCode).emit('game:diceRolled', dicePayload);
+      }
+
+      if (result.autoPass) {
+        gameRegistry.setAutoPassTimer(roomCode, () => {
+          handleAutoPass(roomCode);
+        });
+      } else {
+        setTimeout(() => {
+          handleAIMove(roomCode);
+        }, gameRegistry.getAIThinkDelay());
+      }
+    }
+  }
+
+  function handleAIMove(roomCode: string): void {
+    const game = gameRegistry.getGame(roomCode);
+    if (!game) return;
+
+    const currentColor = game.state.turn;
+    if (!gameRegistry.isAISubstitute(roomCode, currentColor)) return;
+
+    if (game.state.phase !== 'awaiting_move') return;
+
+    const moves = gameRegistry.getLegalMoves(roomCode);
+    if (moves.length === 0) return;
+
+    const randomMove = moves[Math.floor(Math.random() * moves.length)];
+    
+    const room = roomRegistry.getRoom(roomCode);
+    if (!room) return;
+
+    const currentPlayerSocket = room.players.find(p => p.color === currentColor)?.id;
+
+    const result = gameRegistry.applyMove(roomCode, randomMove.tokenIndex);
+
+    if (!result.success) return;
+
+    if (currentPlayerSocket) {
+      const tokenMovedPayload: TokenMovedPayload = {
+        playerId: currentPlayerSocket,
+        tokenIndex: randomMove.tokenIndex,
+        from: result.from!,
+        to: result.to!,
+        captured: result.captured,
+      };
+      io.to(roomCode).emit('game:tokenMoved', tokenMovedPayload);
+    }
+
+    const updatedGame = gameRegistry.getGame(roomCode);
+    if (!updatedGame) return;
+
+    io.to(roomCode).emit('game:state', updatedGame.state);
+
+    if (updatedGame.state.phase === 'finished') {
+      const placements = updatedGame.state.placements.map((color, idx) => {
+        const player = room.players.find(p => p.color === color);
+        return {
+          playerId: player?.id || '',
+          color,
+          placement: idx + 1,
+        };
+      });
+      
+      const gameOverPayload: GameOverPayload = {
+        winnerId: room.players.find(p => p.color === updatedGame.state.winner)?.id || '',
+        placements,
+      };
+      io.to(roomCode).emit('game:over', gameOverPayload);
+    } else if (updatedGame.state.phase === 'awaiting_roll') {
+      const nextPlayerSocket = room.players.find(p => p.color === updatedGame.state.turn)?.id;
+      
+      if (nextPlayerSocket) {
+        const turnPayload: TurnChangedPayload = {
+          playerId: nextPlayerSocket,
+          deadlineTs: Date.now() + 30000,
+        };
+        io.to(roomCode).emit('game:turnChanged', turnPayload);
+      }
+
+      if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
+        setTimeout(() => {
+          handleAITurn(roomCode);
+        }, gameRegistry.getAIThinkDelay());
+      }
+    }
   }
 
   function handleAutoPass(roomCode: string): void {
@@ -97,6 +220,12 @@ export function createLudiServer(port: number = 3000) {
           deadlineTs: Date.now() + 30000,
         };
         io.to(roomCode).emit('game:turnChanged', turnPayload);
+      }
+
+      if (gameRegistry.isAISubstitute(roomCode, game.state.turn)) {
+        setTimeout(() => {
+          handleAITurn(roomCode);
+        }, gameRegistry.getAIThinkDelay());
       }
     }
   }
@@ -164,6 +293,12 @@ export function createLudiServer(port: number = 3000) {
         };
         io.to(roomCode).emit('game:turnChanged', turnPayload);
       }
+
+      if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
+        setTimeout(() => {
+          handleAITurn(roomCode);
+        }, gameRegistry.getAIThinkDelay());
+      }
     }
   }
 
@@ -183,7 +318,8 @@ export function createLudiServer(port: number = 3000) {
       }
 
       const { displayName, houseRules } = validationResult.data;
-      const roomCode = roomRegistry.createRoom(socket.id, displayName, houseRules);
+      const sessionToken = roomRegistry.generateSessionToken();
+      const roomCode = roomRegistry.createRoom(socket.id, displayName, houseRules, sessionToken);
       
       socket.join(roomCode);
       socketToRoom.set(socket.id, roomCode);
@@ -194,7 +330,7 @@ export function createLudiServer(port: number = 3000) {
         socket.emit('room:state', room);
       }
 
-      callback({ success: true, roomCode });
+      callback({ success: true, roomCode, sessionToken });
       console.log(`Room created: ${roomCode} by ${socket.id}`);
     });
 
@@ -210,8 +346,51 @@ export function createLudiServer(port: number = 3000) {
         return;
       }
 
-      const { roomCode, displayName } = validationResult.data;
-      const result = roomRegistry.joinRoom(roomCode, socket.id, displayName);
+      const { roomCode, displayName, sessionToken } = validationResult.data;
+
+      if (sessionToken) {
+        const reconnectResult = roomRegistry.reconnectPlayer(sessionToken, socket.id);
+        
+        if (reconnectResult.success && reconnectResult.roomCode === roomCode) {
+          socket.join(roomCode);
+          socketToRoom.set(socket.id, roomCode);
+          socketToColor.set(socket.id, reconnectResult.color!);
+
+          const game = gameRegistry.getGame(roomCode);
+          const room = roomRegistry.getRoom(roomCode);
+          
+          if (room) {
+            const cancelResult = gameRegistry.cancelDisconnectGrace(roomCode, reconnectResult.color!);
+            
+            roomRegistry.updatePlayerStatus(roomCode, socket.id, 'connected');
+            
+            io.to(roomCode).emit('room:state', room);
+            
+            if (game) {
+              socket.emit('game:state', game.state);
+
+              if (cancelResult.wasPaused && game.state.turn === reconnectResult.color && game.state.phase === 'awaiting_move') {
+                gameRegistry.setMoveTimer(roomCode, () => {
+                  handleMoveTimeout(roomCode);
+                });
+              }
+            }
+
+            const statusPayload: PlayerStatusChangedPayload = {
+              playerId: socket.id,
+              status: 'connected',
+            };
+            io.to(roomCode).emit('player:statusChanged', statusPayload);
+          }
+
+          callback({ success: true, sessionToken, isReconnect: true });
+          console.log(`Player ${socket.id} reconnected to room ${roomCode}`);
+          return;
+        }
+      }
+
+      const sessionTokenNew = roomRegistry.generateSessionToken();
+      const result = roomRegistry.joinRoom(roomCode, socket.id, displayName, sessionTokenNew);
 
       if (!result.success) {
         callback({ success: false, error: result.error });
@@ -229,7 +408,7 @@ export function createLudiServer(port: number = 3000) {
         io.to(roomCode).emit('room:state', room);
       }
 
-      callback({ success: true });
+      callback({ success: true, sessionToken: sessionTokenNew });
       console.log(`Player ${socket.id} joined room ${roomCode}`);
     });
 
@@ -429,6 +608,12 @@ export function createLudiServer(port: number = 3000) {
           };
           io.to(roomCode).emit('game:turnChanged', turnPayload);
         }
+
+        if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
+          setTimeout(() => {
+            handleAITurn(roomCode);
+          }, 1000);
+        }
       }
     });
 
@@ -436,16 +621,71 @@ export function createLudiServer(port: number = 3000) {
       console.log(`Client disconnected: ${socket.id}`);
       
       const roomCode = socketToRoom.get(socket.id);
-      if (roomCode) {
+      if (!roomCode) return;
+
+      const room = roomRegistry.getRoom(roomCode);
+      const playerColor = socketToColor.get(socket.id);
+      const game = gameRegistry.getGame(roomCode);
+
+      if (room && playerColor && game && game.state.phase !== 'finished') {
+        roomRegistry.updatePlayerStatus(roomCode, socket.id, 'reconnecting');
+        
+        io.to(roomCode).emit('room:state', room);
+        
+        const statusPayload: PlayerStatusChangedPayload = {
+          playerId: socket.id,
+          status: 'reconnecting',
+        };
+        io.to(roomCode).emit('player:statusChanged', statusPayload);
+
+        gameRegistry.startDisconnectGrace(roomCode, playerColor, () => {
+          console.log(`Grace period expired for ${playerColor} in room ${roomCode}`);
+          
+          const currentRoom = roomRegistry.getRoom(roomCode);
+          if (!currentRoom) return;
+
+          const player = currentRoom.players.find(p => p.color === playerColor);
+          if (!player) return;
+
+          if (player.status === 'reconnecting') {
+            roomRegistry.updatePlayerStatus(roomCode, player.id, 'ai-substitute');
+            gameRegistry.markAsAISubstitute(roomCode, playerColor);
+
+            io.to(roomCode).emit('room:state', currentRoom);
+            
+            const aiStatusPayload: PlayerStatusChangedPayload = {
+              playerId: player.id,
+              status: 'ai-substitute',
+            };
+            io.to(roomCode).emit('player:statusChanged', aiStatusPayload);
+
+            const currentGame = gameRegistry.getGame(roomCode);
+            if (currentGame && currentGame.state.turn === playerColor) {
+              if (currentGame.state.phase === 'awaiting_roll') {
+                setTimeout(() => {
+                  handleAITurn(roomCode);
+                }, gameRegistry.getAIThinkDelay());
+              } else if (currentGame.state.phase === 'awaiting_move') {
+                setTimeout(() => {
+                  handleAIMove(roomCode);
+                }, gameRegistry.getAIThinkDelay());
+              }
+            }
+          }
+        });
+
+        console.log(`Player ${socket.id} (${playerColor}) disconnected from room ${roomCode}, starting grace period`);
+      } else {
         roomRegistry.updatePlayerConnection(roomCode, socket.id, false);
         
-        const room = roomRegistry.getRoom(roomCode);
         if (room) {
           io.to(roomCode).emit('room:state', room);
         }
         
         socketToRoom.delete(socket.id);
-        socketToColor.delete(socket.id);
+        if (playerColor) {
+          socketToColor.delete(socket.id);
+        }
       }
     });
   });
