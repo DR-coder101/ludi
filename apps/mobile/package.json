@@ -17,11 +17,14 @@
     "expo-av": "^16.0.8",
     "expo-haptics": "^57.0.3",
     "expo-router": "~4.0.0",
+    "expo-secure-store": "^57.0.4",
+    "immer": "^11.1.18",
     "react": "18.3.1",
     "react-native": "0.76.5",
     "react-native-reanimated": "^4.6.0",
     "react-native-svg": "^15.15.5",
-    "socket.io-client": "^4.7.0"
+    "socket.io-client": "^4.7.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@types/react": "~18.3.0",
