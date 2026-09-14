@@ -127,6 +127,15 @@ All payloads typed in `packages/protocol/src/events.ts`.
 - Text chat rides Socket.IO (already connected); no separate service.
 - Mute/camera-off toggles via LiveKit SDK. Report/block buttons are post-MVP but stub the UI now.
 
+**Implementation details (M4.2)**:
+- **VideoStore** (`src/stores/videoStore.ts`): Zustand store managing LiveKit connection state, token, mic/camera toggles, and collapse state
+- **VideoTile** component: Renders individual participant video with speaking indicator border (color-coded by player color), graceful avatar fallback when camera off (displays first initial on colored background)
+- **MicCamControls**: Toggle buttons for mic and camera, visual state indication
+- **VideoGrid**: 2×2 collapsible grid (max 4 players), integrates with LiveKitRoom context, shows active speaker borders
+- **Token fetch**: Client calls `POST /video-token` (roomCode + userId) when room reaches READY_CHECK phase; server validates player is seated and game exists before issuing token
+- **Environment**: `EXPO_PUBLIC_LIVEKIT_URL` required in mobile app; server needs `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`
+- **Native module requirement**: LiveKit uses native WebRTC; **EAS development build required** — does NOT work in Expo Go
+
 ### 3.7 Data model (server, PostgreSQL)
 
 ```
@@ -196,5 +205,7 @@ M1–M3 are the core risk. Get two phones playing a complete online match before
 
 - Node 20+, pnpm 9+
 - Env vars: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`, `DATABASE_URL`, `PORT`
+- Mobile env vars: `EXPO_PUBLIC_SERVER_URL`, `EXPO_PUBLIC_LIVEKIT_URL`
 - Dev commands: `pnpm dev:server`, `pnpm dev:mobile`, `pnpm test:rules`
 - Expo Go for early dev; switch to a **development build** (EAS) once LiveKit native SDK lands in M4 — LiveKit does not run in Expo Go.
+- For two-device video testing: both devices need development builds with same `EXPO_PUBLIC_LIVEKIT_URL` pointing to your LiveKit server (Cloud or self-hosted)
