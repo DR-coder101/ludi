@@ -9,10 +9,19 @@ import {
   type GameState as RulesGameState,
 } from '@ludi/rules';
 
+export interface DisconnectGrace {
+  color: Color;
+  startTime: number;
+  timer: NodeJS.Timeout;
+  turnTimerPaused: boolean;
+}
+
 export interface GameManager {
   state: GameState;
   autoPassTimer: NodeJS.Timeout | null;
   moveTimer: NodeJS.Timeout | null;
+  disconnectGraces: Map<Color, DisconnectGrace>;
+  aiSubstitutes: Set<Color>;
 }
 
 export class GameManagerRegistry {
@@ -36,6 +45,8 @@ export class GameManagerRegistry {
       state: gameState,
       autoPassTimer: null,
       moveTimer: null,
+      disconnectGraces: new Map(),
+      aiSubstitutes: new Set(),
     });
 
     return gameState;
@@ -49,6 +60,7 @@ export class GameManagerRegistry {
     const game = this.games.get(roomCode);
     if (game) {
       this.clearTimers(game);
+      this.clearAllGraceTimers(game);
       this.games.delete(roomCode);
     }
   }
@@ -154,9 +166,69 @@ export class GameManagerRegistry {
     game.moveTimer = setTimeout(callback, 30000);
   }
 
+  startDisconnectGrace(roomCode: string, color: Color, onGraceExpired: () => void): void {
+    const game = this.games.get(roomCode);
+    if (!game) return;
+
+    if (game.disconnectGraces.has(color)) {
+      return;
+    }
+
+    const shouldPauseTurnTimer = game.state.turn === color && game.state.phase === 'awaiting_move';
+    
+    if (shouldPauseTurnTimer && game.moveTimer) {
+      clearTimeout(game.moveTimer);
+      game.moveTimer = null;
+    }
+
+    const timer = setTimeout(() => {
+      game.disconnectGraces.delete(color);
+      onGraceExpired();
+    }, 60000);
+
+    game.disconnectGraces.set(color, {
+      color,
+      startTime: Date.now(),
+      timer,
+      turnTimerPaused: shouldPauseTurnTimer,
+    });
+  }
+
+  cancelDisconnectGrace(roomCode: string, color: Color): { wasPaused: boolean } {
+    const game = this.games.get(roomCode);
+    if (!game) return { wasPaused: false };
+
+    const grace = game.disconnectGraces.get(color);
+    if (!grace) return { wasPaused: false };
+
+    clearTimeout(grace.timer);
+    game.disconnectGraces.delete(color);
+
+    return { wasPaused: grace.turnTimerPaused };
+  }
+
+  markAsAISubstitute(roomCode: string, color: Color): void {
+    const game = this.games.get(roomCode);
+    if (!game) return;
+    game.aiSubstitutes.add(color);
+  }
+
+  isAISubstitute(roomCode: string, color: Color): boolean {
+    const game = this.games.get(roomCode);
+    if (!game) return false;
+    return game.aiSubstitutes.has(color);
+  }
+
   clearTimers(game: GameManager): void {
     this.clearAutoPassTimer(game);
     this.clearMoveTimer(game);
+  }
+
+  private clearAllGraceTimers(game: GameManager): void {
+    for (const grace of game.disconnectGraces.values()) {
+      clearTimeout(grace.timer);
+    }
+    game.disconnectGraces.clear();
   }
 
   private clearAutoPassTimer(game: GameManager): void {

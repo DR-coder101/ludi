@@ -22,12 +22,17 @@ export const HouseRulesSchema = z.object({
 });
 export type HouseRules = z.infer<typeof HouseRulesSchema>;
 
+export const PlayerStatusSchema = z.enum(['connected', 'disconnected', 'reconnecting', 'ai-substitute']);
+export type PlayerStatus = z.infer<typeof PlayerStatusSchema>;
+
 export const PlayerSchema = z.object({
   id: z.string(),
   displayName: z.string().min(1).max(50),
   color: ColorSchema,
   connected: z.boolean(),
   isHost: z.boolean(),
+  status: PlayerStatusSchema.optional(),
+  sessionToken: z.string().optional(),
 });
 export type Player = z.infer<typeof PlayerSchema>;
 
@@ -40,6 +45,7 @@ export type RoomCreatePayload = z.infer<typeof RoomCreatePayloadSchema>;
 export const RoomJoinPayloadSchema = z.object({
   roomCode: z.string().length(6),
   displayName: z.string().min(1).max(50),
+  sessionToken: z.string().optional(),
 });
 export type RoomJoinPayload = z.infer<typeof RoomJoinPayloadSchema>;
 
@@ -56,11 +62,14 @@ export interface RoomCreateResponse {
   success: boolean;
   roomCode?: string;
   error?: string;
+  sessionToken?: string;
 }
 
 export interface RoomJoinResponse {
   success: boolean;
   error?: string;
+  sessionToken?: string;
+  isReconnect?: boolean;
 }
 
 export const TokenPosSchema = z.union([
@@ -162,6 +171,11 @@ export interface ClientToServerEvents {
   'chat:send': (message: string) => void;
 }
 
+export interface PlayerStatusChangedPayload {
+  playerId: PlayerId;
+  status: PlayerStatus;
+}
+
 export interface ServerToClientEvents {
   'room:state': (state: RoomState) => void;
   'game:state': (state: GameState) => void;
@@ -171,6 +185,7 @@ export interface ServerToClientEvents {
   'game:over': (payload: GameOverPayload) => void;
   'chat:message': (message: string, playerId: PlayerId) => void;
   'player:connectionChanged': (playerId: PlayerId, connected: boolean) => void;
+  'player:statusChanged': (payload: PlayerStatusChangedPayload) => void;
   'error': (message: string) => void;
   pong: (message: string) => void;
 }
