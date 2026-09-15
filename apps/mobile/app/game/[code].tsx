@@ -312,11 +312,12 @@ export default function OnlineGameScreen() {
     });
   }, [isMyTurn, gameState, legalMoves, isMoving, applyOptimisticMove, rollbackOptimisticMove]);
 
-  const handleLeave = () => {
+  const handleLeave = async () => {
     const socket = socketManager.getSocket();
     if (socket) {
       socket.emit('room:leave');
     }
+    await socketManager.clearSession();
     router.replace('/');
   };
 
