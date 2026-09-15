@@ -15,8 +15,8 @@ const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
 function MatchCard({ match, currentUserId }: { match: MatchHistory; currentUserId: string }) {
   const startDate = new Date(match.startedAt);
   const endDate = match.endedAt ? new Date(match.endedAt) : null;
-  const winner = match.players.find((p) => p.userId === match.winnerId);
-  const currentPlayer = match.players.find((p) => p.userId === currentUserId);
+  const winner = match.players.find((p: any) => p.userId === match.winnerId);
+  const currentPlayer = match.players.find((p: any) => p.userId === currentUserId);
   const isWinner = match.winnerId === currentUserId;
 
   const sortedPlayers = [...match.players].sort((a, b) => {

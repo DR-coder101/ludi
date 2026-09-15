@@ -17,6 +17,7 @@ import { useGameStore } from '../../src/stores/gameStore';
 import { useConnectionStore } from '../../src/stores/connectionStore';
 import { useChatStore } from '../../src/stores/chatStore';
 import { useVideoStore } from '../../src/stores/videoStore';
+import { useToastStore } from '../../src/stores/toastStore';
 import { GameBoard } from '../../src/components/board/GameBoard';
 import { Dice } from '../../src/components/Dice';
 import { TurnIndicator } from '../../src/components/TurnIndicator';
@@ -24,6 +25,8 @@ import { WinBanner } from '../../src/components/WinBanner';
 import { TurnDeadline } from '../../src/components/TurnDeadline';
 import { ChatPanel } from '../../src/components/ChatPanel';
 import { VideoGrid } from '../../src/components/video/VideoGrid';
+import { Toast } from '../../src/components/Toast';
+import { OnboardingTooltip, useOnboarding } from '../../src/components/OnboardingTooltip';
 import { gameAudio, triggerHaptic } from '../../src/utils/gameAudio';
 import { fetchVideoToken } from '../../src/net/videoToken';
 
@@ -58,6 +61,10 @@ export default function OnlineGameScreen() {
   const videoToken = useVideoStore((state) => state.token);
   const setConnection = useVideoStore((state) => state.setConnection);
   const resetVideo = useVideoStore((state) => state.reset);
+  
+  const { visible, message, type, duration, showToast, hideToast } = useToastStore();
+
+  const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
 
   // Local UI state
   const [animatingToken, setAnimatingToken] = useState<{
@@ -225,6 +232,7 @@ export default function OnlineGameScreen() {
 
     socket.on('error', (message) => {
       console.error('[Game] Server error:', message);
+      showToast(message, 'error');
     });
 
     return () => {
@@ -268,7 +276,7 @@ export default function OnlineGameScreen() {
       
       if (!response.success) {
         console.error('[Game] Roll failed:', response.error);
-        alert(response.error);
+        showToast(response.error || 'Roll failed', 'error');
       }
     });
   }, [isMyTurn, gameState?.phase, isRolling]);
@@ -295,9 +303,11 @@ export default function OnlineGameScreen() {
 
       if (!response.success) {
         console.error('[Game] Move rejected:', response.error, response.hint);
-        // Rollback optimistic update
         rollbackOptimisticMove();
-        alert(`Move rejected: ${response.error}\n${response.hint || ''}`);
+        const errorMsg = response.hint 
+          ? `${response.error}: ${response.hint}`
+          : response.error || 'Move rejected';
+        showToast(errorMsg, 'error', 4000);
       }
     });
   }, [isMyTurn, gameState, legalMoves, isMoving, applyOptimisticMove, rollbackOptimisticMove]);
@@ -330,6 +340,13 @@ export default function OnlineGameScreen() {
 
   const gameContent = (
     <>
+      <Toast
+        visible={visible}
+        message={message}
+        type={type}
+        duration={duration}
+        onDismiss={hideToast}
+      />
       {isReconnecting && (
         <View style={styles.reconnectingBanner}>
           <Text style={styles.reconnectingText}>🔄 Reconnecting...</Text>
@@ -390,6 +407,9 @@ export default function OnlineGameScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {shouldShowOnboarding && (
+        <OnboardingTooltip onDismiss={dismissOnboarding} />
+      )}
       <ScrollView contentContainerStyle={styles.container}>
         {videoToken && livekitUrl ? (
           gameContent
