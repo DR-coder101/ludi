@@ -1013,6 +1013,10 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
           }
         });
 
+        socketToRoom.delete(socket.id);
+        socketToPlayer.delete(socket.id);
+        socketToColor.delete(socket.id);
+
         console.log(`Player ${playerId} (${playerColor}) disconnected from room ${roomCode} (socket ${socket.id}), starting grace period`);
       } else {
         if (playerId) {
