@@ -69,10 +69,13 @@ export default function HomeScreen() {
           exactFinishBonus: false,
           playForPlacements: false,
         },
-      }, (response) => {
+      }, async (response) => {
         setIsCreatingRoom(false);
         
         if (response.success && response.roomCode) {
+          if (response.sessionToken) {
+            await socketManager.saveSessionToken(response.sessionToken);
+          }
           router.push(`/lobby/${response.roomCode}`);
         } else {
           showToast(response.error || 'Failed to create room', 'error');
@@ -102,13 +105,19 @@ export default function HomeScreen() {
       await socketManager.initialize();
       const socket = socketManager.connect();
 
+      const storedToken = socketManager.getSessionToken();
+      
       socket.emit('room:join', {
         roomCode: roomCode.trim().toUpperCase(),
         displayName: displayName.trim(),
-      }, (response) => {
+        sessionToken: storedToken || undefined,
+      }, async (response) => {
         setIsJoiningRoom(false);
         
         if (response.success) {
+          if (response.sessionToken) {
+            await socketManager.saveSessionToken(response.sessionToken);
+          }
           router.push(`/lobby/${roomCode.trim().toUpperCase()}`);
         } else {
           showToast(response.error || 'Failed to join room', 'error');

@@ -46,12 +46,6 @@ class SocketManager {
 
     this.socket.on('connect', () => {
       console.log('[Socket] Connected:', this.socket?.id);
-      
-      // Save socket ID as session token for reattachment
-      if (this.socket?.id) {
-        this.setSessionToken(this.socket.id);
-      }
-
       this.connectListeners.forEach(listener => listener());
     });
 
@@ -117,14 +111,18 @@ class SocketManager {
     };
   }
 
-  private async setSessionToken(token: string): Promise<void> {
+  async saveSessionToken(token: string): Promise<void> {
     this.sessionToken = token;
     try {
       await SecureStore.setItemAsync(SESSION_TOKEN_KEY, token);
-      console.log('[Socket] Session token saved');
+      console.log('[Socket] Session token saved:', token);
     } catch (error) {
       console.error('[Socket] Failed to save session token:', error);
     }
+  }
+
+  getSessionToken(): string | null {
+    return this.sessionToken;
   }
 
   async clearSession(): Promise<void> {
