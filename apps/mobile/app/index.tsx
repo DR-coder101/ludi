@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { Color } from '@ludi/rules';
 import { socketManager } from '../src/net/socket';
+import { useAuthStore } from '../src/stores/authStore';
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
@@ -14,6 +15,7 @@ const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { isAuthenticated, createGuest, isLoading: isAuthLoading, initializeAuth } = useAuthStore();
   const [mode, setMode] = useState<'online' | 'local' | null>(null);
   
   // Local game state
@@ -26,6 +28,10 @@ export default function HomeScreen() {
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
 
   const handlePlayerCountChange = (count: 2 | 3 | 4) => {
     setPlayerCount(count);
@@ -112,16 +118,46 @@ export default function HomeScreen() {
     }
   };
 
+  const handleQuickPlay = async () => {
+    if (!isAuthenticated && !isAuthLoading) {
+      try {
+        await createGuest();
+      } catch (err) {
+        console.error('Failed to create guest account:', err);
+      }
+    }
+    setMode('online');
+  };
+
   if (mode === null) {
     return (
       <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.headerNav}>
+          {isAuthenticated && (
+            <>
+              <TouchableOpacity
+                style={styles.navButton}
+                onPress={() => router.push('/profile')}
+              >
+                <Text style={styles.navButtonText}>👤 Profile</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.navButton}
+                onPress={() => router.push('/history')}
+              >
+                <Text style={styles.navButtonText}>📜 History</Text>
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
         <Text style={styles.title}>🎲 Ludi</Text>
         <Text style={styles.subtitle}>Caribbean Ludo</Text>
 
         <View style={styles.modeContainer}>
           <TouchableOpacity
             style={styles.modeButton}
-            onPress={() => setMode('online')}
+            onPress={handleQuickPlay}
           >
             <Text style={styles.modeButtonIcon}>🌐</Text>
             <Text style={styles.modeButtonText}>Online Multiplayer</Text>
@@ -137,6 +173,28 @@ export default function HomeScreen() {
             <Text style={styles.modeButtonSubtext}>Play on one device</Text>
           </TouchableOpacity>
         </View>
+
+        {!isAuthenticated && (
+          <View style={styles.authPrompt}>
+            <Text style={styles.authPromptText}>
+              Create an account to save your progress
+            </Text>
+            <View style={styles.authButtonRow}>
+              <TouchableOpacity
+                style={styles.authButton}
+                onPress={() => router.push('/auth/signin')}
+              >
+                <Text style={styles.authButtonText}>Sign In</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.authButton}
+                onPress={() => router.push('/auth/signup')}
+              >
+                <Text style={styles.authButtonText}>Sign Up</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
     );
   }
@@ -282,6 +340,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     padding: 20,
     alignItems: 'center',
+  },
+  headerNav: {
+    flexDirection: 'row',
+    alignSelf: 'flex-end',
+    gap: 12,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  navButton: {
+    backgroundColor: '#2a2a2a',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#D4AF37',
+  },
+  navButtonText: {
+    color: '#D4AF37',
+    fontSize: 14,
+    fontWeight: '600',
   },
   backButton: {
     alignSelf: 'flex-start',
@@ -506,5 +584,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ccc',
     marginBottom: 4,
+  },
+  authPrompt: {
+    width: '100%',
+    maxWidth: 400,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 16,
+    padding: 20,
+    marginTop: 20,
+    borderWidth: 2,
+    borderColor: '#3a3a3a',
+    alignItems: 'center',
+  },
+  authPromptText: {
+    fontSize: 14,
+    color: '#ccc',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  authButtonRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  authButton: {
+    backgroundColor: 'transparent',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#D4AF37',
+  },
+  authButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#D4AF37',
   },
 });
