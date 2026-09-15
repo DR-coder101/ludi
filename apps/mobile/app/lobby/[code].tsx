@@ -47,14 +47,23 @@ export default function LobbyScreen() {
       return;
     }
 
-    // Set my player ID from socket
-    setMyPlayerId(socket.id || '');
+    // Set my player ID from stored server-issued ID
+    const storedPlayerId = socketManager.getPlayerId();
+    if (storedPlayerId) {
+      setMyPlayerId(storedPlayerId);
+    }
     setConnected(socket.connected);
 
     // Listen for room state updates
     socket.on('room:state', (state) => {
       console.log('[Lobby] Room state update:', state);
       setRoomState(state);
+      
+      // Update myPlayerId if we don't have it yet and can find ourselves
+      const storedPlayerId = socketManager.getPlayerId();
+      if (storedPlayerId && state.players.some(p => p.id === storedPlayerId)) {
+        setMyPlayerId(storedPlayerId);
+      }
     });
 
     // Listen for game start

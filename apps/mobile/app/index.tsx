@@ -76,6 +76,9 @@ export default function HomeScreen() {
           if (response.sessionToken) {
             await socketManager.saveSessionToken(response.sessionToken);
           }
+          if (response.playerId) {
+            await socketManager.savePlayerId(response.playerId);
+          }
           router.push(`/lobby/${response.roomCode}`);
         } else {
           showToast(response.error || 'Failed to create room', 'error');
@@ -117,6 +120,9 @@ export default function HomeScreen() {
         if (response.success) {
           if (response.sessionToken) {
             await socketManager.saveSessionToken(response.sessionToken);
+          }
+          if (response.playerId) {
+            await socketManager.savePlayerId(response.playerId);
           }
           router.push(`/lobby/${roomCode.trim().toUpperCase()}`);
         } else {

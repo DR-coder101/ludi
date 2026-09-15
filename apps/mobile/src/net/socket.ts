@@ -10,21 +10,24 @@ import * as SecureStore from 'expo-secure-store';
 export type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const SESSION_TOKEN_KEY = 'ludi_session_token';
+const PLAYER_ID_KEY = 'ludi_player_id';
 const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
 class SocketManager {
   private socket: TypedSocket | null = null;
   private sessionToken: string | null = null;
+  private playerId: string | null = null;
   private reconnectListeners: Array<() => void> = [];
   private disconnectListeners: Array<() => void> = [];
   private connectListeners: Array<() => void> = [];
 
   async initialize(): Promise<void> {
-    // Load persisted session token
+    // Load persisted session token and player ID
     try {
       this.sessionToken = await SecureStore.getItemAsync(SESSION_TOKEN_KEY);
+      this.playerId = await SecureStore.getItemAsync(PLAYER_ID_KEY);
     } catch (error) {
-      console.warn('Failed to load session token:', error);
+      console.warn('Failed to load session data:', error);
     }
   }
 
@@ -125,13 +128,29 @@ class SocketManager {
     return this.sessionToken;
   }
 
+  async savePlayerId(id: string): Promise<void> {
+    this.playerId = id;
+    try {
+      await SecureStore.setItemAsync(PLAYER_ID_KEY, id);
+      console.log('[Socket] Player ID saved:', id);
+    } catch (error) {
+      console.error('[Socket] Failed to save player ID:', error);
+    }
+  }
+
+  getPlayerId(): string | null {
+    return this.playerId;
+  }
+
   async clearSession(): Promise<void> {
     this.sessionToken = null;
+    this.playerId = null;
     try {
       await SecureStore.deleteItemAsync(SESSION_TOKEN_KEY);
-      console.log('[Socket] Session token cleared');
+      await SecureStore.deleteItemAsync(PLAYER_ID_KEY);
+      console.log('[Socket] Session data cleared');
     } catch (error) {
-      console.error('[Socket] Failed to clear session token:', error);
+      console.error('[Socket] Failed to clear session data:', error);
     }
   }
 }
