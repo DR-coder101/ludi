@@ -146,6 +146,13 @@ export function ChatPanel({ roomCode, myPlayerId, roomPlayers }: ChatPanelProps)
             keyExtractor={(_, index) => index.toString()}
             style={styles.messagesList}
             contentContainerStyle={styles.messagesContent}
+            ListEmptyComponent={
+              <View style={styles.emptyChat}>
+                <Text style={styles.emptyChatIcon}>💬</Text>
+                <Text style={styles.emptyChatText}>No messages yet</Text>
+                <Text style={styles.emptyChatSubtext}>Start the conversation!</Text>
+              </View>
+            }
             onContentSizeChange={() => {
               if (isOpen) {
                 flatListRef.current?.scrollToEnd({ animated: true });
@@ -323,5 +330,25 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#1a1a1a',
+  },
+  emptyChat: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyChatIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  emptyChatText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#D4AF37',
+    marginBottom: 4,
+  },
+  emptyChatSubtext: {
+    fontSize: 14,
+    color: '#888',
   },
 });

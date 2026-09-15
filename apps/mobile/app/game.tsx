@@ -19,11 +19,14 @@ import { Dice } from '../src/components/Dice';
 import { TurnIndicator } from '../src/components/TurnIndicator';
 import { WinBanner } from '../src/components/WinBanner';
 import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
+import { OnboardingTooltip, useOnboarding } from '../src/components/OnboardingTooltip';
 
 export default function GameScreen() {
   const router = useRouter();
   const { colors } = useLocalSearchParams<{ colors: string }>();
   const { width } = useWindowDimensions();
+  
+  const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
   
   const playerColors = useMemo(() => {
     if (!colors) return ['red', 'green'] as Color[];
@@ -137,6 +140,9 @@ export default function GameScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {shouldShowOnboarding && (
+        <OnboardingTooltip onDismiss={dismissOnboarding} />
+      )}
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <TurnIndicator

@@ -4,6 +4,8 @@ import { useRouter } from 'expo-router';
 import type { Color } from '@ludi/rules';
 import { socketManager } from '../src/net/socket';
 import { useAuthStore } from '../src/stores/authStore';
+import { useToastStore } from '../src/stores/toastStore';
+import { Toast } from '../src/components/Toast';
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
@@ -16,6 +18,7 @@ const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
 export default function HomeScreen() {
   const router = useRouter();
   const { isAuthenticated, createGuest, isLoading: isAuthLoading, initializeAuth } = useAuthStore();
+  const { visible, message, type, duration, showToast, hideToast } = useToastStore();
   const [mode, setMode] = useState<'online' | 'local' | null>(null);
   
   // Local game state
@@ -46,7 +49,7 @@ export default function HomeScreen() {
 
   const handleCreateRoom = async () => {
     if (!displayName.trim()) {
-      setError('Please enter your name');
+      showToast('Please enter your name', 'error');
       return;
     }
 
@@ -72,23 +75,23 @@ export default function HomeScreen() {
         if (response.success && response.roomCode) {
           router.push(`/lobby/${response.roomCode}`);
         } else {
-          setError(response.error || 'Failed to create room');
+          showToast(response.error || 'Failed to create room', 'error');
         }
       });
     } catch (err) {
       setIsCreatingRoom(false);
-      setError('Connection failed. Check server is running.');
+      showToast('Connection failed. Check server is running.', 'error');
       console.error('Create room error:', err);
     }
   };
 
   const handleJoinRoom = async () => {
     if (!displayName.trim()) {
-      setError('Please enter your name');
+      showToast('Please enter your name', 'error');
       return;
     }
     if (!roomCode.trim() || roomCode.trim().length !== 6) {
-      setError('Please enter a valid 6-character room code');
+      showToast('Please enter a valid 6-character room code', 'error');
       return;
     }
 
@@ -108,12 +111,12 @@ export default function HomeScreen() {
         if (response.success) {
           router.push(`/lobby/${roomCode.trim().toUpperCase()}`);
         } else {
-          setError(response.error || 'Failed to join room');
+          showToast(response.error || 'Failed to join room', 'error');
         }
       });
     } catch (err) {
       setIsJoiningRoom(false);
-      setError('Connection failed. Check server is running.');
+      showToast('Connection failed. Check server is running.', 'error');
       console.error('Join room error:', err);
     }
   };
@@ -132,6 +135,13 @@ export default function HomeScreen() {
   if (mode === null) {
     return (
       <ScrollView contentContainerStyle={styles.container}>
+        <Toast
+          visible={visible}
+          message={message}
+          type={type}
+          duration={duration}
+          onDismiss={hideToast}
+        />
         <View style={styles.headerNav}>
           {isAuthenticated && (
             <>
@@ -202,6 +212,13 @@ export default function HomeScreen() {
   if (mode === 'online') {
     return (
       <ScrollView contentContainerStyle={styles.container}>
+        <Toast
+          visible={visible}
+          message={message}
+          type={type}
+          duration={duration}
+          onDismiss={hideToast}
+        />
         <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
@@ -274,6 +291,13 @@ export default function HomeScreen() {
   // Local mode
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <Toast
+        visible={visible}
+        message={message}
+        type={type}
+        duration={duration}
+        onDismiss={hideToast}
+      />
       <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
         <Text style={styles.backButtonText}>← Back</Text>
       </TouchableOpacity>
