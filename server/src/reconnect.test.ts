@@ -71,6 +71,8 @@ describe('M3.5 Reconnect & Dropout', () => {
         expect(response.playerId).toBeTruthy();
         expect(response.playerId).toMatch(/^[a-f0-9]{32}$/);
         expect(response.playerId).not.toBe(client1.id);
+        expect(response.sessionToken).not.toBe(client1.id);
+        expect(response.sessionToken).not.toBe(response.playerId);
         roomCode = response.roomCode!;
         client1.sessionToken = response.sessionToken;
         client1.playerId = response.playerId;
@@ -89,6 +91,8 @@ describe('M3.5 Reconnect & Dropout', () => {
         expect(response.playerId).toBeTruthy();
         expect(response.playerId).toMatch(/^[a-f0-9]{32}$/);
         expect(response.playerId).not.toBe(client2.id);
+        expect(response.sessionToken).not.toBe(client2.id);
+        expect(response.sessionToken).not.toBe(response.playerId);
         expect(response.isReconnect).toBeUndefined();
         resolve();
       });
@@ -109,6 +113,7 @@ describe('M3.5 Reconnect & Dropout', () => {
     let roomCode: string;
     let sessionToken: string;
     let originalPlayerId: string;
+    const originalSocketId = client1.id;
 
     await new Promise<void>((resolve) => {
       client1.emit('room:create', {
@@ -124,6 +129,8 @@ describe('M3.5 Reconnect & Dropout', () => {
         roomCode = response.roomCode!;
         sessionToken = response.sessionToken!;
         originalPlayerId = response.playerId!;
+        expect(sessionToken).not.toBe(originalSocketId);
+        expect(originalPlayerId).not.toBe(originalSocketId);
         resolve();
       });
     });
@@ -137,6 +144,9 @@ describe('M3.5 Reconnect & Dropout', () => {
       reconnectClient.connect();
     });
 
+    const newSocketId = reconnectClient.id;
+    expect(newSocketId).not.toBe(originalSocketId);
+
     await new Promise<void>((resolve) => {
       reconnectClient.emit('room:join', {
         roomCode,
@@ -148,6 +158,8 @@ describe('M3.5 Reconnect & Dropout', () => {
         expect(response.sessionToken).toBe(sessionToken);
         expect(response.playerId).toBe(originalPlayerId);
         expect(response.playerId).not.toBe(reconnectClient.id);
+        expect(sessionToken).not.toBe(newSocketId);
+        expect(originalPlayerId).not.toBe(newSocketId);
         resolve();
       });
     });
