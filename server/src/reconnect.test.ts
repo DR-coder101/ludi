@@ -10,6 +10,7 @@ import type {
 
 interface TestSocket extends ClientSocket {
   sessionToken?: string;
+  playerId?: string;
 }
 
 const PORT = 3010;
@@ -67,8 +68,12 @@ describe('M3.5 Reconnect & Dropout', () => {
         expect(response.success).toBe(true);
         expect(response.sessionToken).toBeTruthy();
         expect(response.sessionToken).toMatch(/^[a-f0-9]{64}$/);
+        expect(response.playerId).toBeTruthy();
+        expect(response.playerId).toMatch(/^[a-f0-9]{32}$/);
+        expect(response.playerId).not.toBe(client1.id);
         roomCode = response.roomCode!;
         client1.sessionToken = response.sessionToken;
+        client1.playerId = response.playerId;
         resolve();
       });
     });
@@ -81,6 +86,9 @@ describe('M3.5 Reconnect & Dropout', () => {
         expect(response.success).toBe(true);
         expect(response.sessionToken).toBeTruthy();
         expect(response.sessionToken).toMatch(/^[a-f0-9]{64}$/);
+        expect(response.playerId).toBeTruthy();
+        expect(response.playerId).toMatch(/^[a-f0-9]{32}$/);
+        expect(response.playerId).not.toBe(client2.id);
         expect(response.isReconnect).toBeUndefined();
         resolve();
       });
@@ -100,6 +108,7 @@ describe('M3.5 Reconnect & Dropout', () => {
 
     let roomCode: string;
     let sessionToken: string;
+    let originalPlayerId: string;
 
     await new Promise<void>((resolve) => {
       client1.emit('room:create', {
@@ -114,6 +123,7 @@ describe('M3.5 Reconnect & Dropout', () => {
       }, (response) => {
         roomCode = response.roomCode!;
         sessionToken = response.sessionToken!;
+        originalPlayerId = response.playerId!;
         resolve();
       });
     });
@@ -136,6 +146,8 @@ describe('M3.5 Reconnect & Dropout', () => {
         expect(response.success).toBe(true);
         expect(response.isReconnect).toBe(true);
         expect(response.sessionToken).toBe(sessionToken);
+        expect(response.playerId).toBe(originalPlayerId);
+        expect(response.playerId).not.toBe(reconnectClient.id);
         resolve();
       });
     });
@@ -200,6 +212,7 @@ describe('M3.5 Reconnect & Dropout', () => {
       }, (response) => {
         roomCode = response.roomCode!;
         client1.sessionToken = response.sessionToken;
+        client1.playerId = response.playerId;
         resolve();
       });
     });
@@ -210,6 +223,7 @@ describe('M3.5 Reconnect & Dropout', () => {
         displayName: 'Player 2',
       }, (response) => {
         client2.sessionToken = response.sessionToken;
+        client2.playerId = response.playerId;
         resolve();
       });
     });
@@ -229,7 +243,7 @@ describe('M3.5 Reconnect & Dropout', () => {
 
     const turnClient = currentGameState!.turn === 'red' ? client1 : client2;
     const activeClient = turnClient === client1 ? client2 : client1;
-    const disconnectedId = turnClient.id!;
+    const disconnectedPlayerId = turnClient.playerId!;
 
     await new Promise<void>((resolve) => {
       turnClient.emit('game:roll', {}, (response) => {
@@ -244,13 +258,13 @@ describe('M3.5 Reconnect & Dropout', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    expect(playerStatuses.get(disconnectedId)).toBe('reconnecting');
+    expect(playerStatuses.get(disconnectedPlayerId)).toBe('reconnecting');
     console.log('✓ Player status: reconnecting');
 
     console.log(`Waiting ${TEST_GRACE_MS}ms for grace period to expire...`);
     await new Promise(resolve => setTimeout(resolve, TEST_GRACE_MS + 100));
 
-    expect(playerStatuses.get(disconnectedId)).toBe('ai-substitute');
+    expect(playerStatuses.get(disconnectedPlayerId)).toBe('ai-substitute');
     console.log('✓ Player status after grace: ai-substitute');
 
     const maxWait = 3000;
@@ -269,7 +283,7 @@ describe('M3.5 Reconnect & Dropout', () => {
     });
 
     console.log(`AI move count after ${Date.now() - startWait}ms: ${aiMoveCount}`);
-    expect(playerStatuses.get(disconnectedId)).toBe('ai-substitute');
+    expect(playerStatuses.get(disconnectedPlayerId)).toBe('ai-substitute');
     console.log('✓ AI substitute mode confirmed (server authority maintained)');
 
     activeClient.disconnect();
@@ -324,6 +338,7 @@ describe('M3.5 Reconnect & Dropout', () => {
       }, (response) => {
         roomCode = response.roomCode!;
         client1.sessionToken = response.sessionToken;
+        client1.playerId = response.playerId;
         resolve();
       });
     });
@@ -334,6 +349,7 @@ describe('M3.5 Reconnect & Dropout', () => {
         displayName: 'Player 2',
       }, (response) => {
         client2.sessionToken = response.sessionToken;
+        client2.playerId = response.playerId;
         resolve();
       });
     });
@@ -353,7 +369,7 @@ describe('M3.5 Reconnect & Dropout', () => {
 
     const turnClient = currentGameState!.turn === 'red' ? client1 : client2;
     const savedSessionToken = turnClient.sessionToken;
-    const disconnectedId = turnClient.id!;
+    const savedPlayerId = turnClient.playerId!;
 
     await new Promise<void>((resolve) => {
       turnClient.emit('game:roll', {}, (response) => {
@@ -368,7 +384,7 @@ describe('M3.5 Reconnect & Dropout', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    expect(playerStatuses.get(disconnectedId)).toBe('reconnecting');
+    expect(playerStatuses.get(savedPlayerId)).toBe('reconnecting');
     console.log('✓ Player status: reconnecting');
 
     console.log('Rejoining within grace period...');
@@ -397,13 +413,14 @@ describe('M3.5 Reconnect & Dropout', () => {
       }, (response) => {
         expect(response.success).toBe(true);
         expect(response.isReconnect).toBe(true);
+        expect(response.playerId).toBe(savedPlayerId);
         resolve();
       });
     });
 
     await new Promise(resolve => setTimeout(resolve, 200));
 
-    expect(playerStatuses.get(reconnectClient.id!)).toBe('connected');
+    expect(playerStatuses.get(savedPlayerId)).toBe('connected');
     console.log('✓ Player status after rejoin: connected');
 
     expect(resyncedGameState).toBeTruthy();
@@ -411,7 +428,7 @@ describe('M3.5 Reconnect & Dropout', () => {
 
     await new Promise(resolve => setTimeout(resolve, TEST_GRACE_MS + 200));
 
-    expect(playerStatuses.get(reconnectClient.id!)).not.toBe('ai-substitute');
+    expect(playerStatuses.get(savedPlayerId)).not.toBe('ai-substitute');
     console.log('✓ Grace canceled, no AI substitution');
 
     reconnectClient.disconnect();
