@@ -63,6 +63,7 @@ export interface RoomCreateResponse {
   roomCode?: string;
   error?: string;
   sessionToken?: string;
+  playerId?: string;
 }
 
 export interface RoomJoinResponse {
@@ -70,6 +71,7 @@ export interface RoomJoinResponse {
   error?: string;
   sessionToken?: string;
   isReconnect?: boolean;
+  playerId?: string;
 }
 
 export const TokenPosSchema = z.union([

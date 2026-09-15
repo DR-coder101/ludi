@@ -6,28 +6,34 @@ const COLORS: Color[] = ['red', 'green', 'yellow', 'blue'];
 
 export class RoomRegistry {
   private rooms = new Map<string, RoomState>();
-  private sessionToPlayer = new Map<string, { roomCode: string; playerId: string }>();
+  private sessionToPlayer = new Map<string, { roomCode: string; playerId: string; color: Color }>();
 
   generateSessionToken(): string {
     return randomBytes(32).toString('hex');
   }
 
-  registerSession(sessionToken: string, roomCode: string, playerId: string): void {
-    this.sessionToPlayer.set(sessionToken, { roomCode, playerId });
+  generatePlayerId(): string {
+    return randomBytes(16).toString('hex');
   }
 
-  getPlayerBySession(sessionToken: string): { roomCode: string; playerId: string } | undefined {
+  registerSession(sessionToken: string, roomCode: string, playerId: string, color: Color): void {
+    this.sessionToPlayer.set(sessionToken, { roomCode, playerId, color });
+  }
+
+  getPlayerBySession(sessionToken: string): { roomCode: string; playerId: string; color: Color } | undefined {
     return this.sessionToPlayer.get(sessionToken);
   }
 
-  createRoom(hostId: string, displayName: string, houseRules: HouseRules, sessionToken: string): string {
+  createRoom(displayName: string, houseRules: HouseRules, sessionToken: string): { roomCode: string; playerId: string } {
     let roomCode: string;
     do {
       roomCode = generateRoomCode();
     } while (this.rooms.has(roomCode));
 
+    const playerId = this.generatePlayerId();
+
     const host: Player = {
-      id: hostId,
+      id: playerId,
       displayName,
       color: COLORS[0],
       connected: true,
@@ -41,19 +47,19 @@ export class RoomRegistry {
       players: [host],
       houseRules,
       status: 'lobby',
-      hostId,
+      hostId: playerId,
     };
 
     this.rooms.set(roomCode, room);
-    this.registerSession(sessionToken, roomCode, hostId);
-    return roomCode;
+    this.registerSession(sessionToken, roomCode, playerId, COLORS[0]);
+    return { roomCode, playerId };
   }
 
   getRoom(roomCode: string): RoomState | undefined {
     return this.rooms.get(roomCode);
   }
 
-  joinRoom(roomCode: string, playerId: string, displayName: string, sessionToken: string): { success: boolean; error?: string; color?: Color } {
+  joinRoom(roomCode: string, displayName: string, sessionToken: string): { success: boolean; error?: string; color?: Color; playerId?: string } {
     const room = this.rooms.get(roomCode);
     
     if (!room) {
@@ -68,16 +74,14 @@ export class RoomRegistry {
       return { success: false, error: 'Room is full' };
     }
 
-    if (room.players.some(p => p.id === playerId)) {
-      return { success: false, error: 'Already in room' };
-    }
-
     const usedColors = new Set(room.players.map(p => p.color));
     const availableColor = COLORS.find(c => !usedColors.has(c));
     
     if (!availableColor) {
       return { success: false, error: 'No colors available' };
     }
+
+    const playerId = this.generatePlayerId();
 
     const player: Player = {
       id: playerId,
@@ -90,39 +94,36 @@ export class RoomRegistry {
     };
 
     room.players.push(player);
-    this.registerSession(sessionToken, roomCode, playerId);
-    return { success: true, color: availableColor };
+    this.registerSession(sessionToken, roomCode, playerId, availableColor);
+    return { success: true, color: availableColor, playerId };
   }
 
-  reconnectPlayer(sessionToken: string, newSocketId: string): { success: boolean; roomCode?: string; playerId?: string; color?: Color; error?: string } {
+  reconnectPlayer(sessionToken: string): { success: boolean; roomCode?: string; playerId?: string; color?: Color; error?: string } {
     const session = this.sessionToPlayer.get(sessionToken);
     if (!session) {
       return { success: false, error: 'Invalid session token' };
     }
 
-    const { roomCode, playerId: oldPlayerId } = session;
+    const { roomCode, playerId, color } = session;
     const room = this.rooms.get(roomCode);
     
     if (!room) {
       return { success: false, error: 'Room not found' };
     }
 
-    const player = room.players.find(p => p.sessionToken === sessionToken);
+    const player = room.players.find(p => p.id === playerId);
     if (!player) {
       return { success: false, error: 'Player not found in room' };
     }
 
-    player.id = newSocketId;
     player.connected = true;
     player.status = 'connected';
-
-    this.sessionToPlayer.set(sessionToken, { roomCode, playerId: newSocketId });
 
     return { 
       success: true, 
       roomCode, 
-      playerId: newSocketId,
-      color: player.color,
+      playerId,
+      color,
     };
   }
 

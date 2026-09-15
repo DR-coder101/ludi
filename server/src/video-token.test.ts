@@ -38,6 +38,9 @@ describe('Video Token Endpoint', () => {
     const client1 = await import('socket.io-client').then(m => m.io(baseUrl));
     const client2 = await import('socket.io-client').then(m => m.io(baseUrl));
     
+    let player1Id: string | undefined;
+    let player2Id: string | undefined;
+    
     await new Promise<void>((resolve) => {
       client1.emit('room:create', {
         displayName: 'Player1',
@@ -74,7 +77,8 @@ describe('Video Token Endpoint', () => {
           playForPlacements: true,
         },
       }, (response) => {
-        if (response.success && response.roomCode) {
+        if (response.success && response.roomCode && response.playerId) {
+          player1Id = response.playerId;
           resolve(response.roomCode);
         }
       });
@@ -85,7 +89,8 @@ describe('Video Token Endpoint', () => {
         roomCode: actualRoomCode,
         displayName: 'Player2-Final',
       }, (joinResponse) => {
-        if (joinResponse.success) {
+        if (joinResponse.success && joinResponse.playerId) {
+          player2Id = joinResponse.playerId;
           resolve();
         }
       });
@@ -97,8 +102,8 @@ describe('Video Token Endpoint', () => {
 
     return {
       roomCode: actualRoomCode,
-      player1Id: client1.id,
-      player2Id: client2.id,
+      player1Id: player1Id!,
+      player2Id: player2Id!,
       cleanup: () => {
         client1.disconnect();
         client2.disconnect();
@@ -159,6 +164,8 @@ describe('Video Token Endpoint', () => {
     it('should reject when game has not started yet', async () => {
       const client = await import('socket.io-client').then(m => m.io(baseUrl));
       
+      let playerId: string | undefined;
+      
       const roomCode = await new Promise<string>((resolve) => {
         client.emit('room:create', {
           displayName: 'LobbyPlayer',
@@ -170,7 +177,8 @@ describe('Video Token Endpoint', () => {
             playForPlacements: true,
           },
         }, (response) => {
-          if (response.success && response.roomCode) {
+          if (response.success && response.roomCode && response.playerId) {
+            playerId = response.playerId;
             resolve(response.roomCode);
           }
         });
@@ -183,7 +191,7 @@ describe('Video Token Endpoint', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           roomCode,
-          userId: client.id,
+          userId: playerId,
         }),
       });
 
