@@ -295,11 +295,68 @@ export const BOARD_SIZE = 19;
 export const CELL_SIZE = 1; // relative unit
 
 /**
- * Color palette (standard Ludo colors)
+ * Jamaican Board Theme - Color Palette
+ * 
+ * Player piece colors (engine color → display color):
+ * - Middlesex (engine: red)    → RED pieces (#D32F2F)
+ * - Kingston (engine: green)   → GREEN pieces (#00A651)
+ * - Surrey (engine: yellow)    → YELLOW pieces (#FCD116)
+ * - Cornwall (engine: blue)    → BLACK pieces (#000000)
  */
 export const COLORS: Record<Color, string> = {
-  red: '#E53935',
-  green: '#43A047',
-  yellow: '#FDD835',
-  blue: '#1E88E5',
+  red: '#D32F2F',      // Middlesex - red pieces
+  green: '#00A651',    // Kingston - Jamaica green
+  yellow: '#FCD116',   // Surrey - Jamaica gold
+  blue: '#000000',     // Cornwall - BLACK pieces (engine id stays 'blue')
+};
+
+/**
+ * Jamaican Theme Palette
+ * 
+ * Based on Jamaican flag colors and traditional board design
+ */
+export const THEME = {
+  // Board foundation
+  board: '#1A1A1A',           // Black board background
+  grid: '#FFFFFF',            // White grid lines (thin)
+  
+  // Jamaican flag colors
+  jamaicaGreen: '#00A651',    // Jamaican green
+  jamaicaGold: '#FCD116',     // Jamaican gold/yellow
+  black: '#000000',           // Black (saltire, accents)
+  
+  // Board elements
+  frame: '#000000',           // Black frame
+  comeOut: '#00A651',         // Green come-out cells
+  arrow: '#FFFFFF',           // White direction arrows
+  safe: '#000000',            // Black circle on safe cells
+  
+  // Center 3×3 pattern
+  centerX: '#FCD116',         // Yellow saltire X
+  centerTopBottom: '#00A651', // Green top/bottom triangles
+  centerLeftRight: '#000000', // Black left/right triangles
+  centerSilhouette: '#000000', // Jamaica island silhouette
+  
+  // Home stretch pattern (repeating bands: Green → Yellow → Black)
+  homePattern: ['#00A651', '#FCD116', '#000000', '#00A651', '#FCD116', '#000000'],
+  
+  // Outer lane pattern
+  outerLane: {
+    green: '#00A651',
+    yellow: '#FCD116',
+    black: '#000000',
+  },
+} as const;
+
+/**
+ * County Skins - Display names for player colors
+ * 
+ * Maps engine colors to Jamaican parish/county names.
+ * Yard placement follows engine START adjacency, NOT photo corner labels.
+ */
+export const COUNTY_NAMES: Record<Color, string> = {
+  red: 'Middlesex',    // Engine red=0  → bottom-right yard
+  green: 'Kingston',   // Engine green=13 → top-right yard
+  yellow: 'Surrey',    // Engine yellow=26 → top-left yard
+  blue: 'Cornwall',    // Engine blue=39 → bottom-left yard (BLACK pieces)
 };
