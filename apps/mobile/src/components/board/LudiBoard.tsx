@@ -59,8 +59,8 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
           key={`yard-${color}`}
           x={yard.topLeft.col * cellSize}
           y={yard.topLeft.row * cellSize}
-          width={cellSize * 4}
-          height={cellSize * 4}
+          width={cellSize * 8}
+          height={cellSize * 8}
           fill={COLORS[color]}
           opacity={0.3}
           stroke={COLORS[color]}
