@@ -121,6 +121,19 @@ export const SAFE_CELLS: number[] = [0, 13, 26, 39, 8, 21, 34, 47];
 
 /**
  * Yards (starting areas) - each holds 4 tokens
+ * Classic Ludo layout: yards positioned adjacent to each color's start cell
+ * 
+ * Engine starts (preserved):
+ * - Red: TRACK[0] at row 13, col 7 (bottom arm middle)
+ * - Green: TRACK[13] at row 7, col 14 (right arm middle)
+ * - Yellow: TRACK[26] at row 1, col 7 (top arm middle)
+ * - Blue: TRACK[39] at row 7, col 0 (left arm middle)
+ * 
+ * Yard positions (fixed for adjacency):
+ * - Red: bottom-right corner (rows 10-13, cols 10-13) - adjacent to bottom arm
+ * - Green: top-right corner (rows 1-4, cols 10-13) - adjacent to right arm
+ * - Yellow: top-left corner (rows 1-4, cols 1-4) - adjacent to top arm
+ * - Blue: bottom-left corner (rows 10-13, cols 1-4) - adjacent to left arm
  */
 export const YARDS: Record<Color, YardPosition> = {
   red: {
@@ -133,12 +146,12 @@ export const YARDS: Record<Color, YardPosition> = {
     ],
   },
   green: {
-    topLeft: { row: 10, col: 1 },
+    topLeft: { row: 1, col: 10 },
     tokenPositions: [
-      { row: 10.5, col: 1.5 },
-      { row: 10.5, col: 3.5 },
-      { row: 12.5, col: 1.5 },
-      { row: 12.5, col: 3.5 },
+      { row: 1.5, col: 10.5 },
+      { row: 1.5, col: 12.5 },
+      { row: 3.5, col: 10.5 },
+      { row: 3.5, col: 12.5 },
     ],
   },
   yellow: {
@@ -151,12 +164,12 @@ export const YARDS: Record<Color, YardPosition> = {
     ],
   },
   blue: {
-    topLeft: { row: 1, col: 10 },
+    topLeft: { row: 10, col: 1 },
     tokenPositions: [
-      { row: 1.5, col: 10.5 },
-      { row: 1.5, col: 12.5 },
-      { row: 3.5, col: 10.5 },
-      { row: 3.5, col: 12.5 },
+      { row: 10.5, col: 1.5 },
+      { row: 10.5, col: 3.5 },
+      { row: 12.5, col: 1.5 },
+      { row: 12.5, col: 3.5 },
     ],
   },
 };
