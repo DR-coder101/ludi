@@ -11,6 +11,8 @@ import {
   START_CELLS,
   BOARD_SIZE,
   COLORS,
+  THEME,
+  COUNTY_NAMES,
   type Color,
   type CellPosition,
 } from './boardLayout';
@@ -50,17 +52,17 @@ const MemoizedTrackCell = memo<{
       y={cell.row * cellSize}
       width={cellSize}
       height={cellSize}
-      fill={isSafe ? '#FFD700' : isStart ? '#FFA500' : '#2a2a2a'}
-      stroke="#4a4a4a"
+      fill={isStart ? THEME.comeOut : THEME.board}
+      stroke={THEME.grid}
       strokeWidth={1}
+      opacity={isStart ? 1 : 0.3}
     />
-    {isSafe && (
+    {isSafe && !isStart && (
       <Circle
         cx={cell.col * cellSize + cellSize / 2}
         cy={cell.row * cellSize + cellSize / 2}
-        r={cellSize * 0.15}
-        fill="#FFD700"
-        opacity={0.8}
+        r={cellSize * 0.2}
+        fill={THEME.safe}
       />
     )}
   </React.Fragment>
@@ -85,10 +87,10 @@ function getTokenCoordinates(pos: TokenPos, color: Color): CellPosition | null {
   
   if (pos.zone === 'home') {
     const centerPos: Record<Color, CellPosition> = {
-      red: { row: 7.5, col: 7 },
-      green: { row: 7, col: 8.5 },
-      yellow: { row: 6.5, col: 7 },
-      blue: { row: 7, col: 5.5 },
+      red: { row: 9.5, col: 9 },
+      green: { row: 9, col: 9.5 },
+      yellow: { row: 8.5, col: 9 },
+      blue: { row: 9, col: 8.5 },
     };
     return centerPos[color];
   }
@@ -133,8 +135,9 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           x={0}
           y={i * cellSize}
           width={width}
-          height={0.5}
-          fill="#ccc"
+          height={1}
+          fill={THEME.grid}
+          opacity={0.2}
         />
       );
       lines.push(
@@ -142,9 +145,10 @@ export const GameBoard: React.FC<GameBoardProps> = ({
           key={`v-${i}`}
           x={i * cellSize}
           y={0}
-          width={0.5}
+          width={1}
           height={boardHeight}
-          fill="#ccc"
+          fill={THEME.grid}
+          opacity={0.2}
         />
       );
     }
@@ -152,44 +156,37 @@ export const GameBoard: React.FC<GameBoardProps> = ({
   };
 
   const renderYards = () => {
-    return COLORS_ARRAY.map((color) => {
-      if (!gameState.config.playerColors.includes(color)) return null;
-      const yard = YARDS[color];
-      return (
-        <Rect
-          key={`yard-${color}`}
-          x={yard.topLeft.col * cellSize}
-          y={yard.topLeft.row * cellSize}
-          width={cellSize * 8}
-          height={cellSize * 8}
-          fill={COLORS[color]}
-          opacity={0.3}
-          stroke={COLORS[color]}
-          strokeWidth={2}
-        />
-      );
-    });
+    return null;
   };
 
   const renderHomeColumns = () => {
     return COLORS_ARRAY.map((color) => {
       if (!gameState.config.playerColors.includes(color)) return null;
       const column = HOME_COLUMNS[color];
-      return column.cells.map((cell, index) => (
-        <Rect
-          key={`home-${color}-${index}`}
-          x={cell.col * cellSize}
-          y={cell.row * cellSize}
-          width={cellSize}
-          height={cellSize}
-          fill={COLORS[color]}
-          opacity={0.4}
-        />
-      ));
+      return column.cells.map((cell, index) => {
+        const patternIndex = index % THEME.homePattern.length;
+        return (
+          <Rect
+            key={`home-${color}-${index}`}
+            x={cell.col * cellSize}
+            y={cell.row * cellSize}
+            width={cellSize}
+            height={cellSize}
+            fill={THEME.homePattern[patternIndex]}
+          />
+        );
+      });
     });
   };
 
   const renderCenterTriangles = () => {
+    const colorMap: Record<Color, string> = {
+      red: THEME.centerTopBottom,
+      green: THEME.centerLeftRight,
+      yellow: THEME.centerTopBottom,
+      blue: THEME.centerLeftRight,
+    };
+    
     return COLORS_ARRAY.map((color) => {
       if (!gameState.config.playerColors.includes(color)) return null;
       const triangle = CENTER_TRIANGLES[color];
@@ -205,8 +202,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
         <Polygon
           key={`triangle-${color}`}
           points={points}
-          fill={COLORS[color]}
-          opacity={0.6}
+          fill={colorMap[color]}
         />
       );
     });
@@ -347,7 +343,7 @@ export const GameBoard: React.FC<GameBoardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#2a2a2a',
+    backgroundColor: THEME.board,
     borderRadius: 8,
   },
 });
