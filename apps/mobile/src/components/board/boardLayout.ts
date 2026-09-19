@@ -24,7 +24,7 @@ export interface YardPosition {
 }
 
 export interface HomeColumnPosition {
-  cells: CellPosition[]; // 5 cells from track to home
+  cells: CellPosition[]; // 6 cells from track to home
 }
 
 /**
@@ -34,9 +34,9 @@ export interface HomeColumnPosition {
  */
 export const TRACK_CELLS: CellPosition[] = [
   // Red's start → moving right (bottom edge)
-  { row: 13, col: 7 },  // 0 - Red start
+  { row: 13, col: 7 },  // 0 - Red start (SAFE)
   { row: 13, col: 8 },  // 1
-  { row: 12, col: 8 },  // 2 - safe (star)
+  { row: 12, col: 8 },  // 2
   { row: 11, col: 8 },  // 3
   { row: 10, col: 8 },  // 4
   { row: 9, col: 8 },   // 5
@@ -44,16 +44,16 @@ export const TRACK_CELLS: CellPosition[] = [
   // Turn up (right edge bottom)
   { row: 8, col: 8 },   // 6
   { row: 8, col: 9 },   // 7
-  { row: 8, col: 10 },  // 8 - safe (star)
+  { row: 8, col: 10 },  // 8 - SAFE (star)
   { row: 8, col: 11 },  // 9
   { row: 8, col: 12 },  // 10
   { row: 8, col: 13 },  // 11
   { row: 8, col: 14 },  // 12
   
   // Green's start (right edge middle)
-  { row: 7, col: 14 },  // 13 - Green start
+  { row: 7, col: 14 },  // 13 - Green start (SAFE)
   { row: 6, col: 14 },  // 14
-  { row: 6, col: 13 },  // 15 - safe (star)
+  { row: 6, col: 13 },  // 15
   { row: 6, col: 12 },  // 16
   { row: 6, col: 11 },  // 17
   { row: 6, col: 10 },  // 18
@@ -61,16 +61,16 @@ export const TRACK_CELLS: CellPosition[] = [
   // Turn left (top edge right)
   { row: 6, col: 9 },   // 19
   { row: 6, col: 8 },   // 20
-  { row: 5, col: 8 },   // 21 - safe (star)
+  { row: 5, col: 8 },   // 21 - SAFE (star)
   { row: 4, col: 8 },   // 22
   { row: 3, col: 8 },   // 23
   { row: 2, col: 8 },   // 24
   { row: 1, col: 8 },   // 25
   
   // Yellow's start (top edge middle)
-  { row: 1, col: 7 },   // 26 - Yellow start
+  { row: 1, col: 7 },   // 26 - Yellow start (SAFE)
   { row: 1, col: 6 },   // 27
-  { row: 2, col: 6 },   // 28 - safe (star)
+  { row: 2, col: 6 },   // 28
   { row: 3, col: 6 },   // 29
   { row: 4, col: 6 },   // 30
   { row: 5, col: 6 },   // 31
@@ -78,16 +78,16 @@ export const TRACK_CELLS: CellPosition[] = [
   // Turn down (left edge top)
   { row: 6, col: 6 },   // 32
   { row: 6, col: 5 },   // 33
-  { row: 6, col: 4 },   // 34 - safe (star)
+  { row: 6, col: 4 },   // 34 - SAFE (star)
   { row: 6, col: 3 },   // 35
   { row: 6, col: 2 },   // 36
   { row: 6, col: 1 },   // 37
   { row: 6, col: 0 },   // 38
   
   // Blue's start (left edge middle)
-  { row: 7, col: 0 },   // 39 - Blue start
+  { row: 7, col: 0 },   // 39 - Blue start (SAFE)
   { row: 8, col: 0 },   // 40
-  { row: 8, col: 1 },   // 41 - safe (star)
+  { row: 8, col: 1 },   // 41
   { row: 8, col: 2 },   // 42
   { row: 8, col: 3 },   // 43
   { row: 8, col: 4 },   // 44
@@ -95,7 +95,7 @@ export const TRACK_CELLS: CellPosition[] = [
   // Turn right (bottom edge left)
   { row: 8, col: 5 },   // 45
   { row: 8, col: 6 },   // 46
-  { row: 9, col: 6 },   // 47 - safe (star)
+  { row: 9, col: 6 },   // 47 - SAFE (star)
   { row: 10, col: 6 },  // 48
   { row: 11, col: 6 },  // 49
   { row: 12, col: 6 },  // 50
@@ -114,8 +114,10 @@ export const START_CELLS: Record<Color, number> = {
 
 /**
  * Safe cells (star markers) - indices into TRACK_CELLS
+ * Start cells: 0 (red), 13 (green), 26 (yellow), 39 (blue)
+ * Star cells: 8, 21, 34, 47
  */
-export const SAFE_CELLS: number[] = [2, 8, 15, 21, 28, 34, 41, 47];
+export const SAFE_CELLS: number[] = [0, 13, 26, 39, 8, 21, 34, 47];
 
 /**
  * Yards (starting areas) - each holds 4 tokens
@@ -160,7 +162,7 @@ export const YARDS: Record<Color, YardPosition> = {
 };
 
 /**
- * Home columns (5 cells leading to home center)
+ * Home columns (6 cells leading to home center)
  */
 export const HOME_COLUMNS: Record<Color, HomeColumnPosition> = {
   red: {
@@ -170,6 +172,7 @@ export const HOME_COLUMNS: Record<Color, HomeColumnPosition> = {
       { row: 10, col: 7 },
       { row: 9, col: 7 },
       { row: 8, col: 7 },
+      { row: 7, col: 7 },
     ],
   },
   green: {
@@ -179,6 +182,7 @@ export const HOME_COLUMNS: Record<Color, HomeColumnPosition> = {
       { row: 7, col: 11 },
       { row: 7, col: 10 },
       { row: 7, col: 9 },
+      { row: 7, col: 8 },
     ],
   },
   yellow: {
@@ -188,6 +192,7 @@ export const HOME_COLUMNS: Record<Color, HomeColumnPosition> = {
       { row: 4, col: 7 },
       { row: 5, col: 7 },
       { row: 6, col: 7 },
+      { row: 7, col: 7 },
     ],
   },
   blue: {
@@ -197,6 +202,7 @@ export const HOME_COLUMNS: Record<Color, HomeColumnPosition> = {
       { row: 7, col: 3 },
       { row: 7, col: 4 },
       { row: 7, col: 5 },
+      { row: 7, col: 6 },
     ],
   },
 };
