@@ -10,6 +10,8 @@ import {
   START_CELLS,
   BOARD_SIZE,
   COLORS,
+  THEME,
+  COUNTY_NAMES,
   type Color,
 } from './boardLayout';
 import { Token } from './Token';
@@ -33,8 +35,9 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
           x={0}
           y={i * cellSize}
           width={width}
-          height={0.5}
-          fill="#ccc"
+          height={1}
+          fill={THEME.grid}
+          opacity={0.2}
         />
       );
       lines.push(
@@ -42,9 +45,10 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
           key={`v-${i}`}
           x={i * cellSize}
           y={0}
-          width={0.5}
+          width={1}
           height={boardHeight}
-          fill="#ccc"
+          fill={THEME.grid}
+          opacity={0.2}
         />
       );
     }
@@ -52,42 +56,36 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
   };
 
   const renderYards = () => {
-    return COLORS_ARRAY.map((color) => {
-      const yard = YARDS[color];
-      return (
-        <Rect
-          key={`yard-${color}`}
-          x={yard.topLeft.col * cellSize}
-          y={yard.topLeft.row * cellSize}
-          width={cellSize * 8}
-          height={cellSize * 8}
-          fill={COLORS[color]}
-          opacity={0.3}
-          stroke={COLORS[color]}
-          strokeWidth={2}
-        />
-      );
-    });
+    return null;
   };
 
   const renderHomeColumns = () => {
     return COLORS_ARRAY.map((color) => {
       const column = HOME_COLUMNS[color];
-      return column.cells.map((cell, index) => (
-        <Rect
-          key={`home-${color}-${index}`}
-          x={cell.col * cellSize}
-          y={cell.row * cellSize}
-          width={cellSize}
-          height={cellSize}
-          fill={COLORS[color]}
-          opacity={0.4}
-        />
-      ));
+      return column.cells.map((cell, index) => {
+        const patternIndex = index % THEME.homePattern.length;
+        return (
+          <Rect
+            key={`home-${color}-${index}`}
+            x={cell.col * cellSize}
+            y={cell.row * cellSize}
+            width={cellSize}
+            height={cellSize}
+            fill={THEME.homePattern[patternIndex]}
+          />
+        );
+      });
     });
   };
 
   const renderCenterTriangles = () => {
+    const colorMap: Record<Color, string> = {
+      red: THEME.centerTopBottom,
+      green: THEME.centerLeftRight,
+      yellow: THEME.centerTopBottom,
+      blue: THEME.centerLeftRight,
+    };
+    
     return COLORS_ARRAY.map((color) => {
       const triangle = CENTER_TRIANGLES[color];
       const points = triangle
@@ -102,8 +100,7 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
         <Polygon
           key={`triangle-${color}`}
           points={points}
-          fill={COLORS[color]}
-          opacity={0.6}
+          fill={colorMap[color]}
         />
       );
     });
@@ -121,16 +118,17 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
             y={cell.row * cellSize}
             width={cellSize}
             height={cellSize}
-            fill={isSafe ? '#FFD700' : isStart ? '#FFA500' : '#fff'}
-            stroke="#888"
+            fill={isStart ? THEME.comeOut : THEME.board}
+            stroke={THEME.grid}
             strokeWidth={1}
+            opacity={isStart ? 1 : 0.3}
           />
-          {isSafe && (
+          {isSafe && !isStart && (
             <Circle
               cx={cell.col * cellSize + cellSize / 2}
               cy={cell.row * cellSize + cellSize / 2}
-              r={cellSize * 0.15}
-              fill="#fff"
+              r={cellSize * 0.2}
+              fill={THEME.safe}
             />
           )}
         </React.Fragment>
@@ -173,6 +171,6 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: THEME.board,
   },
 });
