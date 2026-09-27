@@ -20,10 +20,10 @@ import { colors, typography, spacing, radii, shadows, PLACE_NAMES } from '../../
 import type { EngineColor } from '../../src/theme/tokens';
 
 const COLOR_DISPLAY: Record<EngineColor, { name: string; hex: string; shortName: string }> = {
-  yellow: { name: PLACE_NAMES.yellow, hex: colors.pieces.yellow, shortName: 'MOBAY' },
-  green: { name: PLACE_NAMES.green, hex: colors.pieces.green, shortName: 'OCHI' },
-  blue: { name: PLACE_NAMES.blue, hex: colors.pieces.blue, shortName: 'NEGRIL' },
-  red: { name: PLACE_NAMES.red, hex: colors.pieces.red, shortName: 'KINGSTON' },
+  yellow: { name: PLACE_NAMES.yellow, hex: colors.places.montegoGold, shortName: 'MOBAY' },
+  green: { name: PLACE_NAMES.green, hex: colors.places.ochoGreen, shortName: 'OCHI' },
+  blue: { name: PLACE_NAMES.blue, hex: colors.places.negrilBlack, shortName: 'NEGRIL' },
+  red: { name: PLACE_NAMES.red, hex: colors.places.kingstonRed, shortName: 'KINGSTON' },
 };
 
 export default function LobbyScreen() {

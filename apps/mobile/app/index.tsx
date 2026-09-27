@@ -12,10 +12,10 @@ import { colors, typography, spacing, radii, shadows } from '../src/theme/tokens
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
-  yellow: { name: 'Montego Bay', hex: colors.pieces.yellow },
-  green: { name: 'Ocho Rios', hex: colors.pieces.green },
-  blue: { name: 'Negril', hex: colors.pieces.blue },
-  red: { name: 'Kingston', hex: colors.pieces.red },
+  yellow: { name: 'Montego Bay', hex: colors.places.montegoGold },
+  green: { name: 'Ocho Rios', hex: colors.places.ochoGreen },
+  blue: { name: 'Negril', hex: colors.places.negrilBlack },
+  red: { name: 'Kingston', hex: colors.places.kingstonRed },
 };
 
 export default function HomeScreen() {
@@ -436,16 +436,16 @@ const styles = StyleSheet.create({
     letterSpacing: typography.letterSpacing.wide,
   },
   title: {
-    fontSize: typography.sizes.displayLarge,
+    fontSize: typography.sizes.displayHero,
     fontFamily: typography.fonts.display,
     textAlign: 'center',
     marginTop: spacing.xl,
     marginBottom: spacing.sm,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.widest,
-    textShadowColor: colors.shadowGold,
-    textShadowOffset: { width: 0, height: 4 },
-    textShadowRadius: 12,
+    color: colors.gold,
+    letterSpacing: typography.letterSpacing.displayWide,
+    textShadowColor: colors.greenDeep,
+    textShadowOffset: { width: 4, height: 4 },
+    textShadowRadius: 0,
   },
   subtitle: {
     fontSize: typography.sizes.bodyLarge,
@@ -466,7 +466,7 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: colors.accent,
+    borderColor: colors.gold,
     ...shadows.gold,
   },
   modeButtonIcon: {
@@ -475,10 +475,11 @@ const styles = StyleSheet.create({
   },
   modeButtonText: {
     fontSize: typography.sizes.headingMedium,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
+    fontFamily: typography.fonts.sticker,
+    color: colors.gold,
     marginBottom: spacing.xs,
-    letterSpacing: typography.letterSpacing.wider,
+    letterSpacing: typography.letterSpacing.stickerWide,
+    textTransform: 'uppercase',
   },
   modeButtonSubtext: {
     fontSize: typography.sizes.bodySmall,
@@ -515,7 +516,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   primaryButton: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.gold,
     paddingVertical: spacing.md,
     borderRadius: radii.lg,
     alignItems: 'center',
@@ -523,9 +524,10 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     fontSize: typography.sizes.bodyLarge,
-    fontFamily: typography.fonts.heading,
-    color: colors.textOnAccent,
-    letterSpacing: typography.letterSpacing.wider,
+    fontFamily: typography.fonts.sticker,
+    color: colors.bg,
+    letterSpacing: typography.letterSpacing.stickerWide,
+    textTransform: 'uppercase',
   },
   secondaryButton: {
     backgroundColor: 'transparent',
