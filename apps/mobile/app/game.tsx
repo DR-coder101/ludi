@@ -15,7 +15,7 @@ import {
   applyMove,
 } from '@ludi/rules';
 import { GameBoard } from '../src/components/board/GameBoard';
-import { Dice } from '../src/components/Dice';
+import { DicePair } from '../src/components/DicePair';
 import { TurnIndicator } from '../src/components/TurnIndicator';
 import { WinBanner } from '../src/components/WinBanner';
 import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
@@ -164,7 +164,7 @@ export default function GameScreen() {
         </View>
 
         <View style={styles.controls}>
-          <Dice
+          <DicePair
             value={gameState.dice}
             onRoll={handleRoll}
             disabled={gameState.phase !== 'awaiting_roll'}

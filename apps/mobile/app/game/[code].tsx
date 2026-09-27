@@ -19,7 +19,7 @@ import { useChatStore } from '../../src/stores/chatStore';
 import { useVideoStore } from '../../src/stores/videoStore';
 import { useToastStore } from '../../src/stores/toastStore';
 import { GameBoard } from '../../src/components/board/GameBoard';
-import { Dice } from '../../src/components/Dice';
+import { DicePair } from '../../src/components/DicePair';
 import { TurnIndicator } from '../../src/components/TurnIndicator';
 import { WinBanner } from '../../src/components/WinBanner';
 import { TurnDeadline } from '../../src/components/TurnDeadline';
@@ -389,7 +389,7 @@ export default function OnlineGameScreen() {
       </View>
 
       <View style={styles.controls}>
-        <Dice
+        <DicePair
           value={gameState.dice}
           onRoll={handleRoll}
           disabled={!isMyTurn || gameState.phase !== 'awaiting_roll' || isRolling}
