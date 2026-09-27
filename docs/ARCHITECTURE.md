@@ -171,7 +171,7 @@ apps/mobile/
     theme/                # colors per player: red/green/yellow/blue + JA-inspired accent
 ```
 
-**Board rendering:** draw the 15×15 grid in `react-native-svg` (or Skia). Coordinates for the 52-cell main track, 4 yards, 4 home columns, and 4 start cells are defined as **data** (`boardLayout.ts`), not hardcoded in components — this lets agents and tests reason about positions.
+**Board rendering:** draw the 19×19 grid (8×8 corner yards, 3×8 arms, 3×3 centre — Dean's plywood board) in `react-native-svg`. Coordinates for the 52-cell main track, 4 yards, 4 home columns, and 4 start cells are defined as **data** (`boardLayout.ts`), not hardcoded in components — this lets agents and tests reason about positions.
 
 **Game feel checklist (do not skip):** dice shake + tumble animation, token hop along path cells, capture "knock out" animation, slide-up chat, subtle sound effects, haptics on your turn.
 
@@ -204,8 +204,9 @@ M1–M3 are the core risk. Get two phones playing a complete online match before
 ## 7. Environment & Setup (for Cursor agents)
 
 - Node 20+, pnpm 9+
-- Env vars: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`, `DATABASE_URL`, `PORT`
-- Mobile env vars: `EXPO_PUBLIC_SERVER_URL`, `EXPO_PUBLIC_LIVEKIT_URL`
+- Server env vars (`server/.env`): `PORT` (default `3000`), `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
+- Mobile env vars (`apps/mobile/.env`): `EXPO_PUBLIC_SOCKET_URL` (game server URL, default `http://localhost:3000`), `EXPO_PUBLIC_LIVEKIT_URL`, `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+  - Known inconsistency: the `POST /video-token` request in `apps/mobile/src/net/videoToken.ts` reads `EXPO_PUBLIC_SERVER_URL` instead of `EXPO_PUBLIC_SOCKET_URL`. Until that is fixed in code, set `EXPO_PUBLIC_SERVER_URL` to the same value when testing video on a device.
 - Dev commands: `pnpm dev:server`, `pnpm dev:mobile`, `pnpm test:rules`
 - Expo Go for early dev; switch to a **development build** (EAS) once LiveKit native SDK lands in M4 — LiveKit does not run in Expo Go.
 - For two-device video testing: both devices need development builds with same `EXPO_PUBLIC_LIVEKIT_URL` pointing to your LiveKit server (Cloud or self-hosted)
