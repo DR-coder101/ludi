@@ -7,8 +7,14 @@
 
 ## 1. Board & Setup
 
-- Standard 15×15 cross board: **52-cell main track** (circular), 4 corner yards (bases), 4 home columns of 6 cells leading to centre.
+- **19×19 cross board**, modelled on Dean's Jamaican plywood board (not the 15×15 grid of standard Ludo):
+  - 4 corner yards (bases), each **8×8** cells.
+  - 4 arms, each **3 cells wide × 8 cells long**, joining the yards to the centre.
+  - A **3×3 centre** divided into four home triangles.
+  - Grid geometry (cell coordinates) lives in `apps/mobile/src/components/board/boardLayout.ts`. The rules engine (`packages/rules/src/topology.ts`) does not know about the grid; it only works with the abstract track and home-column indices below.
+- **52-cell main track** (circular, absolute indices 0–51) and 4 home columns of 6 cells leading to the centre.
 - 4 players, colours in clockwise turn order: **Red → Green → Yellow → Blue**. (2–3 player games use a subset in this order.)
+- **2-player games use the full 4-yard board.** The board does not shrink or change shape; the two unused yards simply stay empty, and the unused colours' start/home cells behave as described in §10 item 11.
 - Each player has **4 tokens**, all starting in their yard.
 - Player start cells are 13 track positions apart: Red=0, Green=13, Yellow=26, Blue=39 (absolute track indices).
 - A token's journey: leave yard → travel the full 52-cell track clockwise → enter own home column → reach centre (home). Total steps from start cell to home = **57**.
@@ -17,6 +23,8 @@
 
 - Highest opening roll goes first **[HOUSE: or youngest/host choice]**; play proceeds clockwise.
 - On your turn: roll one die (1–6), then move one legal token exactly that many steps.
+
+> **Moving to two dice (decided, not yet implemented).** Ludi is moving to a two-dice game. That decision is made, but the rules engine has **not** been changed yet: `packages/rules` still rolls a single die (`GameState.dice: number | null`, one value 1–6 per roll), and every rule in this document describes that current single-die behaviour. The detailed two-dice rules will be written here when the engine work lands.
 
 ## 3. Leaving the Yard ("Coming Out")
 
@@ -46,7 +54,7 @@
 
 ## 7. Safe Cells
 
-- The 4 **start cells** and the 4 **star-marked cells** (indices 8, 21, 34, 47 in standard layout) are safe: tokens of multiple colours may share them; **no captures** occur there.
+- The 4 **start cells** and the 4 **star-marked cells** (absolute track indices 8, 21, 34, 47) are safe: tokens of multiple colours may share them; **no captures** occur there.
 - Exception per §6: a blockade on a safe cell is still impassable.
 
 ## 8. Movement Rules
