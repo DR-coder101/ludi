@@ -1,5 +1,12 @@
 /**
  * Haptic feedback utility with Reduce Motion support
+ * 
+ * APPROVED SPEC haptics patterns:
+ * - light: Per landing during piece slide
+ * - medium: Roll selection, entry to track
+ * - heavy: Capture
+ * - success: Dice 6, piece reaching home, win
+ * - warning: Blocked move
  */
 
 import * as Haptics from 'expo-haptics';
@@ -27,31 +34,45 @@ export async function triggerHaptic(type: keyof typeof haptics): Promise<void> {
 
   try {
     switch (type) {
-      case 'roll':
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        break;
-      case 'move':
+      case 'light':
+        // Per landing during piece slide
         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         break;
-      case 'capture':
+      case 'medium':
+        // Roll selection, entry to track
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        break;
+      case 'heavy':
+        // Capture
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+        break;
+      case 'success':
+        // Dice 6, piece reaching home, win (x2 for win)
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         break;
-      case 'blocked':
+      case 'warning':
+        // Blocked move
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        break;
-      case 'win':
-        // Multi-pulse celebration for win
-        await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        setTimeout(() => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }, 100);
-        setTimeout(() => {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        }, 200);
         break;
     }
   } catch (error) {
     console.warn('Haptic feedback failed:', error);
+  }
+}
+
+/**
+ * Win celebration haptics (success x2)
+ */
+export async function triggerWinHaptics(): Promise<void> {
+  if (isReduceMotionEnabled) return;
+  
+  try {
+    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setTimeout(async () => {
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }, 150);
+  } catch (error) {
+    console.warn('Win haptic feedback failed:', error);
   }
 }
 
