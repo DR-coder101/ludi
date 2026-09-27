@@ -29,9 +29,11 @@ interface ChatPanelProps {
   roomCode: string;
   myPlayerId: string;
   roomPlayers: Player[];
+  /** Draw the floating chat button; screens with their own chat button pass false. */
+  showToggle?: boolean;
 }
 
-export function ChatPanel({ roomCode, myPlayerId, roomPlayers }: ChatPanelProps) {
+export function ChatPanel({ roomCode, myPlayerId, roomPlayers, showToggle = true }: ChatPanelProps) {
   const messages = useChatStore((state) => state.messages);
   const isOpen = useChatStore((state) => state.isOpen);
   const unreadCount = useChatStore((state) => state.unreadCount);
@@ -105,18 +107,19 @@ export function ChatPanel({ roomCode, myPlayerId, roomPlayers }: ChatPanelProps)
 
   return (
     <>
-      {/* Chat toggle button */}
-      <TouchableOpacity
-        style={styles.chatButton}
-        onPress={toggleChat}
-      >
-        <Text style={styles.chatButtonText}>💬</Text>
-        {unreadCount > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadText}>{unreadCount}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+      {showToggle ? (
+        <TouchableOpacity
+          style={styles.chatButton}
+          onPress={toggleChat}
+        >
+          <Text style={styles.chatButtonText}>💬</Text>
+          {unreadCount > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadText}>{unreadCount}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ) : null}
 
       {/* Chat panel */}
       <Animated.View
