@@ -158,7 +158,7 @@ export default function LobbyScreen() {
   if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.gold} />
       </View>
     );
   }
@@ -167,7 +167,7 @@ export default function LobbyScreen() {
     return (
       <DancehallBackground>
         <SafeAreaView style={styles.container}>
-          <ActivityIndicator size="large" color={colors.accent} />
+          <ActivityIndicator size="large" color={colors.gold} />
           <Text style={styles.loadingText}>LOADING ROOM...</Text>
         </SafeAreaView>
       </DancehallBackground>
@@ -297,7 +297,7 @@ export default function LobbyScreen() {
                     >
                       <View style={[
                         styles.cornerIndicator,
-                        { backgroundColor: COLOR_DISPLAY.blue.hex, borderColor: colors.negrilSilver }
+                        { backgroundColor: COLOR_DISPLAY.blue.hex, borderColor: colors.silver }
                       ]} />
                       <Text style={styles.cornerName}>{COLOR_DISPLAY.blue.shortName}</Text>
                       {corners.bottomLeft && (
@@ -336,7 +336,7 @@ export default function LobbyScreen() {
                     disabled={!canStart || isStarting}
                   >
                     {isStarting ? (
-                      <ActivityIndicator color={colors.textOnAccent} />
+                      <ActivityIndicator color={colors.bg} />
                     ) : (
                       <Text style={styles.startButtonText}>
                         {canStart ? 'START GAME' : 'NEED 2-4 PLAYERS'}
@@ -361,7 +361,7 @@ export default function LobbyScreen() {
                   <View style={styles.playerInfo}>
                     <View style={[
                       styles.playerColorDot,
-                      { backgroundColor: player.color ? COLOR_DISPLAY[player.color as EngineColor].hex : colors.textTertiary }
+                      { backgroundColor: player.color ? COLOR_DISPLAY[player.color as EngineColor].hex : colors.textMuted }
                     ]} />
                     <Text style={styles.playerName}>{player.displayName}</Text>
                     {player.id === myPlayer?.id && (
@@ -390,7 +390,7 @@ export default function LobbyScreen() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.bg,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -399,7 +399,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.lg,
-    paddingBottom: spacing['2xl'],
+    paddingBottom: spacing.xl * 2,
   },
   header: {
     marginBottom: spacing.xl,
@@ -409,20 +409,20 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   backButtonText: {
-    color: colors.accent,
+    color: colors.gold,
     fontSize: typography.sizes.bodyMedium,
     fontFamily: typography.fonts.bodyBold,
-    letterSpacing: typography.letterSpacing.wide,
+    letterSpacing: typography.letterSpacing.displayWide,
   },
   roomCodeContainer: {
     alignItems: 'center',
   },
   roomCodeLabel: {
     fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.heading,
-    color: colors.textSecondary,
+    fontFamily: typography.fonts.sticker,
+    color: colors.textMuted,
     marginBottom: spacing.sm,
-    letterSpacing: typography.letterSpacing.wider,
+    letterSpacing: typography.letterSpacing.displayWider,
   },
   roomCodeBox: {
     flexDirection: 'row',
@@ -433,60 +433,60 @@ const styles = StyleSheet.create({
     width: 48,
     height: 60,
     backgroundColor: colors.surface,
-    borderRadius: radii.md,
+    borderRadius: radii.button,
     borderWidth: 2,
-    borderColor: colors.accent,
+    borderColor: colors.gold,
     justifyContent: 'center',
     alignItems: 'center',
     ...shadows.gold,
   },
   codeTileText: {
-    fontSize: typography.sizes.headingLarge,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.wide,
+    fontSize: typography.sizes.displayMediumLarge,
+    fontFamily: typography.fonts.sticker,
+    color: colors.gold,
+    letterSpacing: typography.letterSpacing.displayWide,
   },
   shareButton: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     borderWidth: 2,
-    borderColor: colors.accent,
+    borderColor: colors.gold,
   },
   shareButtonText: {
     fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.wide,
+    fontFamily: typography.fonts.sticker,
+    color: colors.gold,
+    letterSpacing: typography.letterSpacing.displayWide,
   },
   connectionBanner: {
-    backgroundColor: colors.warning,
+    backgroundColor: colors.red,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    borderRadius: radii.md,
+    borderRadius: radii.button,
     marginBottom: spacing.md,
   },
   connectionBannerText: {
     fontSize: typography.sizes.bodySmall,
     fontFamily: typography.fonts.bodyBold,
-    color: colors.textOnAccent,
+    color: colors.bg,
     textAlign: 'center',
   },
   loadingText: {
     fontSize: typography.sizes.bodyMedium,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
+    fontFamily: typography.fonts.sticker,
+    color: colors.gold,
     marginTop: spacing.md,
-    letterSpacing: typography.letterSpacing.wider,
+    letterSpacing: typography.letterSpacing.displayWider,
   },
   tabContainer: {
     flexDirection: 'row',
     marginBottom: spacing.xl,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: colors.accent,
+    borderColor: colors.gold,
   },
   tab: {
     flex: 1,
@@ -495,24 +495,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.gold,
   },
   tabText: {
     fontSize: typography.sizes.bodyMedium,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.wide,
+    fontFamily: typography.fonts.sticker,
+    color: colors.gold,
+    letterSpacing: typography.letterSpacing.displayWide,
   },
   tabTextActive: {
-    color: colors.textOnAccent,
+    color: colors.bg,
   },
   sectionTitle: {
-    fontSize: typography.sizes.headingSmall,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
+    fontSize: typography.sizes.displayMediumSmall,
+    fontFamily: typography.fonts.sticker,
+    color: colors.gold,
     marginBottom: spacing.lg,
     textAlign: 'center',
-    letterSpacing: typography.letterSpacing.wider,
+    letterSpacing: typography.letterSpacing.displayWider,
   },
   cornerPickerContainer: {
     marginBottom: spacing.xl,
@@ -528,56 +528,56 @@ const styles = StyleSheet.create({
     flex: 1,
     aspectRatio: 1,
     backgroundColor: colors.surface,
-    borderRadius: radii.xl,
+    borderRadius: radii.cardLarge,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: colors.surfaceLine,
     padding: spacing.md,
     justifyContent: 'center',
     alignItems: 'center',
-    ...shadows.md,
+    ...shadows.gold,
   },
   cornerCellTaken: {
-    borderColor: colors.accent,
+    borderColor: colors.gold,
   },
   cornerCellMine: {
-    backgroundColor: colors.surfaceElevated,
+    backgroundColor: colors.surfaceEnd,
     ...shadows.gold,
   },
   cornerIndicator: {
     width: 40,
     height: 40,
-    borderRadius: radii.full,
+    borderRadius: 9999,
     marginBottom: spacing.sm,
     borderWidth: 3,
-    borderColor: colors.accent,
+    borderColor: colors.gold,
   },
   cornerName: {
     fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
+    fontFamily: typography.fonts.sticker,
+    color: colors.gold,
     marginBottom: spacing.xs,
     textAlign: 'center',
-    letterSpacing: typography.letterSpacing.wide,
+    letterSpacing: typography.letterSpacing.displayWide,
   },
   cornerPlayer: {
     fontSize: typography.sizes.bodySmall,
     fontFamily: typography.fonts.bodySemiBold,
-    color: colors.textPrimary,
+    color: colors.cream,
     textAlign: 'center',
   },
   cornerEmpty: {
     fontSize: typography.sizes.caption,
     fontFamily: typography.fonts.body,
-    color: colors.textTertiary,
+    color: colors.textMuted,
     textAlign: 'center',
   },
   hostControls: {
     marginTop: spacing.lg,
   },
   startButton: {
-    backgroundColor: colors.accent,
+    backgroundColor: colors.gold,
     paddingVertical: spacing.lg,
-    borderRadius: radii.xl,
+    borderRadius: radii.cardLarge,
     alignItems: 'center',
     ...shadows.gold,
   },
@@ -585,10 +585,10 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   startButtonText: {
-    fontSize: typography.sizes.headingSmall,
-    fontFamily: typography.fonts.heading,
-    color: colors.textOnAccent,
-    letterSpacing: typography.letterSpacing.wider,
+    fontSize: typography.sizes.displayMediumSmall,
+    fontFamily: typography.fonts.sticker,
+    color: colors.bg,
+    letterSpacing: typography.letterSpacing.displayWider,
   },
   waitingContainer: {
     marginTop: spacing.xl,
@@ -598,18 +598,18 @@ const styles = StyleSheet.create({
   waitingText: {
     fontSize: typography.sizes.bodyMedium,
     fontFamily: typography.fonts.body,
-    color: colors.textSecondary,
+    color: colors.textMuted,
   },
   playersListContainer: {
     marginTop: spacing.md,
   },
   playerCard: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     padding: spacing.md,
     marginBottom: spacing.md,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: colors.surfaceLine,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -623,42 +623,42 @@ const styles = StyleSheet.create({
   playerColorDot: {
     width: 24,
     height: 24,
-    borderRadius: radii.full,
+    borderRadius: 9999,
     borderWidth: 2,
-    borderColor: colors.accent,
+    borderColor: colors.gold,
   },
   playerName: {
     fontSize: typography.sizes.bodyMedium,
     fontFamily: typography.fonts.bodySemiBold,
-    color: colors.textPrimary,
+    color: colors.cream,
     flex: 1,
   },
   youBadge: {
     fontSize: typography.sizes.caption,
     fontFamily: typography.fonts.bodyBold,
-    color: colors.accent,
-    backgroundColor: colors.surfaceElevated,
+    color: colors.gold,
+    backgroundColor: colors.surfaceEnd,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs / 2,
-    borderRadius: radii.sm,
+    borderRadius: radii.button,
   },
   hostBadge: {
     fontSize: typography.sizes.caption,
     fontFamily: typography.fonts.bodyBold,
-    color: colors.textOnAccent,
-    backgroundColor: colors.accent,
+    color: colors.bg,
+    backgroundColor: colors.gold,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs / 2,
-    borderRadius: radii.sm,
+    borderRadius: radii.button,
   },
   playerStatus: {
     fontSize: typography.sizes.bodySmall,
     fontFamily: typography.fonts.bodySemiBold,
   },
   playerStatusConnected: {
-    color: colors.success,
+    color: colors.green,
   },
   playerStatusDisconnected: {
-    color: colors.textTertiary,
+    color: colors.textMuted,
   },
 });

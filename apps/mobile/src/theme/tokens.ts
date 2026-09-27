@@ -343,24 +343,6 @@ export const textures = {
 } as const;
 
 /**
- * Legacy token aliases for backwards compatibility
- * TODO: Migrate all callsites to use the real tokens above
- */
-export const legacyTokens = {
-  // Map old names to new tokens
-  accent: colors.gold,
-  background: colors.bg,
-  textPrimary: colors.cream,
-  textSecondary: colors.textMuted,
-  textTertiary: 'rgba(246,239,217,0.5)',
-  textOnAccent: colors.bg,
-  surfaceElevated: colors.surfaceEnd,
-} as const;
-
-// Merge legacy tokens into colors for compatibility
-Object.assign(colors, legacyTokens);
-
-/**
  * Helper functions
  */
 
