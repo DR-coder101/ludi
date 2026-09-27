@@ -1,5 +1,6 @@
 import { Audio } from 'expo-av';
 import * as Haptics from 'expo-haptics';
+import { Platform } from 'react-native';
 
 export type SoundType = 'roll' | 'hop' | 'capture' | 'win';
 
@@ -63,12 +64,19 @@ class GameAudio {
 
 export const gameAudio = new GameAudio();
 
+function haptic(fire: () => Promise<void>): () => void {
+  return () => {
+    if (Platform.OS === 'web') return;
+    fire().catch(() => {});
+  };
+}
+
 export const triggerHaptic = {
-  light: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
-  medium: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium),
-  heavy: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy),
-  success: () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
-  warning: () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning),
-  error: () => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error),
-  selection: () => Haptics.selectionAsync(),
+  light: haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)),
+  medium: haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)),
+  heavy: haptic(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)),
+  success: haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
+  warning: haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)),
+  error: haptic(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)),
+  selection: haptic(() => Haptics.selectionAsync()),
 };
