@@ -6,17 +6,21 @@ import { socketManager } from '../src/net/socket';
 import { useAuthStore } from '../src/stores/authStore';
 import { useToastStore } from '../src/stores/toastStore';
 import { Toast } from '../src/components/Toast';
+import { DancehallBackground } from '../src/components/DancehallBackground';
+import { useDancehallFonts } from '../src/theme/fonts';
+import { colors, typography, spacing, radii, shadows } from '../src/theme/tokens';
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
-  red: { name: 'Red', hex: '#E53935' },
-  green: { name: 'Green', hex: '#43A047' },
-  yellow: { name: 'Yellow', hex: '#FDD835' },
-  blue: { name: 'Blue', hex: '#1E88E5' },
+  yellow: { name: 'Montego Bay', hex: colors.pieces.yellow },
+  green: { name: 'Ocho Rios', hex: colors.pieces.green },
+  blue: { name: 'Negril', hex: colors.pieces.blue },
+  red: { name: 'Kingston', hex: colors.pieces.red },
 };
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { fontsLoaded, fontError } = useDancehallFonts();
   const { isAuthenticated, createGuest, isLoading: isAuthLoading, initializeAuth } = useAuthStore();
   const { visible, message, type, duration, showToast, hideToast } = useToastStore();
   const [mode, setMode] = useState<'online' | 'local' | null>(null);
@@ -147,85 +151,177 @@ export default function HomeScreen() {
     setMode('online');
   };
 
+  if (!fontsLoaded && !fontError) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </View>
+    );
+  }
+
   if (mode === null) {
     return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <Toast
-          visible={visible}
-          message={message}
-          type={type}
-          duration={duration}
-          onDismiss={hideToast}
-        />
-        <View style={styles.headerNav}>
-          {isAuthenticated && (
-            <>
-              <TouchableOpacity
-                style={styles.navButton}
-                onPress={() => router.push('/profile')}
-              >
-                <Text style={styles.navButtonText}>👤 Profile</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.navButton}
-                onPress={() => router.push('/history')}
-              >
-                <Text style={styles.navButtonText}>📜 History</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-
-        <Text style={styles.title}>🎲 Ludi</Text>
-        <Text style={styles.subtitle}>Caribbean Ludo</Text>
-
-        <View style={styles.modeContainer}>
-          <TouchableOpacity
-            style={styles.modeButton}
-            onPress={handleQuickPlay}
-          >
-            <Text style={styles.modeButtonIcon}>🌐</Text>
-            <Text style={styles.modeButtonText}>Online Multiplayer</Text>
-            <Text style={styles.modeButtonSubtext}>Play with friends online</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.modeButton}
-            onPress={() => setMode('local')}
-          >
-            <Text style={styles.modeButtonIcon}>👥</Text>
-            <Text style={styles.modeButtonText}>Local Pass & Play</Text>
-            <Text style={styles.modeButtonSubtext}>Play on one device</Text>
-          </TouchableOpacity>
-        </View>
-
-        {!isAuthenticated && (
-          <View style={styles.authPrompt}>
-            <Text style={styles.authPromptText}>
-              Create an account to save your progress
-            </Text>
-            <View style={styles.authButtonRow}>
-              <TouchableOpacity
-                style={styles.authButton}
-                onPress={() => router.push('/auth/signin')}
-              >
-                <Text style={styles.authButtonText}>Sign In</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.authButton}
-                onPress={() => router.push('/auth/signup')}
-              >
-                <Text style={styles.authButtonText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
+      <DancehallBackground>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Toast
+            visible={visible}
+            message={message}
+            type={type}
+            duration={duration}
+            onDismiss={hideToast}
+          />
+          <View style={styles.headerNav}>
+            {isAuthenticated && (
+              <>
+                <TouchableOpacity
+                  style={styles.navButton}
+                  onPress={() => router.push('/profile')}
+                >
+                  <Text style={styles.navButtonText}>👤 Profile</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.navButton}
+                  onPress={() => router.push('/history')}
+                >
+                  <Text style={styles.navButtonText}>📜 History</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
-        )}
-      </ScrollView>
+
+          <Text style={styles.title}>LUDI</Text>
+          <Text style={styles.subtitle}>Jamaican Dancehall Edition</Text>
+
+          <View style={styles.modeContainer}>
+            <TouchableOpacity
+              style={styles.modeButton}
+              onPress={handleQuickPlay}
+            >
+              <Text style={styles.modeButtonIcon}>🌐</Text>
+              <Text style={styles.modeButtonText}>ONLINE PLAY</Text>
+              <Text style={styles.modeButtonSubtext}>Link up with friends</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modeButton}
+              onPress={() => setMode('local')}
+            >
+              <Text style={styles.modeButtonIcon}>👥</Text>
+              <Text style={styles.modeButtonText}>PASS & PLAY</Text>
+              <Text style={styles.modeButtonSubtext}>One device vibes</Text>
+            </TouchableOpacity>
+          </View>
+
+          {!isAuthenticated && (
+            <View style={styles.authPrompt}>
+              <Text style={styles.authPromptText}>
+                Sign up to save your progress and compete
+              </Text>
+              <View style={styles.authButtonRow}>
+                <TouchableOpacity
+                  style={styles.authButton}
+                  onPress={() => router.push('/auth/signin')}
+                >
+                  <Text style={styles.authButtonText}>SIGN IN</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.authButton, styles.authButtonPrimary]}
+                  onPress={() => router.push('/auth/signup')}
+                >
+                  <Text style={[styles.authButtonText, styles.authButtonTextPrimary]}>SIGN UP</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+        </ScrollView>
+      </DancehallBackground>
     );
   }
 
   if (mode === 'online') {
     return (
+      <DancehallBackground>
+        <ScrollView contentContainerStyle={styles.container}>
+          <Toast
+            visible={visible}
+            message={message}
+            type={type}
+            duration={duration}
+            onDismiss={hideToast}
+          />
+          <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
+            <Text style={styles.backButtonText}>← BACK</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.title}>ONLINE PLAY</Text>
+
+          <View style={styles.setupCard}>
+            <Text style={styles.sectionTitle}>YOUR NAME</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your name"
+              placeholderTextColor={colors.textTertiary}
+              value={displayName}
+              onChangeText={setDisplayName}
+              maxLength={50}
+              autoCapitalize="words"
+            />
+
+            <TouchableOpacity
+              style={[styles.primaryButton, isCreatingRoom && styles.buttonDisabled]}
+              onPress={handleCreateRoom}
+              disabled={isCreatingRoom}
+            >
+              {isCreatingRoom ? (
+                <ActivityIndicator color={colors.textOnAccent} />
+              ) : (
+                <Text style={styles.primaryButtonText}>CREATE ROOM</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>OR</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Text style={styles.sectionTitle}>JOIN ROOM</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter 6-character code"
+              placeholderTextColor={colors.textTertiary}
+              value={roomCode}
+              onChangeText={(text) => setRoomCode(text.toUpperCase())}
+              maxLength={6}
+              autoCapitalize="characters"
+            />
+
+            <TouchableOpacity
+              style={[styles.secondaryButton, isJoiningRoom && styles.buttonDisabled]}
+              onPress={handleJoinRoom}
+              disabled={isJoiningRoom}
+            >
+              {isJoiningRoom ? (
+                <ActivityIndicator color={colors.accent} />
+              ) : (
+                <Text style={styles.secondaryButtonText}>JOIN ROOM</Text>
+              )}
+            </TouchableOpacity>
+
+            {error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+              </View>
+            ) : null}
+          </View>
+        </ScrollView>
+      </DancehallBackground>
+    );
+  }
+
+  // Local mode
+  return (
+    <DancehallBackground>
       <ScrollView contentContainerStyle={styles.container}>
         <Toast
           visible={visible}
@@ -235,287 +331,215 @@ export default function HomeScreen() {
           onDismiss={hideToast}
         />
         <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>← BACK</Text>
         </TouchableOpacity>
 
-        <Text style={styles.title}>🌐 Online Play</Text>
+        <Text style={styles.title}>PASS & PLAY</Text>
 
         <View style={styles.setupCard}>
-          <Text style={styles.sectionTitle}>Your Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your name"
-            placeholderTextColor="#888"
-            value={displayName}
-            onChangeText={setDisplayName}
-            maxLength={50}
-            autoCapitalize="words"
-          />
-
-          <TouchableOpacity
-            style={[styles.primaryButton, isCreatingRoom && styles.buttonDisabled]}
-            onPress={handleCreateRoom}
-            disabled={isCreatingRoom}
-          >
-            {isCreatingRoom ? (
-              <ActivityIndicator color="#1a1a1a" />
-            ) : (
-              <Text style={styles.primaryButtonText}>Create Room</Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.dividerLine} />
+          <Text style={styles.sectionTitle}>NUMBER OF PLAYERS</Text>
+          <View style={styles.buttonRow}>
+            {([2, 3, 4] as const).map((count) => (
+              <TouchableOpacity
+                key={count}
+                style={[
+                  styles.playerButton,
+                  playerCount === count && styles.playerButtonSelected,
+                ]}
+                onPress={() => handlePlayerCountChange(count)}
+              >
+                <Text
+                  style={[
+                    styles.playerButtonText,
+                    playerCount === count && styles.playerButtonTextSelected,
+                  ]}
+                >
+                  {count}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          <Text style={styles.sectionTitle}>Join Room</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter 6-character room code"
-            placeholderTextColor="#888"
-            value={roomCode}
-            onChangeText={(text) => setRoomCode(text.toUpperCase())}
-            maxLength={6}
-            autoCapitalize="characters"
-          />
+          <Text style={styles.sectionTitle}>PLAYERS</Text>
+          <View style={styles.colorsContainer}>
+            {selectedColors.map((color) => (
+              <View key={color} style={styles.colorCard}>
+                <View
+                  style={[
+                    styles.colorCircle,
+                    { backgroundColor: COLOR_DISPLAY[color].hex },
+                    color === 'blue' && styles.colorCircleNegril,
+                  ]}
+                />
+                <Text style={styles.colorName}>{COLOR_DISPLAY[color].name}</Text>
+              </View>
+            ))}
+          </View>
 
-          <TouchableOpacity
-            style={[styles.secondaryButton, isJoiningRoom && styles.buttonDisabled]}
-            onPress={handleJoinRoom}
-            disabled={isJoiningRoom}
-          >
-            {isJoiningRoom ? (
-              <ActivityIndicator color="#D4AF37" />
-            ) : (
-              <Text style={styles.secondaryButtonText}>Join Room</Text>
-            )}
+          <TouchableOpacity style={styles.primaryButton} onPress={handleStartLocalGame}>
+            <Text style={styles.primaryButtonText}>START GAME</Text>
           </TouchableOpacity>
+        </View>
 
-          {error ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{error}</Text>
-            </View>
-          ) : null}
+        <View style={styles.infoCard}>
+          <Text style={styles.infoTitle}>HOUSE RULES</Text>
+          <Text style={styles.infoText}>• Max 2 consecutive sixes</Text>
+          <Text style={styles.infoText}>• No extra roll on capture</Text>
+          <Text style={styles.infoText}>• Winner takes all</Text>
         </View>
       </ScrollView>
-    );
-  }
-
-  // Local mode
-  return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Toast
-        visible={visible}
-        message={message}
-        type={type}
-        duration={duration}
-        onDismiss={hideToast}
-      />
-      <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
-        <Text style={styles.backButtonText}>← Back</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.title}>👥 Local Play</Text>
-
-      <View style={styles.setupCard}>
-        <Text style={styles.sectionTitle}>Number of Players</Text>
-        <View style={styles.buttonRow}>
-          {([2, 3, 4] as const).map((count) => (
-            <TouchableOpacity
-              key={count}
-              style={[
-                styles.playerButton,
-                playerCount === count && styles.playerButtonSelected,
-              ]}
-              onPress={() => handlePlayerCountChange(count)}
-            >
-              <Text
-                style={[
-                  styles.playerButtonText,
-                  playerCount === count && styles.playerButtonTextSelected,
-                ]}
-              >
-                {count}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <Text style={styles.sectionTitle}>Players</Text>
-        <View style={styles.colorsContainer}>
-          {selectedColors.map((color) => (
-            <View key={color} style={styles.colorCard}>
-              <View
-                style={[
-                  styles.colorCircle,
-                  { backgroundColor: COLOR_DISPLAY[color].hex },
-                ]}
-              />
-              <Text style={styles.colorName}>{COLOR_DISPLAY[color].name}</Text>
-            </View>
-          ))}
-        </View>
-
-        <TouchableOpacity style={styles.primaryButton} onPress={handleStartLocalGame}>
-          <Text style={styles.primaryButtonText}>Start Game</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>House Rules</Text>
-        <Text style={styles.infoText}>• Max 2 consecutive sixes</Text>
-        <Text style={styles.infoText}>• No extra roll on capture</Text>
-        <Text style={styles.infoText}>• Winner takes all (no placements)</Text>
-      </View>
-    </ScrollView>
+    </DancehallBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   container: {
     flexGrow: 1,
-    backgroundColor: '#1a1a1a',
-    padding: 20,
+    padding: spacing.lg,
     alignItems: 'center',
   },
   headerNav: {
     flexDirection: 'row',
     alignSelf: 'flex-end',
-    gap: 12,
-    marginTop: 20,
-    marginBottom: 10,
+    gap: spacing.sm,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
   navButton: {
-    backgroundColor: '#2a2a2a',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#D4AF37',
+    borderColor: colors.accent,
   },
   navButtonText: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: '600',
+    color: colors.accent,
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.bodySemiBold,
   },
   backButton: {
     alignSelf: 'flex-start',
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: spacing.lg,
+    marginBottom: spacing.md,
   },
   backButtonText: {
-    color: '#D4AF37',
-    fontSize: 16,
-    fontWeight: '600',
+    color: colors.accent,
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.bodyBold,
+    letterSpacing: typography.letterSpacing.wide,
   },
   title: {
-    fontSize: 40,
-    fontWeight: 'bold',
+    fontSize: typography.sizes.displayLarge,
+    fontFamily: typography.fonts.display,
     textAlign: 'center',
-    marginTop: 20,
-    marginBottom: 8,
-    color: '#D4AF37',
+    marginTop: spacing.xl,
+    marginBottom: spacing.sm,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.widest,
+    textShadowColor: colors.shadowGold,
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 12,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#D4AF37',
+    fontSize: typography.sizes.bodyLarge,
+    fontFamily: typography.fonts.bodySemiBold,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 40,
-    fontWeight: '500',
+    marginBottom: spacing['2xl'],
+    letterSpacing: typography.letterSpacing.wider,
   },
   modeContainer: {
     width: '100%',
     maxWidth: 400,
-    gap: 16,
+    gap: spacing.md,
   },
   modeButton: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#D4AF37',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
+    borderColor: colors.accent,
+    ...shadows.gold,
   },
   modeButtonIcon: {
     fontSize: 48,
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   modeButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#D4AF37',
-    marginBottom: 4,
+    fontSize: typography.sizes.headingMedium,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    marginBottom: spacing.xs,
+    letterSpacing: typography.letterSpacing.wider,
   },
   modeButtonSubtext: {
-    fontSize: 14,
-    color: '#ccc',
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.body,
+    color: colors.textSecondary,
   },
   setupCard: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 24,
-    marginBottom: 20,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.xl,
+    marginBottom: spacing.lg,
     borderWidth: 2,
-    borderColor: '#D4AF37',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 6,
+    borderColor: colors.accent,
+    ...shadows.gold,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#D4AF37',
+    fontSize: typography.sizes.bodyLarge,
+    fontFamily: typography.fonts.heading,
+    marginBottom: spacing.md,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wide,
   },
   input: {
-    backgroundColor: '#3a3a3a',
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
-    color: '#fff',
-    marginBottom: 16,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.body,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
     borderWidth: 2,
-    borderColor: '#4a4a4a',
+    borderColor: colors.border,
   },
   primaryButton: {
-    backgroundColor: '#D4AF37',
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: colors.accent,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
     alignItems: 'center',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 6,
+    ...shadows.gold,
   },
   primaryButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: typography.sizes.bodyLarge,
+    fontFamily: typography.fonts.heading,
+    color: colors.textOnAccent,
+    letterSpacing: typography.letterSpacing.wider,
   },
   secondaryButton: {
     backgroundColor: 'transparent',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#D4AF37',
+    borderColor: colors.accent,
   },
   secondaryButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#D4AF37',
+    fontSize: typography.sizes.bodyLarge,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wider,
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -523,139 +547,152 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 24,
+    marginVertical: spacing.xl,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: '#4a4a4a',
+    backgroundColor: colors.border,
   },
   dividerText: {
-    color: '#888',
-    paddingHorizontal: 12,
-    fontSize: 14,
-    fontWeight: '600',
+    color: colors.textTertiary,
+    paddingHorizontal: spacing.md,
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.bodySemiBold,
+    letterSpacing: typography.letterSpacing.wider,
   },
   errorContainer: {
-    marginTop: 16,
-    padding: 12,
-    backgroundColor: '#4a2020',
-    borderRadius: 8,
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: '#E53935',
+    borderColor: colors.error,
   },
   errorText: {
-    color: '#ff6b6b',
-    fontSize: 14,
+    color: colors.error,
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.body,
     textAlign: 'center',
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 32,
+    gap: spacing.md,
+    marginBottom: spacing.xl,
   },
   playerButton: {
     flex: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    backgroundColor: '#3a3a3a',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.lg,
+    backgroundColor: colors.surfaceElevated,
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#4a4a4a',
+    borderColor: colors.border,
   },
   playerButtonSelected: {
-    backgroundColor: '#D4AF37',
-    borderColor: '#D4AF37',
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   playerButtonText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#888',
+    fontSize: typography.sizes.headingSmall,
+    fontFamily: typography.fonts.heading,
+    color: colors.textTertiary,
   },
   playerButtonTextSelected: {
-    color: '#1a1a1a',
+    color: colors.textOnAccent,
   },
   colorsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-    marginBottom: 24,
+    gap: spacing.md,
+    marginBottom: spacing.xl,
+    justifyContent: 'center',
   },
   colorCard: {
     alignItems: 'center',
-    width: 80,
+    width: 100,
   },
   colorCircle: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginBottom: 8,
+    width: 60,
+    height: 60,
+    borderRadius: radii.full,
+    marginBottom: spacing.sm,
     borderWidth: 3,
-    borderColor: '#D4AF37',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    borderColor: colors.accent,
+    ...shadows.md,
+  },
+  colorCircleNegril: {
+    borderColor: colors.negrilSilver,
   },
   colorName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#fff',
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.bodySemiBold,
+    color: colors.textPrimary,
+    textAlign: 'center',
   },
   infoCard: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.lg,
     borderWidth: 2,
-    borderColor: '#3a3a3a',
+    borderColor: colors.border,
   },
   infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#D4AF37',
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.heading,
+    marginBottom: spacing.md,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wide,
   },
   infoText: {
-    fontSize: 14,
-    color: '#ccc',
-    marginBottom: 4,
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.body,
+    color: colors.textSecondary,
+    marginBottom: spacing.xs,
   },
   authPrompt: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 20,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    padding: spacing.lg,
+    marginTop: spacing.lg,
     borderWidth: 2,
-    borderColor: '#3a3a3a',
+    borderColor: colors.border,
     alignItems: 'center',
   },
   authPromptText: {
-    fontSize: 14,
-    color: '#ccc',
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.body,
+    color: colors.textSecondary,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.md,
   },
   authButtonRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: spacing.md,
   },
   authButton: {
     backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.lg,
     borderWidth: 2,
-    borderColor: '#D4AF37',
+    borderColor: colors.accent,
+  },
+  authButtonPrimary: {
+    backgroundColor: colors.accent,
   },
   authButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#D4AF37',
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  authButtonTextPrimary: {
+    color: colors.textOnAccent,
   },
 });

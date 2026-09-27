@@ -11,6 +11,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo-google-fonts/anton": "^0.2.3",
+    "@expo-google-fonts/archivo-black": "^0.2.3",
+    "@expo-google-fonts/inter": "^0.2.3",
     "@livekit/react-native": "^3.0.0",
     "@livekit/react-native-webrtc": "^144.2.0",
     "@ludi/protocol": "workspace:*",
@@ -19,6 +22,7 @@
     "@supabase/supabase-js": "^2.116.0",
     "expo": "~52.0.0",
     "expo-av": "^16.0.8",
+    "expo-font": "~13.0.1",
     "expo-haptics": "^57.0.3",
     "expo-router": "~4.0.0",
     "expo-secure-store": "^57.0.4",

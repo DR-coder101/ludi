@@ -14,18 +14,23 @@ import { socketManager } from '../../src/net/socket';
 import { useRoomStore } from '../../src/stores/roomStore';
 import { useConnectionStore } from '../../src/stores/connectionStore';
 import type { Player } from '@ludi/protocol';
+import { DancehallBackground } from '../../src/components/DancehallBackground';
+import { useDancehallFonts } from '../../src/theme/fonts';
+import { colors, typography, spacing, radii, shadows, PLACE_NAMES } from '../../src/theme/tokens';
+import type { EngineColor } from '../../src/theme/tokens';
 
-const COLOR_DISPLAY: Record<string, { name: string; hex: string }> = {
-  red: { name: 'Red', hex: '#E53935' },
-  green: { name: 'Green', hex: '#43A047' },
-  yellow: { name: 'Yellow', hex: '#FDD835' },
-  blue: { name: 'Blue', hex: '#1E88E5' },
+const COLOR_DISPLAY: Record<EngineColor, { name: string; hex: string; shortName: string }> = {
+  yellow: { name: PLACE_NAMES.yellow, hex: colors.pieces.yellow, shortName: 'MOBAY' },
+  green: { name: PLACE_NAMES.green, hex: colors.pieces.green, shortName: 'OCHI' },
+  blue: { name: PLACE_NAMES.blue, hex: colors.pieces.blue, shortName: 'NEGRIL' },
+  red: { name: PLACE_NAMES.red, hex: colors.pieces.red, shortName: 'KINGSTON' },
 };
 
 export default function LobbyScreen() {
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code: string }>();
   const roomCode = code?.toUpperCase() || '';
+  const { fontsLoaded, fontError } = useDancehallFonts();
 
   const roomState = useRoomStore((state) => state.roomState);
   const setRoomState = useRoomStore((state) => state.setRoomState);
@@ -39,6 +44,7 @@ export default function LobbyScreen() {
   const setReconnecting = useConnectionStore((state) => state.setReconnecting);
 
   const [isStarting, setIsStarting] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<'create' | 'join'>('create');
 
   useEffect(() => {
     const socket = socketManager.getSocket();
@@ -47,32 +53,27 @@ export default function LobbyScreen() {
       return;
     }
 
-    // Set my player ID from stored server-issued ID
     const storedPlayerId = socketManager.getPlayerId();
     if (storedPlayerId) {
       setMyPlayerId(storedPlayerId);
     }
     setConnected(socket.connected);
 
-    // Listen for room state updates
     socket.on('room:state', (state) => {
       console.log('[Lobby] Room state update:', state);
       setRoomState(state);
       
-      // Update myPlayerId if we don't have it yet and can find ourselves
       const storedPlayerId = socketManager.getPlayerId();
       if (storedPlayerId && state.players.some(p => p.id === storedPlayerId)) {
         setMyPlayerId(storedPlayerId);
       }
     });
 
-    // Listen for game start
     socket.on('game:state', (gameState) => {
       console.log('[Lobby] Game started, navigating to game screen');
       router.replace(`/game/${roomCode}`);
     });
 
-    // Connection status
     socket.on('connect', () => {
       console.log('[Lobby] Socket connected');
       setConnected(true);
@@ -94,372 +95,570 @@ export default function LobbyScreen() {
       setReconnecting(false);
     });
 
-    // Player connection changes
     socket.on('player:connectionChanged', (playerId, connected) => {
       console.log(`[Lobby] Player ${playerId} connection: ${connected}`);
       updatePlayerConnection(playerId, connected);
     });
 
-    socket.on('error', (message) => {
-      console.error('[Lobby] Server error:', message);
-      alert(message);
-    });
-
     return () => {
       socket.off('room:state');
       socket.off('game:state');
+      socket.off('connect');
+      socket.off('disconnect');
       socket.off('player:connectionChanged');
-      socket.off('error');
     };
-  }, [roomCode, router]);
+  }, []);
 
-  const handleLeave = async () => {
+  const handleSelectColor = (color: EngineColor) => {
+    if (!myPlayer) return;
+    
     const socket = socketManager.getSocket();
-    if (socket) {
-      socket.emit('room:leave');
-    }
-    await socketManager.clearSession();
-    router.replace('/');
+    if (!socket) return;
+
+    socket.emit('room:selectColor', { color }, (response) => {
+      if (!response.success) {
+        console.error('Failed to select color:', response.error);
+      }
+    });
   };
 
   const handleStartGame = () => {
+    if (!isHost) return;
+    
     const socket = socketManager.getSocket();
-    if (!socket || !isHost) return;
-
-    if (!roomState || roomState.players.length < 2) {
-      alert('Need at least 2 players to start');
-      return;
-    }
+    if (!socket) return;
 
     setIsStarting(true);
-    socket.emit('room:ready');
-    
-    // Timeout in case server doesn't respond
-    setTimeout(() => setIsStarting(false), 5000);
+    socket.emit('room:startGame', {}, (response) => {
+      setIsStarting(false);
+      if (!response.success) {
+        console.error('Failed to start game:', response.error);
+      }
+    });
   };
 
-  const handleShareCode = async () => {
+  const handleShareRoomCode = async () => {
     try {
       await Share.share({
         message: `Join my Ludi game! Room code: ${roomCode}`,
       });
     } catch (error) {
-      console.error('Share error:', error);
+      console.error('Error sharing:', error);
     }
   };
 
-  if (!roomState) {
+  const handleLeave = () => {
+    const socket = socketManager.getSocket();
+    if (socket) {
+      socket.emit('room:leave');
+    }
+    router.replace('/');
+  };
+
+  if (!fontsLoaded && !fontError) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#D4AF37" />
-          <Text style={styles.loadingText}>Loading room...</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.accent} />
+      </View>
     );
   }
 
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.container}>
-        {!isConnected && (
-          <View style={styles.reconnectingBanner}>
-            <Text style={styles.reconnectingText}>🔄 Reconnecting...</Text>
-          </View>
-        )}
+  if (!roomState) {
+    return (
+      <DancehallBackground>
+        <SafeAreaView style={styles.container}>
+          <ActivityIndicator size="large" color={colors.accent} />
+          <Text style={styles.loadingText}>LOADING ROOM...</Text>
+        </SafeAreaView>
+      </DancehallBackground>
+    );
+  }
 
-        <View style={styles.header}>
-          <TouchableOpacity onPress={handleLeave} style={styles.leaveButton}>
-            <Text style={styles.leaveButtonText}>← Leave</Text>
-          </TouchableOpacity>
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Room Lobby</Text>
-            <View style={styles.codeContainer}>
-              <Text style={styles.code}>{roomCode}</Text>
-              <TouchableOpacity onPress={handleShareCode} style={styles.shareButton}>
-                <Text style={styles.shareButtonText}>📤 Share</Text>
+  const connectedPlayers = roomState.players.filter(p => p.connected);
+  const canStart = isHost && connectedPlayers.length >= 2 && connectedPlayers.length <= 4;
+
+  // Group players by corner for 2x2 layout
+  const corners = {
+    topLeft: roomState.players.find(p => p.color === 'yellow'),     // MONTEGO BAY
+    topRight: roomState.players.find(p => p.color === 'green'),     // OCHO RIOS
+    bottomLeft: roomState.players.find(p => p.color === 'blue'),    // NEGRIL
+    bottomRight: roomState.players.find(p => p.color === 'red'),    // KINGSTON
+  };
+
+  return (
+    <DancehallBackground>
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Header */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleLeave} style={styles.backButton}>
+              <Text style={styles.backButtonText}>← LEAVE</Text>
+            </TouchableOpacity>
+            
+            <View style={styles.roomCodeContainer}>
+              <Text style={styles.roomCodeLabel}>ROOM CODE</Text>
+              <View style={styles.roomCodeBox}>
+                {roomCode.split('').map((char, index) => (
+                  <View key={index} style={styles.codeTile}>
+                    <Text style={styles.codeTileText}>{char}</Text>
+                  </View>
+                ))}
+              </View>
+              <TouchableOpacity onPress={handleShareRoomCode} style={styles.shareButton}>
+                <Text style={styles.shareButtonText}>SHARE CODE</Text>
               </TouchableOpacity>
             </View>
           </View>
-        </View>
 
-        <View style={styles.playersCard}>
-          <Text style={styles.cardTitle}>
-            Players ({roomState.players.length}/4)
-          </Text>
-          
-          {roomState.players.map((player: Player) => (
-            <PlayerCard key={player.id} player={player} isMe={player.id === myPlayer?.id} />
-          ))}
-
-          {roomState.players.length < 4 && (
-            <View style={styles.emptySlot}>
-              <Text style={styles.emptySlotText}>Waiting for players...</Text>
+          {/* Connection Status */}
+          {!isConnected && (
+            <View style={styles.connectionBanner}>
+              <Text style={styles.connectionBannerText}>⚠️ RECONNECTING...</Text>
             </View>
           )}
-        </View>
 
-        <View style={styles.rulesCard}>
-          <Text style={styles.cardTitle}>House Rules</Text>
-          <View style={styles.ruleRow}>
-            <Text style={styles.ruleLabel}>Max consecutive sixes:</Text>
-            <Text style={styles.ruleValue}>{roomState.houseRules.maxConsecutiveSixes}</Text>
-          </View>
-          <View style={styles.ruleRow}>
-            <Text style={styles.ruleLabel}>Extra roll on capture:</Text>
-            <Text style={styles.ruleValue}>{roomState.houseRules.extraRollOnCapture ? 'Yes' : 'No'}</Text>
-          </View>
-          <View style={styles.ruleRow}>
-            <Text style={styles.ruleLabel}>Play for placements:</Text>
-            <Text style={styles.ruleValue}>{roomState.houseRules.playForPlacements ? 'Yes' : 'No'}</Text>
-          </View>
-        </View>
-
-        {isHost && (
-          <TouchableOpacity
-            style={[
-              styles.startButton,
-              (isStarting || roomState.players.length < 2) && styles.startButtonDisabled,
-            ]}
-            onPress={handleStartGame}
-            disabled={isStarting || roomState.players.length < 2}
-          >
-            {isStarting ? (
-              <ActivityIndicator color="#1a1a1a" />
-            ) : (
-              <Text style={styles.startButtonText}>
-                {roomState.players.length < 2 ? 'Waiting for Players...' : 'Start Game'}
+          {/* Tabs */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, selectedTab === 'create' && styles.tabActive]}
+              onPress={() => setSelectedTab('create')}
+            >
+              <Text style={[styles.tabText, selectedTab === 'create' && styles.tabTextActive]}>
+                SETUP
               </Text>
-            )}
-          </TouchableOpacity>
-        )}
-
-        {!isHost && (
-          <View style={styles.waitingContainer}>
-            <Text style={styles.waitingText}>Waiting for host to start...</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, selectedTab === 'join' && styles.tabActive]}
+              onPress={() => setSelectedTab('join')}
+            >
+              <Text style={[styles.tabText, selectedTab === 'join' && styles.tabTextActive]}>
+                PLAYERS ({connectedPlayers.length}/4)
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
-      </ScrollView>
-    </SafeAreaView>
-  );
-}
 
-function PlayerCard({ player, isMe }: { player: Player; isMe: boolean }) {
-  const colorInfo = COLOR_DISPLAY[player.color] || { name: player.color, hex: '#888' };
+          {/* Content based on tab */}
+          {selectedTab === 'create' ? (
+            <>
+              {/* 2x2 Corner Picker */}
+              <View style={styles.cornerPickerContainer}>
+                <Text style={styles.sectionTitle}>PICK YOUR CORNER</Text>
+                <View style={styles.cornerGrid}>
+                  {/* Top row */}
+                  <View style={styles.cornerRow}>
+                    {/* Top-left: Montego Bay (yellow) */}
+                    <TouchableOpacity
+                      style={[
+                        styles.cornerCell,
+                        corners.topLeft && styles.cornerCellTaken,
+                        corners.topLeft?.id === myPlayer?.id && styles.cornerCellMine,
+                      ]}
+                      onPress={() => handleSelectColor('yellow')}
+                      disabled={!!corners.topLeft && corners.topLeft.id !== myPlayer?.id}
+                    >
+                      <View style={[styles.cornerIndicator, { backgroundColor: COLOR_DISPLAY.yellow.hex }]} />
+                      <Text style={styles.cornerName}>{COLOR_DISPLAY.yellow.shortName}</Text>
+                      {corners.topLeft && (
+                        <Text style={styles.cornerPlayer}>{corners.topLeft.displayName}</Text>
+                      )}
+                      {!corners.topLeft && <Text style={styles.cornerEmpty}>AVAILABLE</Text>}
+                    </TouchableOpacity>
 
-  return (
-    <View style={[styles.playerCard, !player.connected && styles.playerCardDisconnected]}>
-      <View style={[styles.playerColorCircle, { backgroundColor: colorInfo.hex }]} />
-      <View style={styles.playerInfo}>
-        <Text style={styles.playerName}>
-          {player.displayName}
-          {isMe && ' (You)'}
-          {player.isHost && ' 👑'}
-        </Text>
-        <Text style={styles.playerColor}>{colorInfo.name}</Text>
-      </View>
-      {!player.connected && (
-        <View style={styles.disconnectedBadge}>
-          <Text style={styles.disconnectedText}>Offline</Text>
-        </View>
-      )}
-    </View>
+                    {/* Top-right: Ocho Rios (green) */}
+                    <TouchableOpacity
+                      style={[
+                        styles.cornerCell,
+                        corners.topRight && styles.cornerCellTaken,
+                        corners.topRight?.id === myPlayer?.id && styles.cornerCellMine,
+                      ]}
+                      onPress={() => handleSelectColor('green')}
+                      disabled={!!corners.topRight && corners.topRight.id !== myPlayer?.id}
+                    >
+                      <View style={[styles.cornerIndicator, { backgroundColor: COLOR_DISPLAY.green.hex }]} />
+                      <Text style={styles.cornerName}>{COLOR_DISPLAY.green.shortName}</Text>
+                      {corners.topRight && (
+                        <Text style={styles.cornerPlayer}>{corners.topRight.displayName}</Text>
+                      )}
+                      {!corners.topRight && <Text style={styles.cornerEmpty}>AVAILABLE</Text>}
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Bottom row */}
+                  <View style={styles.cornerRow}>
+                    {/* Bottom-left: Negril (blue/black) */}
+                    <TouchableOpacity
+                      style={[
+                        styles.cornerCell,
+                        corners.bottomLeft && styles.cornerCellTaken,
+                        corners.bottomLeft?.id === myPlayer?.id && styles.cornerCellMine,
+                      ]}
+                      onPress={() => handleSelectColor('blue')}
+                      disabled={!!corners.bottomLeft && corners.bottomLeft.id !== myPlayer?.id}
+                    >
+                      <View style={[
+                        styles.cornerIndicator,
+                        { backgroundColor: COLOR_DISPLAY.blue.hex, borderColor: colors.negrilSilver }
+                      ]} />
+                      <Text style={styles.cornerName}>{COLOR_DISPLAY.blue.shortName}</Text>
+                      {corners.bottomLeft && (
+                        <Text style={styles.cornerPlayer}>{corners.bottomLeft.displayName}</Text>
+                      )}
+                      {!corners.bottomLeft && <Text style={styles.cornerEmpty}>AVAILABLE</Text>}
+                    </TouchableOpacity>
+
+                    {/* Bottom-right: Kingston (red) */}
+                    <TouchableOpacity
+                      style={[
+                        styles.cornerCell,
+                        corners.bottomRight && styles.cornerCellTaken,
+                        corners.bottomRight?.id === myPlayer?.id && styles.cornerCellMine,
+                      ]}
+                      onPress={() => handleSelectColor('red')}
+                      disabled={!!corners.bottomRight && corners.bottomRight.id !== myPlayer?.id}
+                    >
+                      <View style={[styles.cornerIndicator, { backgroundColor: COLOR_DISPLAY.red.hex }]} />
+                      <Text style={styles.cornerName}>{COLOR_DISPLAY.red.shortName}</Text>
+                      {corners.bottomRight && (
+                        <Text style={styles.cornerPlayer}>{corners.bottomRight.displayName}</Text>
+                      )}
+                      {!corners.bottomRight && <Text style={styles.cornerEmpty}>AVAILABLE</Text>}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+
+              {/* Host Controls */}
+              {isHost && (
+                <View style={styles.hostControls}>
+                  <TouchableOpacity
+                    style={[styles.startButton, !canStart && styles.startButtonDisabled]}
+                    onPress={handleStartGame}
+                    disabled={!canStart || isStarting}
+                  >
+                    {isStarting ? (
+                      <ActivityIndicator color={colors.textOnAccent} />
+                    ) : (
+                      <Text style={styles.startButtonText}>
+                        {canStart ? 'START GAME' : 'NEED 2-4 PLAYERS'}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {!isHost && (
+                <View style={styles.waitingContainer}>
+                  <Text style={styles.waitingText}>Waiting for host to start...</Text>
+                </View>
+              )}
+            </>
+          ) : (
+            /* Players List Tab */
+            <View style={styles.playersListContainer}>
+              <Text style={styles.sectionTitle}>PLAYERS IN LOBBY</Text>
+              {roomState.players.map((player) => (
+                <View key={player.id} style={styles.playerCard}>
+                  <View style={styles.playerInfo}>
+                    <View style={[
+                      styles.playerColorDot,
+                      { backgroundColor: player.color ? COLOR_DISPLAY[player.color as EngineColor].hex : colors.textTertiary }
+                    ]} />
+                    <Text style={styles.playerName}>{player.displayName}</Text>
+                    {player.id === myPlayer?.id && (
+                      <Text style={styles.youBadge}>YOU</Text>
+                    )}
+                    {player.id === roomState.hostId && (
+                      <Text style={styles.hostBadge}>HOST</Text>
+                    )}
+                  </View>
+                  <Text style={[
+                    styles.playerStatus,
+                    player.connected ? styles.playerStatusConnected : styles.playerStatusDisconnected
+                  ]}>
+                    {player.connected ? '● ONLINE' : '● OFFLINE'}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </DancehallBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 20,
-  },
   loadingContainer: {
     flex: 1,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#D4AF37',
-  },
-  reconnectingBanner: {
-    backgroundColor: '#4a3a1a',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  reconnectingText: {
-    color: '#FDD835',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  header: {
-    marginBottom: 24,
-  },
-  leaveButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 16,
-  },
-  leaveButtonText: {
-    color: '#D4AF37',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  titleContainer: {
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#D4AF37',
-    marginBottom: 8,
-  },
-  codeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  code: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#fff',
-    letterSpacing: 4,
-    fontFamily: 'monospace',
-  },
-  shareButton: {
-    padding: 8,
-  },
-  shareButtonText: {
-    fontSize: 16,
-  },
-  playersCard: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#D4AF37',
-    marginBottom: 16,
-  },
-  playerCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#3a3a3a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#4a4a4a',
-  },
-  playerCardDisconnected: {
-    opacity: 0.6,
-    borderColor: '#666',
-  },
-  playerColorCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-  },
-  playerInfo: {
+  container: {
     flex: 1,
   },
-  playerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
-    marginBottom: 2,
+  scrollContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing['2xl'],
   },
-  playerColor: {
-    fontSize: 14,
-    color: '#aaa',
+  header: {
+    marginBottom: spacing.xl,
   },
-  disconnectedBadge: {
-    backgroundColor: '#4a2020',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
+  backButton: {
+    alignSelf: 'flex-start',
+    marginBottom: spacing.md,
   },
-  disconnectedText: {
-    color: '#ff6b6b',
-    fontSize: 12,
-    fontWeight: '600',
+  backButtonText: {
+    color: colors.accent,
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.bodyBold,
+    letterSpacing: typography.letterSpacing.wide,
   },
-  emptySlot: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: '#3a3a3a',
-    borderStyle: 'dashed',
+  roomCodeContainer: {
     alignItems: 'center',
   },
-  emptySlotText: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
+  roomCodeLabel: {
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.heading,
+    color: colors.textSecondary,
+    marginBottom: spacing.sm,
+    letterSpacing: typography.letterSpacing.wider,
   },
-  rulesCard: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderColor: '#3a3a3a',
-  },
-  ruleRow: {
+  roomCodeBox: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
+    gap: spacing.sm,
+    marginBottom: spacing.md,
   },
-  ruleLabel: {
-    fontSize: 14,
-    color: '#ccc',
+  codeTile: {
+    width: 48,
+    height: 60,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
+    borderWidth: 2,
+    borderColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.gold,
   },
-  ruleValue: {
-    fontSize: 14,
-    color: '#fff',
-    fontWeight: '600',
+  codeTileText: {
+    fontSize: typography.sizes.headingLarge,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  shareButton: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    borderWidth: 2,
+    borderColor: colors.accent,
+  },
+  shareButtonText: {
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  connectionBanner: {
+    backgroundColor: colors.warning,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radii.md,
+    marginBottom: spacing.md,
+  },
+  connectionBannerText: {
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.bodyBold,
+    color: colors.textOnAccent,
+    textAlign: 'center',
+  },
+  loadingText: {
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    marginTop: spacing.md,
+    letterSpacing: typography.letterSpacing.wider,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    marginBottom: spacing.xl,
+    borderRadius: radii.lg,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: colors.accent,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+  },
+  tabActive: {
+    backgroundColor: colors.accent,
+  },
+  tabText: {
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  tabTextActive: {
+    color: colors.textOnAccent,
+  },
+  sectionTitle: {
+    fontSize: typography.sizes.headingSmall,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    marginBottom: spacing.lg,
+    textAlign: 'center',
+    letterSpacing: typography.letterSpacing.wider,
+  },
+  cornerPickerContainer: {
+    marginBottom: spacing.xl,
+  },
+  cornerGrid: {
+    gap: spacing.md,
+  },
+  cornerRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  cornerCell: {
+    flex: 1,
+    aspectRatio: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radii.xl,
+    borderWidth: 2,
+    borderColor: colors.border,
+    padding: spacing.md,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...shadows.md,
+  },
+  cornerCellTaken: {
+    borderColor: colors.accent,
+  },
+  cornerCellMine: {
+    backgroundColor: colors.surfaceElevated,
+    ...shadows.gold,
+  },
+  cornerIndicator: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.full,
+    marginBottom: spacing.sm,
+    borderWidth: 3,
+    borderColor: colors.accent,
+  },
+  cornerName: {
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    marginBottom: spacing.xs,
+    textAlign: 'center',
+    letterSpacing: typography.letterSpacing.wide,
+  },
+  cornerPlayer: {
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.bodySemiBold,
+    color: colors.textPrimary,
+    textAlign: 'center',
+  },
+  cornerEmpty: {
+    fontSize: typography.sizes.caption,
+    fontFamily: typography.fonts.body,
+    color: colors.textTertiary,
+    textAlign: 'center',
+  },
+  hostControls: {
+    marginTop: spacing.lg,
   },
   startButton: {
-    backgroundColor: '#D4AF37',
-    paddingVertical: 18,
-    borderRadius: 12,
+    backgroundColor: colors.accent,
+    paddingVertical: spacing.lg,
+    borderRadius: radii.xl,
     alignItems: 'center',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 6,
+    ...shadows.gold,
   },
   startButtonDisabled: {
     opacity: 0.5,
   },
   startButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: typography.sizes.headingSmall,
+    fontFamily: typography.fonts.heading,
+    color: colors.textOnAccent,
+    letterSpacing: typography.letterSpacing.wider,
   },
   waitingContainer: {
-    padding: 20,
+    marginTop: spacing.xl,
+    paddingVertical: spacing.lg,
     alignItems: 'center',
   },
   waitingText: {
-    fontSize: 16,
-    color: '#888',
-    fontStyle: 'italic',
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.body,
+    color: colors.textSecondary,
+  },
+  playersListContainer: {
+    marginTop: spacing.md,
+  },
+  playerCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    borderWidth: 2,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  playerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+  },
+  playerColorDot: {
+    width: 24,
+    height: 24,
+    borderRadius: radii.full,
+    borderWidth: 2,
+    borderColor: colors.accent,
+  },
+  playerName: {
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.bodySemiBold,
+    color: colors.textPrimary,
+    flex: 1,
+  },
+  youBadge: {
+    fontSize: typography.sizes.caption,
+    fontFamily: typography.fonts.bodyBold,
+    color: colors.accent,
+    backgroundColor: colors.surfaceElevated,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: radii.sm,
+  },
+  hostBadge: {
+    fontSize: typography.sizes.caption,
+    fontFamily: typography.fonts.bodyBold,
+    color: colors.textOnAccent,
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: radii.sm,
+  },
+  playerStatus: {
+    fontSize: typography.sizes.bodySmall,
+    fontFamily: typography.fonts.bodySemiBold,
+  },
+  playerStatusConnected: {
+    color: colors.success,
+  },
+  playerStatusDisconnected: {
+    color: colors.textTertiary,
   },
 });

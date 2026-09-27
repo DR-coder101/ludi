@@ -291,68 +291,73 @@ export const BOARD_SIZE = 19;
 export const CELL_SIZE = 1; // relative unit
 
 /**
- * Jamaican Board Theme - Color Palette
+ * Dancehall Premium Theme - Piece Colors
  * 
  * Player piece colors (engine color → display color):
- * - Middlesex (engine: red)    → RED pieces (#D32F2F)
- * - Kingston (engine: green)   → GREEN pieces (#00A651)
- * - Surrey (engine: yellow)    → YELLOW pieces (#FCD116)
- * - Cornwall (engine: blue)    → BLACK pieces (#000000)
+ * - KINGSTON (engine: red)     → BRIGHT RED pieces (#FF0000)
+ * - OCHO RIOS (engine: green)  → VIBRANT GREEN pieces (#00FF00)
+ * - MONTEGO BAY (engine: yellow) → GOLD pieces (#FFD700)
+ * - NEGRIL (engine: blue)      → BLACK pieces with SILVER accent (#0A0A0A)
  */
 export const COLORS: Record<Color, string> = {
-  red: '#D32F2F',      // Middlesex - red pieces
-  green: '#00A651',    // Kingston - Jamaica green
-  yellow: '#FCD116',   // Surrey - Jamaica gold
-  blue: '#000000',     // Cornwall - BLACK pieces (engine id stays 'blue')
+  red: '#FF0000',      // KINGSTON - bright red pieces
+  green: '#00FF00',    // OCHO RIOS - vibrant green pieces
+  yellow: '#FFD700',   // MONTEGO BAY - gold pieces
+  blue: '#0A0A0A',     // NEGRIL - BLACK pieces (engine id stays 'blue')
 };
 
 /**
- * Jamaican Theme Palette
+ * Dancehall Premium Theme Palette
  * 
- * Based on Jamaican flag colors and traditional board design
+ * Based on vibrant dancehall aesthetic with plywood board texture
  */
 export const THEME = {
   // Board foundation
-  board: '#1A1A1A',           // Black board background
-  grid: '#FFFFFF',            // White grid lines (thin)
+  board: '#1A0F0A',           // Dark brown (plywood base)
+  grid: '#4D3319',            // Medium brown grid lines
   
-  // Jamaican flag colors
-  jamaicaGreen: '#00A651',    // Jamaican green
-  jamaicaGold: '#FCD116',     // Jamaican gold/yellow
-  black: '#000000',           // Black (saltire, accents)
+  // Jamaican vibrant colors
+  jamaicaGreen: '#00FF00',    // Vibrant green
+  jamaicaGold: '#FFD700',     // Bright gold
+  black: '#0A0A0A',           // Deep black
   
   // Board elements
   frame: '#000000',           // Black frame
-  comeOut: '#00A651',         // Green come-out cells
-  arrow: '#FFFFFF',           // White direction arrows
-  safe: '#000000',            // Black circle on safe cells
+  comeOut: '#FF6B00',         // Orange come-out cells
+  arrow: '#FFD700',           // Gold direction arrows
+  safe: '#FFD700',            // Gold circle on safe cells
   
   // Center 3×3 pattern
-  centerX: '#FCD116',         // Yellow saltire X
-  centerTopBottom: '#00A651', // Green top/bottom triangles
-  centerLeftRight: '#000000', // Black left/right triangles
+  centerX: '#FFD700',         // Gold saltire X
+  centerTopBottom: '#FF0000', // Red top/bottom triangles (Kingston)
+  centerLeftRight: '#00FF00', // Green left/right triangles (Ocho Rios)
   centerSilhouette: '#000000', // Jamaica island silhouette
   
-  // Home stretch pattern (repeating bands: Green → Yellow → Black)
-  homePattern: ['#00A651', '#FCD116', '#000000', '#00A651', '#FCD116', '#000000'],
+  // Home stretch pattern (alternating vibrant colors)
+  homePattern: ['#FFD700', '#00FF00', '#FF0000', '#FFD700', '#00FF00', '#FF0000'],
   
   // Outer lane pattern
   outerLane: {
-    green: '#00A651',
-    yellow: '#FCD116',
-    black: '#000000',
+    green: '#00FF00',
+    yellow: '#FFD700',
+    black: '#0A0A0A',
   },
 } as const;
 
 /**
- * County Skins - Display names for player colors
+ * Place Names - Display names for player colors (Dancehall Premium)
  * 
- * Maps engine colors to Jamaican parish/county names.
+ * Maps engine colors to Jamaican city names.
  * Yard placement follows engine START adjacency, NOT photo corner labels.
  */
-export const COUNTY_NAMES: Record<Color, string> = {
-  red: 'Middlesex',    // Engine red=0  → bottom-right yard
-  green: 'Kingston',   // Engine green=13 → top-right yard
-  yellow: 'Surrey',    // Engine yellow=26 → top-left yard
-  blue: 'Cornwall',    // Engine blue=39 → bottom-left yard (BLACK pieces)
+export const PLACE_NAMES: Record<Color, string> = {
+  yellow: 'MONTEGO BAY',  // Engine yellow=26 → top-left yard (GOLD pieces)
+  green: 'OCHO RIOS',     // Engine green=13 → top-right yard (GREEN pieces)
+  blue: 'NEGRIL',         // Engine blue=39 → bottom-left yard (BLACK pieces with SILVER accent)
+  red: 'KINGSTON',        // Engine red=0  → bottom-right yard (RED pieces)
 };
+
+/**
+ * @deprecated Use PLACE_NAMES instead
+ */
+export const COUNTY_NAMES = PLACE_NAMES;

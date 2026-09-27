@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Svg, { Rect, Circle, Polygon } from 'react-native-svg';
+import { View, StyleSheet, Text } from 'react-native';
+import Svg, { Rect, Circle, Polygon, Defs, LinearGradient, Stop, G } from 'react-native-svg';
 import {
   TRACK_CELLS,
   YARDS,
@@ -11,7 +11,7 @@ import {
   BOARD_SIZE,
   COLORS,
   THEME,
-  COUNTY_NAMES,
+  PLACE_NAMES,
   type Color,
 } from './boardLayout';
 import { Token } from './Token';
@@ -56,7 +56,41 @@ export const LudiBoard: React.FC<LudiBoardProps> = ({ width }) => {
   };
 
   const renderYards = () => {
-    return null;
+    return COLORS_ARRAY.map((color) => {
+      const yard = YARDS[color];
+      const yardWidth = 8 * cellSize;
+      const yardHeight = 8 * cellSize;
+      
+      return (
+        <G key={`yard-${color}`}>
+          {/* Yard background */}
+          <Rect
+            x={yard.topLeft.col * cellSize}
+            y={yard.topLeft.row * cellSize}
+            width={yardWidth}
+            height={yardHeight}
+            fill={COLORS[color]}
+            opacity={0.15}
+            stroke={COLORS[color]}
+            strokeWidth={2}
+          />
+          
+          {/* Token holder positions (visible guide) */}
+          {yard.tokenPositions.map((pos, index) => (
+            <Circle
+              key={`holder-${color}-${index}`}
+              cx={pos.col * cellSize}
+              cy={pos.row * cellSize}
+              r={cellSize * 0.4}
+              fill="transparent"
+              stroke={COLORS[color]}
+              strokeWidth={1}
+              opacity={0.3}
+            />
+          ))}
+        </G>
+      );
+    });
   };
 
   const renderHomeColumns = () => {
