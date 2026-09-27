@@ -22,9 +22,11 @@ This document describes how to perform a complete 4-player test of Ludi on real 
   - Ensure LiveKit is accessible from devices
 
 ### Environment Configuration
-Update `apps/mobile/.env`:
+Update `apps/mobile/.env` (the server listens on port `3000` unless `PORT` is set in `server/.env`):
 ```
-EXPO_PUBLIC_SERVER_URL=http://192.168.1.100:3001
+EXPO_PUBLIC_SOCKET_URL=http://192.168.1.100:3000
+# Currently also required for video: src/net/videoToken.ts reads this name instead of EXPO_PUBLIC_SOCKET_URL
+EXPO_PUBLIC_SERVER_URL=http://192.168.1.100:3000
 EXPO_PUBLIC_LIVEKIT_URL=wss://your-livekit-server.com
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -189,7 +191,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 **"Connection failed" error:**
 - Verify server is running: `pnpm dev:server` in repo root
-- Check firewall allows port 3001
+- Check firewall allows port 3000 (or your `PORT` override)
 - Confirm devices can ping server IP
 
 **Video not connecting:**
