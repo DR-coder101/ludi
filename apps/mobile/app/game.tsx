@@ -1,22 +1,15 @@
-import { useState, useEffect, useMemo } from 'react';
-import {
-  StyleSheet,
-  View,
-  useWindowDimensions,
-  ScrollView,
-  SafeAreaView,
-} from 'react-native';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import type { Color, GameState, TokenPos } from '@ludi/rules';
+import type { Color, GameState } from '@ludi/rules';
 import {
   createGame,
   rollDice,
   legalMoves,
   applyMove,
 } from '@ludi/rules';
-import { GameBoard } from '../src/components/board/GameBoard';
-import { Dice } from '../src/components/Dice';
-import { TurnIndicator } from '../src/components/TurnIndicator';
+import { BoardScreen } from '../src/components/game/BoardScreen';
+import type { LastRoll } from '../src/components/game/turnCopy';
+import type { Seats } from '../src/components/game/types';
 import { WinBanner } from '../src/components/WinBanner';
 import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
 import { OnboardingTooltip, useOnboarding } from '../src/components/OnboardingTooltip';
@@ -24,10 +17,9 @@ import { OnboardingTooltip, useOnboarding } from '../src/components/OnboardingTo
 export default function GameScreen() {
   const router = useRouter();
   const { colors } = useLocalSearchParams<{ colors: string }>();
-  const { width } = useWindowDimensions();
-  
+
   const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
-  
+
   const playerColors = useMemo(() => {
     if (!colors) return ['red', 'green'] as Color[];
     return colors.split(',') as Color[];
@@ -45,34 +37,24 @@ export default function GameScreen() {
       },
     })
   );
-
-  const [animatingToken, setAnimatingToken] = useState<{
-    tokenIndex: number;
-    from: TokenPos;
-    to: TokenPos;
-  } | null>(null);
-
-  const [capturedToken, setCapturedToken] = useState<{
-    tokenIndex: number;
-    pos: TokenPos;
-  } | null>(null);
-  
-  const [previousTurn, setPreviousTurn] = useState<Color | null>(null);
+  const [lastRoll, setLastRoll] = useState<LastRoll | null>(null);
+  const [rollKey, setRollKey] = useState(0);
+  const previousTurn = useRef<Color>(gameState.turn);
 
   useEffect(() => {
     gameAudio.initialize();
     gameAudio.loadSounds();
-    
+
     return () => {
       gameAudio.cleanup();
     };
   }, []);
 
   useEffect(() => {
-    if (gameState.turn !== previousTurn && previousTurn !== null) {
+    if (gameState.turn !== previousTurn.current) {
       triggerHaptic.medium();
+      previousTurn.current = gameState.turn;
     }
-    setPreviousTurn(gameState.turn);
   }, [gameState.turn]);
 
   useEffect(() => {
@@ -87,131 +69,58 @@ export default function GameScreen() {
     return legalMoves(gameState);
   }, [gameState]);
 
-  const legalTokenIndices = useMemo(() => {
-    return legalMovesArray.map((move) => move.tokenIndex);
-  }, [legalMovesArray]);
+  const seats = useMemo<Seats>(
+    () => Object.fromEntries(playerColors.map((c, i) => [c, { name: `Player ${i + 1}` }])),
+    [playerColors]
+  );
 
   const handleRoll = () => {
     if (gameState.phase !== 'awaiting_roll') return;
-    
+
     const result = rollDice(gameState, Math.random);
+    gameAudio.play('roll');
+    setLastRoll({
+      value: result.value,
+      color: gameState.turn,
+      passed: result.state.phase !== 'awaiting_move',
+    });
+    setRollKey((k) => k + 1);
     setGameState(result.state);
   };
 
   const handleTokenPress = (tokenIndex: number) => {
     if (gameState.phase !== 'awaiting_move') return;
-    
-    const move = legalMovesArray.find((m) => m.tokenIndex === tokenIndex);
-    if (!move) return;
-
-    const oldPos = gameState.tokens[tokenIndex].pos;
-    
-    if (move.captures) {
-      const capturedTokenIndex = gameState.tokens.findIndex(
-        (t) => t.color === move.captures!.color && t.index === move.captures!.index
-      );
-      
-      if (capturedTokenIndex !== -1) {
-        const capturedPos = gameState.tokens[capturedTokenIndex].pos;
-        setCapturedToken({ tokenIndex: capturedTokenIndex, pos: capturedPos });
-      }
-    }
-    
-    setAnimatingToken({
-      tokenIndex,
-      from: oldPos,
-      to: move.resulting,
-    });
-    
-    const result = applyMove(gameState, tokenIndex);
-    
-    setTimeout(() => {
-      setGameState(result.state);
-      setAnimatingToken(null);
-      setCapturedToken(null);
-    }, 800);
+    if (!legalMovesArray.some((m) => m.tokenIndex === tokenIndex)) return;
+    setGameState(applyMove(gameState, tokenIndex).state);
   };
 
   const handleNewGame = () => {
     router.back();
   };
 
-  const boardWidth = Math.min(width - 32, 500);
-
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <BoardScreen
+      state={gameState}
+      legalMoves={legalMovesArray}
+      seats={seats}
+      myTurn
+      onRoll={handleRoll}
+      onTokenPress={handleTokenPress}
+      lastRoll={lastRoll}
+      rollKey={rollKey}
+      onMenu={() => router.back()}
+      onProfile={() => router.push('/profile')}
+    >
       {shouldShowOnboarding && (
         <OnboardingTooltip onDismiss={dismissOnboarding} />
       )}
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <TurnIndicator
-            currentPlayer={gameState.turn}
-            lastRoll={gameState.dice}
-            phase={gameState.phase}
-          />
-        </View>
-
-        <View style={styles.boardContainer}>
-          <GameBoard
-            width={boardWidth}
-            gameState={gameState}
-            legalTokenIndices={legalTokenIndices}
-            onTokenPress={handleTokenPress}
-            animatingToken={animatingToken}
-            capturedToken={capturedToken}
-          />
-        </View>
-
-        <View style={styles.controls}>
-          <Dice
-            value={gameState.dice}
-            onRoll={handleRoll}
-            disabled={gameState.phase !== 'awaiting_roll'}
-          />
-        </View>
-
-        {gameState.phase === 'finished' && gameState.winner && (
-          <WinBanner
-            winner={gameState.winner}
-            placements={gameState.placements}
-            onNewGame={handleNewGame}
-          />
-        )}
-      </ScrollView>
-    </SafeAreaView>
+      {gameState.phase === 'finished' && gameState.winner && (
+        <WinBanner
+          winner={gameState.winner}
+          placements={gameState.placements}
+          onNewGame={handleNewGame}
+        />
+      )}
+    </BoardScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 16,
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-  },
-  header: {
-    width: '100%',
-    maxWidth: 500,
-    marginBottom: 16,
-  },
-  boardContainer: {
-    marginVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#2a2a2a',
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  controls: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-});

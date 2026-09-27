@@ -2,15 +2,13 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   StyleSheet,
   View,
-  useWindowDimensions,
-  ScrollView,
   SafeAreaView,
   Text,
-  TouchableOpacity,
   ActivityIndicator,
+  Alert,
+  Platform,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import type { Color, TokenPos } from '@ludi/protocol';
 import { socketManager } from '../../src/net/socket';
 import { useRoomStore } from '../../src/stores/roomStore';
 import { useGameStore } from '../../src/stores/gameStore';
@@ -18,23 +16,21 @@ import { useConnectionStore } from '../../src/stores/connectionStore';
 import { useChatStore } from '../../src/stores/chatStore';
 import { useVideoStore } from '../../src/stores/videoStore';
 import { useToastStore } from '../../src/stores/toastStore';
-import { GameBoard } from '../../src/components/board/GameBoard';
-import { Dice } from '../../src/components/Dice';
-import { TurnIndicator } from '../../src/components/TurnIndicator';
+import { BoardScreen } from '../../src/components/game/BoardScreen';
+import type { LastRoll } from '../../src/components/game/turnCopy';
+import type { Seats } from '../../src/components/game/types';
 import { WinBanner } from '../../src/components/WinBanner';
-import { TurnDeadline } from '../../src/components/TurnDeadline';
 import { ChatPanel } from '../../src/components/ChatPanel';
-import { VideoGrid } from '../../src/components/video/VideoGrid';
 import { Toast } from '../../src/components/Toast';
 import { OnboardingTooltip, useOnboarding } from '../../src/components/OnboardingTooltip';
 import { gameAudio, triggerHaptic } from '../../src/utils/gameAudio';
 import { fetchVideoToken } from '../../src/net/videoToken';
+import { palette } from '../../src/theme/tokens';
 
 export default function OnlineGameScreen() {
   const router = useRouter();
   const { code } = useLocalSearchParams<{ code: string }>();
   const roomCode = code?.toUpperCase() || '';
-  const { width } = useWindowDimensions();
 
   // Store state
   const roomState = useRoomStore((state) => state.roomState);
@@ -57,32 +53,24 @@ export default function OnlineGameScreen() {
   const setReconnecting = useConnectionStore((state) => state.setReconnecting);
 
   const addChatMessage = useChatStore((state) => state.addMessage);
+  const unreadCount = useChatStore((state) => state.unreadCount);
+  const toggleChat = useChatStore((state) => state.toggleChat);
 
   const videoToken = useVideoStore((state) => state.token);
   const setConnection = useVideoStore((state) => state.setConnection);
   const resetVideo = useVideoStore((state) => state.reset);
+  const micEnabled = useVideoStore((state) => state.micEnabled);
+  const toggleMic = useVideoStore((state) => state.toggleMic);
   
   const { visible, message, type, duration, showToast, hideToast } = useToastStore();
 
   const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
 
   // Local UI state
-  const [animatingToken, setAnimatingToken] = useState<{
-    tokenIndex: number;
-    from: TokenPos;
-    to: TokenPos;
-  } | null>(null);
-
-  const [capturedToken, setCapturedToken] = useState<{
-    tokenIndex: number;
-    pos: TokenPos;
-  } | null>(null);
-
   const [isRolling, setIsRolling] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
-
-  // LiveKit URL from environment
-  const livekitUrl = process.env.EXPO_PUBLIC_LIVEKIT_URL || '';
+  const [lastRoll, setLastRoll] = useState<LastRoll | null>(null);
+  const [rollKey, setRollKey] = useState(0);
 
   // Initialize audio
   useEffect(() => {
@@ -146,42 +134,20 @@ export default function OnlineGameScreen() {
       console.log('[Game] Dice rolled:', payload.value, 'legal moves:', payload.legalMoves.length);
       setLegalMoves(payload.legalMoves);
       gameAudio.play('roll');
+      const roller = useRoomStore.getState().roomState?.players.find((p) => p.id === payload.playerId);
+      if (roller) {
+        setLastRoll({ value: payload.value, color: roller.color, passed: payload.legalMoves.length === 0 });
+        setRollKey((k) => k + 1);
+      }
       
       if (payload.playerId === myPlayerId) {
         triggerHaptic.light();
       }
     });
 
-    // Token moved (for animations)
+    // Token moves are animated by the board from the state diff.
     socket.on('game:tokenMoved', (payload) => {
       console.log('[Game] Token moved:', payload.tokenIndex, payload.playerId === myPlayerId ? '(me)' : '(other)');
-      
-      setAnimatingToken({
-        tokenIndex: payload.tokenIndex,
-        from: payload.from,
-        to: payload.to,
-      });
-
-      if (payload.captured) {
-        const capturedTokenIndex = gameState?.tokens.findIndex(
-          (t: { color: Color; index: number }) => t.color === payload.captured!.color && t.index === payload.captured!.index
-        ) ?? -1;
-
-        if (capturedTokenIndex !== -1 && gameState) {
-          setCapturedToken({
-            tokenIndex: capturedTokenIndex,
-            pos: gameState.tokens[capturedTokenIndex].pos,
-          });
-          gameAudio.play('capture');
-        }
-      } else {
-        gameAudio.play('hop');
-      }
-
-      setTimeout(() => {
-        setAnimatingToken(null);
-        setCapturedToken(null);
-      }, 800);
     });
 
     // Turn changed
@@ -244,7 +210,7 @@ export default function OnlineGameScreen() {
       socket.off('chat:message');
       socket.off('error');
     };
-  }, [roomCode, myPlayerId, gameState?.tokens]);
+  }, [roomCode, myPlayerId]);
 
   // Derive my color from room state
   const myColor = useMemo(() => {
@@ -257,10 +223,14 @@ export default function OnlineGameScreen() {
     return gameState.turn === myColor;
   }, [gameState, myColor]);
 
-  // Legal token indices for highlighting
-  const legalTokenIndices = useMemo(() => {
-    return legalMoves.map((move) => move.tokenIndex);
-  }, [legalMoves]);
+  const seats = useMemo<Seats>(() => {
+    const out: Seats = {};
+    for (const p of roomState?.players ?? []) {
+      const isYou = p.id === myPlayerId;
+      out[p.color] = { name: p.displayName, isYou, muted: isYou && !micEnabled };
+    }
+    return out;
+  }, [roomState?.players, myPlayerId, micEnabled]);
 
   const handleRoll = useCallback(() => {
     if (!isMyTurn || gameState?.phase !== 'awaiting_roll' || isRolling) return;
@@ -325,22 +295,56 @@ export default function OnlineGameScreen() {
     handleLeave();
   };
 
+  const confirmLeave = () => {
+    if (Platform.OS === 'web') {
+      handleLeave();
+      return;
+    }
+    Alert.alert('Leave game?', 'You will leave this room.', [
+      { text: 'Stay', style: 'cancel' },
+      { text: 'Leave', style: 'destructive', onPress: handleLeave },
+    ]);
+  };
+
   if (!gameState || !roomState) {
     return (
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#D4AF37" />
+          <ActivityIndicator size="large" color={palette.gold} />
           <Text style={styles.loadingText}>Loading game...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  const boardWidth = Math.min(width - 32, 500);
   const isFinished = gameState.phase === 'finished';
 
-  const gameContent = (
-    <>
+  return (
+    <BoardScreen
+      state={gameState}
+      legalMoves={isMyTurn ? legalMoves : []}
+      seats={seats}
+      myTurn={isMyTurn}
+      onRoll={isMyTurn && !isRolling ? handleRoll : undefined}
+      onTokenPress={handleTokenPress}
+      lastRoll={lastRoll}
+      rollKey={rollKey}
+      roomCode={roomCode}
+      live
+      deadline={turnDeadline}
+      onMenu={confirmLeave}
+      onProfile={() => router.push('/profile')}
+      voice={{ on: micEnabled, onToggle: toggleMic }}
+      chat={{ unread: unreadCount, onOpen: toggleChat }}
+    >
+      {shouldShowOnboarding && (
+        <OnboardingTooltip onDismiss={dismissOnboarding} />
+      )}
+      {isReconnecting && (
+        <View style={styles.reconnectingBanner} pointerEvents="none">
+          <Text style={styles.reconnectingText}>Reconnecting...</Text>
+        </View>
+      )}
       <Toast
         visible={visible}
         message={message}
@@ -348,54 +352,12 @@ export default function OnlineGameScreen() {
         duration={duration}
         onDismiss={hideToast}
       />
-      {isReconnecting && (
-        <View style={styles.reconnectingBanner}>
-          <Text style={styles.reconnectingText}>🔄 Reconnecting...</Text>
-        </View>
-      )}
-
-      {videoToken && livekitUrl && roomState && myPlayerId && (
-        <VideoGrid 
-          roomPlayers={roomState.players} 
-          myPlayerId={myPlayerId}
-        />
-      )}
-
-      <View style={styles.header}>
-        <TouchableOpacity onPress={handleLeave} style={styles.leaveButton}>
-          <Text style={styles.leaveButtonText}>← Leave</Text>
-        </TouchableOpacity>
-
-        <TurnIndicator
-          currentPlayer={gameState.turn}
-          lastRoll={gameState.dice}
-          phase={gameState.phase}
-        />
-        
-        {isMyTurn && turnDeadline && gameState.phase !== 'finished' && (
-          <TurnDeadline deadline={turnDeadline} />
-        )}
-      </View>
-
-      <View style={styles.boardContainer}>
-        <GameBoard
-          width={boardWidth}
-          gameState={gameState}
-          legalTokenIndices={isMyTurn ? legalTokenIndices : []}
-          onTokenPress={handleTokenPress}
-          animatingToken={animatingToken}
-          capturedToken={capturedToken}
-        />
-      </View>
-
-      <View style={styles.controls}>
-        <Dice
-          value={gameState.dice}
-          onRoll={handleRoll}
-          disabled={!isMyTurn || gameState.phase !== 'awaiting_roll' || isRolling}
-        />
-      </View>
-
+      <ChatPanel
+        roomCode={roomCode}
+        myPlayerId={myPlayerId || ''}
+        roomPlayers={roomState.players}
+        showToggle={false}
+      />
       {isFinished && gameState.winner && (
         <WinBanner
           winner={gameState.winner}
@@ -403,37 +365,14 @@ export default function OnlineGameScreen() {
           onNewGame={handleNewGame}
         />
       )}
-    </>
-  );
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      {shouldShowOnboarding && (
-        <OnboardingTooltip onDismiss={dismissOnboarding} />
-      )}
-      <ScrollView contentContainerStyle={styles.container}>
-        {videoToken && livekitUrl ? (
-          gameContent
-        ) : (
-          gameContent
-        )}
-      </ScrollView>
-
-      <ChatPanel roomCode={roomCode} myPlayerId={myPlayerId || ''} roomPlayers={roomState.players} />
-    </SafeAreaView>
+    </BoardScreen>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 16,
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: palette.bg,
   },
   loadingContainer: {
     flex: 1,
@@ -443,48 +382,21 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#D4AF37',
+    color: palette.gold,
   },
   reconnectingBanner: {
-    width: '100%',
+    position: 'absolute',
+    top: 64,
+    alignSelf: 'center',
     backgroundColor: '#4a3a1a',
-    padding: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderRadius: 8,
-    marginBottom: 12,
     alignItems: 'center',
   },
   reconnectingText: {
-    color: '#FDD835',
+    color: palette.gold,
     fontSize: 14,
     fontWeight: '600',
-  },
-  header: {
-    width: '100%',
-    maxWidth: 500,
-    marginBottom: 16,
-  },
-  leaveButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 8,
-  },
-  leaveButtonText: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  boardContainer: {
-    marginVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#2a2a2a',
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  controls: {
-    marginTop: 20,
-    alignItems: 'center',
   },
 });
