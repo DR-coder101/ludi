@@ -1,6 +1,12 @@
 # LUDI — Game Rules (Jamaican / Caribbean Ludo)
 ### Source of truth for the rules engine. Cursor agents: read this before touching `packages/rules`.
 
+**Place Display Names (UI only):**
+- Red (engine) → KINGSTON (bottom-right yard)
+- Green (engine) → OCHO RIOS (top-right yard)
+- Yellow (engine) → MONTEGO BAY (top-left yard)
+- Blue (engine) → NEGRIL (bottom-left yard, BLACK pieces with silver accent)
+
 > House rules vary by family and island. Anything marked **[HOUSE]** must be a configurable toggle in `RoomConfig.houseRules`. Everything else is fixed for MVP.
 
 ---
@@ -8,9 +14,9 @@
 ## 1. Board & Setup
 
 - Standard 15×15 cross board: **52-cell main track** (circular), 4 corner yards (bases), 4 home columns of 6 cells leading to centre.
-- 4 players, colours in clockwise turn order: **Red → Green → Yellow → Blue**. (2–3 player games use a subset in this order.)
+- 4 players, colours in clockwise turn order: **Red (KINGSTON) → Green (OCHO RIOS) → Yellow (MONTEGO BAY) → Blue (NEGRIL)**. (2–3 player games use a subset in this order.)
 - Each player has **4 tokens**, all starting in their yard.
-- Player start cells are 13 track positions apart: Red=0, Green=13, Yellow=26, Blue=39 (absolute track indices).
+- Player start cells are 13 track positions apart: Red/KINGSTON=0, Green/OCHO RIOS=13, Yellow/MONTEGO BAY=26, Blue/NEGRIL=39 (absolute track indices).
 - A token's journey: leave yard → travel the full 52-cell track clockwise → enter own home column → reach centre (home). Total steps from start cell to home = **57**.
 
 ## 2. Starting & Turn Order

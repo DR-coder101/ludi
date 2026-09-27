@@ -1,7 +1,13 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+/**
+ * Dancehall Premium Win Banner - Flyer Card Style
+ */
+
+import React, { useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
 import type { Color } from '@ludi/rules';
-import { COLORS } from '../components/board/boardLayout';
+import { PLACE_NAMES, COLORS } from '../components/board/boardLayout';
+import { colors, typography, spacing, radii, shadows } from '../theme/tokens';
+import type { EngineColor } from '../theme/tokens';
 
 interface WinBannerProps {
   winner: Color;
@@ -9,11 +15,11 @@ interface WinBannerProps {
   onNewGame: () => void;
 }
 
-const COLOR_NAMES: Record<Color, string> = {
-  red: 'Red',
-  green: 'Green',
-  yellow: 'Yellow',
-  blue: 'Blue',
+const PLACE_DISPLAY: Record<Color, { name: string; shortName: string }> = {
+  yellow: { name: PLACE_NAMES.yellow, shortName: 'MOBAY' },
+  green: { name: PLACE_NAMES.green, shortName: 'OCHI' },
+  blue: { name: PLACE_NAMES.blue, shortName: 'NEGRIL' },
+  red: { name: PLACE_NAMES.red, shortName: 'KINGSTON' },
 };
 
 export const WinBanner: React.FC<WinBannerProps> = ({
@@ -21,45 +27,107 @@ export const WinBanner: React.FC<WinBannerProps> = ({
   placements,
   onNewGame,
 }) => {
+  const scaleAnim = new Animated.Value(0.8);
+  const opacityAnim = new Animated.Value(0);
+
+  useEffect(() => {
+    // Win celebration animation
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   return (
     <View style={styles.overlay}>
-      <View style={styles.banner}>
-        <Text style={styles.title}>🎉 Game Over! 🎉</Text>
-        
-        <View style={styles.winnerSection}>
-          <View
-            style={[
-              styles.winnerCircle,
-              { backgroundColor: COLORS[winner] },
-            ]}
-          />
-          <Text style={styles.winnerText}>
-            {COLOR_NAMES[winner]} Wins!
+      <Animated.View
+        style={[
+          styles.flyerCard,
+          {
+            transform: [{ scale: scaleAnim }],
+            opacity: opacityAnim,
+          },
+        ]}
+      >
+        {/* Flyer header */}
+        <View style={styles.flyerHeader}>
+          <Text style={styles.flyerTopText}>🎉 CHAMPION 🎉</Text>
+          <Text style={styles.flyerMainTitle}>
+            {PLACE_DISPLAY[winner].name}
+          </Text>
+          <Text style={styles.flyerSubtitle}>TAKES THE CROWN!</Text>
+        </View>
+
+        {/* Winner visual */}
+        <View style={styles.winnerVisual}>
+          <View style={styles.winnerCircleOuter}>
+            <View
+              style={[
+                styles.winnerCircle,
+                { backgroundColor: COLORS[winner] },
+                winner === 'blue' && styles.winnerCircleNegril,
+              ]}
+            />
+          </View>
+          <Text style={styles.winnerLabel}>
+            #{placements.indexOf(winner) + 1} WINNER
           </Text>
         </View>
 
+        {/* Placements podium */}
         {placements.length > 1 && (
-          <View style={styles.placementsSection}>
-            <Text style={styles.placementsTitle}>Final Placements:</Text>
-            {placements.map((color, index) => (
-              <View key={color} style={styles.placementRow}>
-                <Text style={styles.placementRank}>{index + 1}.</Text>
-                <View
-                  style={[
-                    styles.placementCircle,
-                    { backgroundColor: COLORS[color] },
-                  ]}
-                />
-                <Text style={styles.placementName}>{COLOR_NAMES[color]}</Text>
-              </View>
-            ))}
+          <View style={styles.podiumSection}>
+            <Text style={styles.podiumTitle}>FINAL STANDINGS</Text>
+            <View style={styles.podium}>
+              {placements.slice(0, 3).map((color, index) => (
+                <View key={color} style={styles.podiumPlace}>
+                  <View
+                    style={[
+                      styles.podiumCircle,
+                      { backgroundColor: COLORS[color] },
+                      color === 'blue' && styles.podiumCircleNegril,
+                    ]}
+                  />
+                  <View style={[
+                    styles.podiumRank,
+                    index === 0 && styles.podiumRankFirst,
+                    index === 1 && styles.podiumRankSecond,
+                    index === 2 && styles.podiumRankThird,
+                  ]}>
+                    <Text style={styles.podiumRankText}>{index + 1}</Text>
+                  </View>
+                  <Text style={styles.podiumName}>
+                    {PLACE_DISPLAY[color].shortName}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
 
-        <TouchableOpacity style={styles.button} onPress={onNewGame}>
-          <Text style={styles.buttonText}>New Game</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Action buttons */}
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={styles.newGameButton}
+            onPress={onNewGame}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.newGameButtonText}>PLAY AGAIN</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Decorative border pattern */}
+        <View style={styles.decorativeBorder} />
+      </Animated.View>
     </View>
   );
 };
@@ -71,106 +139,178 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
+    backgroundColor: colors.overlay,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1000,
   },
-  banner: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 24,
-    padding: 32,
-    maxWidth: 350,
+  flyerCard: {
+    backgroundColor: colors.surface,
+    borderRadius: radii['2xl'],
+    padding: spacing.xl,
+    maxWidth: 400,
     width: '90%',
     alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#D4AF37',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
-    elevation: 20,
+    borderWidth: 4,
+    borderColor: colors.accent,
+    ...shadows.gold,
+    position: 'relative',
+    overflow: 'hidden',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 24,
-    color: '#D4AF37',
+  decorativeBorder: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 8,
+    backgroundColor: colors.accent,
   },
-  winnerSection: {
+  flyerHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginTop: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  flyerTopText: {
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.bodyBold,
+    color: colors.accent,
+    marginBottom: spacing.sm,
+    letterSpacing: typography.letterSpacing.widest,
+  },
+  flyerMainTitle: {
+    fontSize: typography.sizes.displayMedium,
+    fontFamily: typography.fonts.display,
+    color: colors.accent,
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+    letterSpacing: typography.letterSpacing.wider,
+    textShadowColor: colors.shadowGold,
+    textShadowOffset: { width: 0, height: 4 },
+    textShadowRadius: 12,
+  },
+  flyerSubtitle: {
+    fontSize: typography.sizes.bodyLarge,
+    fontFamily: typography.fonts.heading,
+    color: colors.textSecondary,
+    letterSpacing: typography.letterSpacing.wider,
+  },
+  winnerVisual: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  winnerCircleOuter: {
+    padding: spacing.sm,
+    borderRadius: radii.full,
+    borderWidth: 3,
+    borderColor: colors.accent,
+    marginBottom: spacing.md,
+    ...shadows.gold,
   },
   winnerCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 12,
+    width: 100,
+    height: 100,
+    borderRadius: radii.full,
     borderWidth: 4,
-    borderColor: '#D4AF37',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.6,
-    shadowRadius: 8,
-    elevation: 10,
+    borderColor: colors.accent,
   },
-  winnerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+  winnerCircleNegril: {
+    borderColor: colors.negrilSilver,
   },
-  placementsSection: {
-    width: '100%',
-    marginBottom: 24,
-  },
-  placementsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#D4AF37',
-  },
-  placementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 12,
-  },
-  placementRank: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#D4AF37',
-    width: 24,
-  },
-  placementCircle: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  winnerLabel: {
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    letterSpacing: typography.letterSpacing.wider,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radii.md,
     borderWidth: 2,
-    borderColor: '#D4AF37',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    borderColor: colors.accent,
   },
-  placementName: {
-    fontSize: 16,
-    color: '#fff',
+  podiumSection: {
+    width: '100%',
+    marginBottom: spacing.xl,
   },
-  button: {
-    backgroundColor: '#D4AF37',
-    paddingVertical: 14,
-    paddingHorizontal: 48,
-    borderRadius: 12,
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 8,
+  podiumTitle: {
+    fontSize: typography.sizes.bodyLarge,
+    fontFamily: typography.fonts.heading,
+    color: colors.accent,
+    marginBottom: spacing.md,
+    textAlign: 'center',
+    letterSpacing: typography.letterSpacing.wider,
   },
-  buttonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+  podium: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'flex-end',
+    gap: spacing.sm,
+  },
+  podiumPlace: {
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  podiumCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: radii.full,
+    borderWidth: 3,
+    borderColor: colors.accent,
+    ...shadows.md,
+  },
+  podiumCircleNegril: {
+    borderColor: colors.negrilSilver,
+  },
+  podiumRank: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.full,
+    backgroundColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.textTertiary,
+  },
+  podiumRankFirst: {
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
+    width: 40,
+    height: 40,
+  },
+  podiumRankSecond: {
+    backgroundColor: colors.negrilSilver,
+    borderColor: colors.negrilSilver,
+  },
+  podiumRankThird: {
+    backgroundColor: colors.kingstonRed,
+    borderColor: colors.kingstonRed,
+  },
+  podiumRankText: {
+    fontSize: typography.sizes.bodyMedium,
+    fontFamily: typography.fonts.bodyBold,
+    color: colors.textOnAccent,
+  },
+  podiumName: {
+    fontSize: typography.sizes.caption,
+    fontFamily: typography.fonts.bodySemiBold,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  actionsContainer: {
+    width: '100%',
+    gap: spacing.md,
+  },
+  newGameButton: {
+    backgroundColor: colors.accent,
+    paddingVertical: spacing.lg,
+    borderRadius: radii.xl,
+    alignItems: 'center',
+    ...shadows.gold,
+  },
+  newGameButtonText: {
+    fontSize: typography.sizes.headingSmall,
+    fontFamily: typography.fonts.heading,
+    color: colors.textOnAccent,
+    letterSpacing: typography.letterSpacing.widest,
   },
 });
