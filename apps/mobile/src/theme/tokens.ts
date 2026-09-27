@@ -1,337 +1,401 @@
 /**
- * Dancehall Premium Design Tokens
+ * Dancehall Premium Design Tokens - APPROVED SPEC
  * 
- * Jamaican-inspired color palette with place names:
- * - MONTEGO BAY: Gold (top-left corner)
- * - OCHO RIOS: Green (top-right corner)
- * - NEGRIL: Black with silver accent (bottom-left corner)
- * - KINGSTON: Red (bottom-right corner)
+ * Jamaican place names mapped to engine colors by board corner:
+ * - MONTEGO BAY (Gold): Top-left → engine 'yellow'
+ * - OCHO RIOS (Green): Top-right → engine 'green'
+ * - KINGSTON (Red): Bottom-right → engine 'red'
+ * - NEGRIL (Black/Silver): Bottom-left → engine 'blue'
  */
 
 export type PlaceName = 'MONTEGO BAY' | 'OCHO RIOS' | 'NEGRIL' | 'KINGSTON';
 export type EngineColor = 'red' | 'green' | 'yellow' | 'blue';
 
 /**
- * Place-to-corner mapping (board geometry):
- * Top-left (yellow in engine) → MONTEGO BAY (gold)
- * Top-right (green in engine) → OCHO RIOS (green)
- * Bottom-left (blue in engine) → NEGRIL (black/silver)
- * Bottom-right (red in engine) → KINGSTON (red)
+ * Place-to-engine color mapping (DO NOT CHANGE - matches board geometry)
  */
 export const PLACE_NAMES: Record<EngineColor, PlaceName> = {
-  yellow: 'MONTEGO BAY',   // Top-left yard
-  green: 'OCHO RIOS',       // Top-right yard
-  blue: 'NEGRIL',           // Bottom-left yard
-  red: 'KINGSTON',          // Bottom-right yard
+  yellow: 'MONTEGO BAY',   // Top-left yard (row 0-7, col 0-7)
+  green: 'OCHO RIOS',       // Top-right yard (row 0-7, col 11-18)
+  blue: 'NEGRIL',           // Bottom-left yard (row 11-18, col 0-7)
+  red: 'KINGSTON',          // Bottom-right yard (row 11-18, col 11-18)
 };
 
 /**
- * Color Palette - Dancehall vibrant aesthetic
+ * Geographic coordinates for place pins
+ */
+export const PLACE_PINS: Record<PlaceName, { lat: number; lon: number }> = {
+  'NEGRIL': { lat: 18.268, lon: -78.348 },
+  'MONTEGO BAY': { lat: 18.476, lon: -77.893 },
+  'OCHO RIOS': { lat: 18.407, lon: -77.103 },
+  'KINGSTON': { lat: 17.997, lon: -76.794 },
+};
+
+/**
+ * Color Palette - Dancehall Premium
  */
 export const colors = {
-  // Primary colors - Jamaican places
-  montegoGold: '#FFD700',      // Montego Bay - bright gold
-  ochoGreen: '#00FF00',        // Ocho Rios - vibrant green
-  negrilBlack: '#0A0A0A',      // Negril - deep black
-  negrilSilver: '#C0C0C0',     // Negril accent - silver
-  kingstonRed: '#FF0000',      // Kingston - bright red
-  
-  // Piece colors (matches engine colors for clarity)
-  pieces: {
-    yellow: '#FFD700',         // Montego Bay pieces (gold)
-    green: '#00FF00',          // Ocho Rios pieces (green)
-    blue: '#0A0A0A',           // Negril pieces (black)
-    red: '#FF0000',            // Kingston pieces (red)
-  },
-  
-  // Board colors
-  boardBg: '#1A0F0A',          // Dark brown (plywood texture base)
-  trackCell: '#2A1810',        // Track cell brown
-  safeCell: '#FFD700',         // Gold safe cells
-  startCell: '#FF6B00',        // Orange start cells (come-out)
-  homeStretch: '#8B4513',      // Saddle brown home columns
-  centerBg: '#000000',         // Black center
-  
-  // UI colors
-  background: '#0D0D0D',       // App background (near black)
-  surface: '#1A1A1A',          // Card surfaces
-  surfaceElevated: '#252525',  // Elevated surfaces
-  
-  // Accent & semantic
-  accent: '#FFD700',           // Gold accent
-  accentSecondary: '#00FF00',  // Green accent
-  success: '#00FF00',          // Green
-  error: '#FF0000',            // Red
-  warning: '#FFD700',          // Gold
-  info: '#00BFFF',             // Deep sky blue
+  // Base colors
+  bg: '#0B0B0C',
+  surface: '#141416',           // Gradient start
+  surfaceEnd: '#18181B',        // Gradient end (for cards, rails)
+  surfaceLine: 'rgba(255,255,255,0.08)',
   
   // Text
-  textPrimary: '#FFFFFF',      // White
-  textSecondary: '#B3B3B3',    // Light gray
-  textTertiary: '#737373',     // Medium gray
-  textOnAccent: '#000000',     // Black text on gold
+  cream: '#F6EFD9',             // Primary text, board grid lines at 75%
+  textMuted: 'rgba(246,239,217,0.65)',
   
-  // Borders & dividers
-  border: '#333333',           // Dark gray
-  borderLight: '#4D4D4D',      // Medium dark gray
-  divider: '#262626',          // Very dark gray
+  // Jamaican colors
+  green: '#009B3A',
+  greenDeep: '#006B28',         // Hard poster shadow
+  greenBright: '#19C45A',       // Ocho Rios text on black
+  gold: '#FED100',              // CTA, wordmark
+  goldDeep: '#C9A200',          // CTA gradient end
+  red: '#E4202E',
+  redText: '#FF3340',           // Red text variant
+  silver: '#D9DCE1',            // Negril accent
   
-  // Overlay & shadows
-  overlay: 'rgba(0, 0, 0, 0.7)',
-  shadowDark: 'rgba(0, 0, 0, 0.5)',
-  shadowGold: 'rgba(255, 215, 0, 0.3)',
+  // Hot pink (limited use: LIVE badge, unread, +6 tag, stickers, capture burst - under 3%)
+  hot: '#FF3B7F',
   
-  // Video & live
-  liveRed: '#FF0000',          // LIVE badge
-  videoOverlay: 'rgba(0, 0, 0, 0.6)',
+  // Place piece colors
+  places: {
+    montegoGold: '#FED100',     // Montego Bay pieces
+    ochoGreen: '#0FAE47',       // Ocho Rios pieces
+    kingstonRed: '#E4202E',     // Kingston pieces
+    negrilBlack: '#26272B',     // Negril pieces
+  },
+  
+  // Piece gradients (radial, centre 38%/32%, r 75%, stops 0/.45/1)
+  pieceGradients: {
+    gold: {
+      colors: ['#FFF3A0', '#FED100', '#A88400'],
+      rim: '#FFF8D0',
+      mid: '#FED100', // For base circle
+    },
+    green: {
+      colors: ['#7CF2A4', '#0FAE47', '#005C22'],
+      rim: '#D8FFE6',
+      mid: '#0FAE47',
+    },
+    red: {
+      colors: ['#FF9AA0', '#E4202E', '#7A0710'],
+      rim: '#FFE0E2',
+      mid: '#E4202E',
+    },
+    black: {
+      colors: ['#7A7D84', '#26272B', '#050506'],
+      rim: '#C9CDD4',
+      mid: '#26272B',
+    },
+  },
+  
+  // Board colors (for track cells)
+  trackGreen: '#009B3A',        // Green track cells
+  trackBlack: '#0B0B0C',        // Black track cells
+  trackGold: '#FED100',         // Gold track cells
+  
+  // Home strip colors (solid fills)
+  homeStrips: {
+    gold: '#FED100',            // Montego Bay home column
+    green: '#0FAE47',           // Ocho Rios home column
+    red: '#E4202E',             // Kingston home column
+    negril: '#232428',          // Negril home column (darker black)
+  },
+  
+  // Yard base and accents
+  yardBase: '#0E0E10',
+  
+  // Centre colors
+  centreGreen: '#009B3A',       // Top/bottom triangles
+  centreBlack: '#0B0B0C',       // Left/right triangles
+  centreGoldStroke: '#FED100',  // X stroke and top band
+  centreRed: '#E4202E',         // Bottom band
+  centreSilver: '#D9DCE1',      // Left band
+  centreGreenBright: '#19C45A', // Right band
+  
+  // UI elements
+  videoBg: '#4a4b50',
+  videoBgEnd: '#2a2b2f',
+  videoIcon: '#45464c',
+  slotEmpty: 'rgba(0,0,0,0.45)', // Empty home slot fill
+  
+  // Shadows
+  shadowBlack: 'rgba(0,0,0,0.55)',
+  shadowDark: 'rgba(0,0,0,0.45)',
 } as const;
 
 /**
- * Typography - Anton (display), Archivo Black (headings), Inter (body)
+ * Typography - Expo Google Fonts
  */
 export const typography = {
   fonts: {
-    display: 'Anton_400Regular',          // Big bold headers
-    heading: 'ArchivoBlack_400Regular',   // Section headers
-    body: 'Inter_400Regular',             // Body text
-    bodySemiBold: 'Inter_600SemiBold',    // Emphasized body
-    bodyBold: 'Inter_700Bold',            // Strong emphasis
+    display: 'Anton_400Regular',          // Display text (uppercase, tracking +0.5 to 2)
+    body: 'Inter_400Regular',             // Body text (12-13 at weight 500)
+    bodySemiBold: 'Inter_600SemiBold',    // Labels (600-700)
+    bodyBold: 'Inter_700Bold',            // Labels (600-700)
+    sticker: 'ArchivoBlack_400Regular',   // Stickers, badges, pills (8-13 uppercase, tracking 1-3)
   },
   
   sizes: {
-    displayLarge: 64,      // Hero text
-    displayMedium: 48,     // Main title
-    displaySmall: 36,      // Section title
+    // Display (Anton)
+    displayHero: 168,         // LUDI wordmark
+    displayLarge: 64,         // Place names on win card
+    displayMedium: 48,
+    displaySmall: 36,
     
-    headingLarge: 32,      // Large heading
-    headingMedium: 24,     // Medium heading
-    headingSmall: 20,      // Small heading
+    // Stickers & badges (Archivo Black)
+    stickerLarge: 13,
+    stickerMedium: 11,
+    stickerSmall: 8,
     
-    bodyLarge: 18,         // Large body
-    bodyMedium: 16,        // Medium body
-    bodySmall: 14,         // Small body
-    caption: 12,           // Caption text
-    tiny: 10,              // Tiny labels
+    // Body (Inter)
+    bodyLarge: 13,
+    bodyMedium: 12,
+    bodySmall: 11,
+    caption: 10,
   },
   
-  lineHeights: {
-    tight: 1.1,
-    normal: 1.5,
-    relaxed: 1.75,
-  },
-  
+  // Letter spacing (tracking)
   letterSpacing: {
-    tight: -0.5,
-    normal: 0,
-    wide: 0.5,
-    wider: 1,
-    widest: 2,
+    displayTight: 0.5,
+    displayNormal: 1,
+    displayWide: 2,
+    stickerNormal: 1,
+    stickerWide: 2,
+    stickerWidest: 3,
+  },
+  
+  // Display shadow (Anton text)
+  displayShadow: {
+    color: '#006B28',         // greenDeep
+    offset: { width: 2, height: 2 },  // 2-9px based on size
+    blur: 0,                  // Hard shadow
+  },
+  
+  // Sticker shadow (Archivo Black)
+  stickerShadow: {
+    color: '#000000',
+    offset: { width: 2, height: 3 },  // Hard offset shadow
+    blur: 0,
   },
 } as const;
 
 /**
- * Spacing scale (8px base unit)
+ * Spacing (screen padding 16, gaps 10-12)
  */
 export const spacing = {
+  screenPadding: 16,
+  gapSmall: 10,
+  gapMedium: 12,
   xs: 4,
   sm: 8,
   md: 16,
   lg: 24,
   xl: 32,
-  '2xl': 48,
-  '3xl': 64,
-  '4xl': 96,
 } as const;
 
 /**
  * Border radius
  */
 export const radii = {
-  none: 0,
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
-  '2xl': 24,
-  full: 9999,
+  card: 18,               // Cards (18-20)
+  cardLarge: 20,
+  winnerCard: 24,         // Winner card
+  button: 14,             // Buttons (14-18)
+  buttonLarge: 18,
+  pill: 9999,             // Pills (fully round)
+  railButton: 24,         // 48pt circles (r=24)
+  topBarButton: 21,       // 42pt circles (r=21)
+  yardFrame: 9,           // Yard frame corners
+  yardInner: 6.5,         // Yard dashed rect
+  videoTile: 7,           // Video tile in yard
+} as const;
+
+/**
+ * Button and icon sizes
+ */
+export const sizes = {
+  railButton: 48,         // Rail icon buttons (circles)
+  topBarButton: 42,       // Top bar buttons (circles)
 } as const;
 
 /**
  * Shadows
  */
 export const shadows = {
-  none: {
-    shadowColor: 'transparent',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0,
-    shadowRadius: 0,
-    elevation: 0,
-  },
-  sm: {
-    shadowColor: colors.shadowDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  md: {
-    shadowColor: colors.shadowDark,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
-    elevation: 4,
-  },
-  lg: {
-    shadowColor: colors.shadowDark,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
-  },
   gold: {
-    shadowColor: colors.accent,
+    shadowColor: colors.gold,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.6,
     shadowRadius: 8,
     elevation: 6,
+  },
+  dice: {
+    shadowColor: 'rgba(0,0,0,0.3)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 6,
+    elevation: 4,
   },
 } as const;
 
 /**
- * Board geometry (19x19 grid)
+ * Board geometry (19x19 grid) - DO NOT CHANGE
  */
 export const board = {
   gridSize: 19,
   yardSize: 8,        // 8x8 corners
   armWidth: 3,        // 3-wide arms
-  armLength: 8,       // 8-long arms
+  armLength: 8,       // 8-long arms (home columns are 7 cells)
   centerSize: 3,      // 3x3 center
   
-  trackLength: 52,    // Total track cells
-  homeColumnLength: 6, // Home stretch cells
+  // Cell size in viewBox units (380x380 viewBox, cell=20)
+  viewBoxSize: 380,
+  cellSize: 20,
   
-  // Start cell indices
+  trackLength: 52,    // Total track cells (unchanged)
+  homeColumnLength: 7, // Home stretch cells (r1..7, r11..17, c1..7, c11..17)
+  
+  // Start cell coordinates (come-out positions - DO NOT CHANGE)
+  // These map to engine color indices
   startCells: {
-    red: 0,
-    green: 13,
-    yellow: 26,
-    blue: 39,
+    red: 0,       // Kingston (bottom-right yard)
+    green: 13,    // Ocho Rios (top-right yard)
+    yellow: 26,   // Montego Bay (top-left yard)
+    blue: 39,     // Negril (bottom-left yard)
   },
-  
-  // Safe cell indices
-  safeCells: [0, 8, 13, 21, 26, 34, 39, 47],
 } as const;
 
 /**
- * Motion & Animation
+ * Motion & Animation durations (ms)
  */
 export const motion = {
-  // Durations (ms)
-  instant: 0,
-  fast: 150,
-  normal: 300,
-  slow: 500,
-  slower: 700,
-  slowest: 1000,
+  // Piece slide
+  slidePerCell: 110,        // 110ms per cell
+  slideEase: 'easeOutQuad',
+  slideBounce: 1.08,        // Mid-hop bounce scale
   
-  // Easing curves
-  easing: {
-    linear: [0, 0, 1, 1],
-    easeIn: [0.4, 0, 1, 1],
-    easeOut: [0, 0, 0.2, 1],
-    easeInOut: [0.4, 0, 0.2, 1],
-    bounce: [0.68, -0.55, 0.265, 1.55],
-  },
+  // Entry animation
+  entryDuration: 260,       // Spring animation
+  entryDamping: 14,
   
-  // Animation config
-  pieceSlide: {
-    duration: 400,
-    stagger: 80,  // Delay between path segments
-  },
+  // Dice
+  diceDurationMin: 600,
+  diceDurationMax: 750,
+  diceOvershoot: 120,       // ms overshoot after land
   
-  diceRoll: {
-    duration: 600,
-    rotations: 3,
-  },
+  // Pulses
+  legalMovePulse: 900,      // Gold ring pulse loop
+  yardGlowBreath: 1600,     // Current turn yard glow
   
-  captureBurst: {
-    duration: 500,
-    scale: 1.5,
-  },
+  // Capture
+  captureBurst: 350,
+  captureArc: 450,
   
-  yardPulse: {
-    duration: 1000,
-    scale: 1.05,
-    repeat: true,
-  },
+  // Win
+  winSlam: 280,             // Card slam spring
+  winSlamScale: 1.15,       // Initial scale
+  winConfetti: 2500,
+  winStickerDelay: 200,
+  winRaysRotation: 40000,   // 40s per full rotation
   
-  movablePulse: {
-    duration: 1200,
-    ringScale: 1.3,
-    opacity: 0.6,
-    repeat: true,
-  },
+  // Buttons
+  buttonPress: 90,
+  buttonScale: 0.97,
   
-  winCelebration: {
-    duration: 2000,
-    confettiCount: 50,
-  },
+  // Reduce Motion fallback
+  crossFade: 200,           // Cross-fade instead of animations
 } as const;
 
 /**
- * Haptics patterns
+ * Haptics patterns (expo-haptics)
  */
 export const haptics = {
-  roll: 'impactMedium',           // Dice roll
-  move: 'impactLight',            // Token move
-  capture: 'notificationSuccess', // Capture opponent
-  blocked: 'notificationWarning', // Illegal move
-  win: 'notificationSuccess',     // Win game
+  light: 'light',             // Per landing
+  medium: 'medium',           // Roll selection, entry track
+  heavy: 'heavy',             // Capture
+  success: 'success',         // Dice 6, piece home, win
+  warning: 'warning',         // Blocked move
 } as const;
 
 /**
- * Texture & effects
+ * Sticker rotation range (degrees)
+ */
+export const stickerRotation = {
+  min: -7,
+  max: 12,
+} as const;
+
+/**
+ * Texture settings
  */
 export const textures = {
-  plywood: {
-    // SVG pattern or image for plywood board texture
-    enabled: true,
-    opacity: 0.15,
-  },
-  
-  grain: {
-    // Noise grain for dancehall aesthetic
+  filmGrain: {
     enabled: true,
     opacity: 0.05,
   },
-  
-  gradient: {
-    // Radial gradient from center
+  halftone: {
     enabled: true,
-    colors: ['rgba(255, 215, 0, 0.1)', 'transparent'],
+    gridSize: 6,          // 6pt grid
+    dotRadius: 1.1,       // 1.1pt dot
   },
 } as const;
 
 /**
- * Helper function to get place color
+ * Helper functions
  */
+
 export function getPlaceColor(engineColor: EngineColor): string {
   const colorMap: Record<EngineColor, string> = {
-    yellow: colors.montegoGold,
-    green: colors.ochoGreen,
-    blue: colors.negrilBlack,
-    red: colors.kingstonRed,
+    yellow: colors.places.montegoGold,
+    green: colors.places.ochoGreen,
+    blue: colors.places.negrilBlack,
+    red: colors.places.kingstonRed,
   };
   return colorMap[engineColor];
 }
 
-/**
- * Helper function to get place accent (for borders, highlights)
- */
 export function getPlaceAccent(engineColor: EngineColor): string {
-  // Negril gets silver accent, others use same color
+  // Negril gets silver accent, others use place color
   if (engineColor === 'blue') {
-    return colors.negrilSilver;
+    return colors.silver;
   }
-  return getPlaceColor(engineColor);
+  // Montego Bay, Ocho Rios, Kingston use their piece colors as accents
+  const accentMap: Record<EngineColor, string> = {
+    yellow: colors.gold,
+    green: colors.greenBright,
+    red: colors.redText,
+    blue: colors.silver, // Already handled above
+  };
+  return accentMap[engineColor];
+}
+
+export function getPieceGradient(engineColor: EngineColor) {
+  const gradientMap = {
+    yellow: colors.pieceGradients.gold,
+    green: colors.pieceGradients.green,
+    blue: colors.pieceGradients.black,
+    red: colors.pieceGradients.red,
+  };
+  return gradientMap[engineColor];
+}
+
+export function getHomeStripColor(engineColor: EngineColor): string {
+  const stripMap: Record<EngineColor, string> = {
+    yellow: colors.homeStrips.gold,
+    green: colors.homeStrips.green,
+    blue: colors.homeStrips.negril,
+    red: colors.homeStrips.red,
+  };
+  return stripMap[engineColor];
+}
+
+/**
+ * Get track cell fill color based on outer index
+ * Track fill = [green, black, gold, black][outerIndex % 4]
+ */
+export function getTrackCellColor(outerIndex: number): string {
+  const pattern = [colors.trackGreen, colors.trackBlack, colors.trackGold, colors.trackBlack];
+  return pattern[outerIndex % 4];
 }
