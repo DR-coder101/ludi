@@ -175,9 +175,29 @@ export interface VideoTokenResponse {
   error?: string;
 }
 
+export const RoomSelectColorPayloadSchema = z.object({
+  color: ColorSchema,
+});
+export type RoomSelectColorPayload = z.infer<typeof RoomSelectColorPayloadSchema>;
+
+export interface RoomSelectColorResponse {
+  success: boolean;
+  error?: string;
+}
+
+export const RoomStartGamePayloadSchema = z.object({});
+export type RoomStartGamePayload = z.infer<typeof RoomStartGamePayloadSchema>;
+
+export interface RoomStartGameResponse {
+  success: boolean;
+  error?: string;
+}
+
 export interface ClientToServerEvents {
   'room:create': (payload: RoomCreatePayload, callback: (response: RoomCreateResponse) => void) => void;
   'room:join': (payload: RoomJoinPayload, callback: (response: RoomJoinResponse) => void) => void;
+  'room:selectColor': (payload: RoomSelectColorPayload, callback: (response: RoomSelectColorResponse) => void) => void;
+  'room:startGame': (payload: RoomStartGamePayload, callback: (response: RoomStartGameResponse) => void) => void;
   'room:ready': () => void;
   'room:leave': () => void;
   'game:roll': (payload: GameRollPayload, callback: (response: GameRollResponse) => void) => void;
