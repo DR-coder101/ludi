@@ -14,12 +14,15 @@ import {
   legalMoves,
   applyMove,
 } from '@ludi/rules';
-import { GameBoard } from '../src/components/board/GameBoard';
-import { DicePair } from '../src/components/DicePair';
-import { TurnIndicator } from '../src/components/TurnIndicator';
+import { BoardSVGFull } from '../src/components/board/BoardSVGFull';
+import { BoardTopBar } from '../src/components/BoardTopBar';
+import { IconRails } from '../src/components/IconRails';
+import { TurnCard } from '../src/components/TurnCard';
+import { PlayerStrip } from '../src/components/PlayerStrip';
 import { WinBanner } from '../src/components/WinBanner';
 import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
 import { OnboardingTooltip, useOnboarding } from '../src/components/OnboardingTooltip';
+import type { EngineColor } from '../src/theme/tokens';
 
 export default function GameScreen() {
   const router = useRouter();
@@ -138,38 +141,47 @@ export default function GameScreen() {
 
   const boardWidth = Math.min(width - 32, 500);
 
+  const players = playerColors.map((color) => ({
+    engineColor: color as EngineColor,
+    name: `Player ${playerColors.indexOf(color) + 1}`,
+    isCurrentTurn: color === gameState.turn,
+  }));
+
   return (
     <SafeAreaView style={styles.safeArea}>
       {shouldShowOnboarding && (
         <OnboardingTooltip onDismiss={dismissOnboarding} />
       )}
+      
+      <BoardTopBar
+        onBack={() => router.back()}
+        onSettings={() => {}}
+      />
+      
       <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <TurnIndicator
-            currentPlayer={gameState.turn}
-            lastRoll={gameState.dice}
-            phase={gameState.phase}
-          />
-        </View>
-
         <View style={styles.boardContainer}>
-          <GameBoard
+          <BoardSVGFull
             width={boardWidth}
-            gameState={gameState}
-            legalTokenIndices={legalTokenIndices}
-            onTokenPress={handleTokenPress}
-            animatingToken={animatingToken}
-            capturedToken={capturedToken}
+            pieces={gameState.tokens.map((token, i) => ({
+              engineColor: token.color as EngineColor,
+              row: token.pos.row,
+              col: token.pos.col,
+              isMovable: legalTokenIndices.includes(i),
+            }))}
+            highlightCells={legalMovesArray.map(m => ({ row: m.resulting.row, col: m.resulting.col }))}
           />
         </View>
 
-        <View style={styles.controls}>
-          <DicePair
-            value={gameState.dice}
+        <View style={styles.railsAndTurnCard}>
+          <IconRails />
+          <TurnCard
+            currentPlayer={gameState.turn as EngineColor}
+            dice={gameState.dice ? [gameState.dice, gameState.dice] : null}
             onRoll={handleRoll}
-            disabled={gameState.phase !== 'awaiting_roll'}
           />
         </View>
+
+        <PlayerStrip players={players} />
 
         {gameState.phase === 'finished' && gameState.winner && (
           <WinBanner
@@ -186,32 +198,20 @@ export default function GameScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0B0B0C',
   },
   container: {
     flexGrow: 1,
-    padding: 16,
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-  },
-  header: {
-    width: '100%',
-    maxWidth: 500,
-    marginBottom: 16,
+    backgroundColor: '#0B0B0C',
   },
   boardContainer: {
     marginVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#2a2a2a',
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 8,
+    alignItems: 'center',
   },
-  controls: {
-    marginTop: 20,
+  railsAndTurnCard: {
+    width: '100%',
+    marginTop: 16,
     alignItems: 'center',
   },
 });

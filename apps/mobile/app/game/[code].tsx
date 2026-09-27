@@ -18,9 +18,11 @@ import { useConnectionStore } from '../../src/stores/connectionStore';
 import { useChatStore } from '../../src/stores/chatStore';
 import { useVideoStore } from '../../src/stores/videoStore';
 import { useToastStore } from '../../src/stores/toastStore';
-import { GameBoard } from '../../src/components/board/GameBoard';
-import { DicePair } from '../../src/components/DicePair';
-import { TurnIndicator } from '../../src/components/TurnIndicator';
+import { BoardSVGFull } from '../../src/components/board/BoardSVGFull';
+import { BoardTopBar } from '../../src/components/BoardTopBar';
+import { IconRails } from '../../src/components/IconRails';
+import { TurnCard } from '../../src/components/TurnCard';
+import { PlayerStrip } from '../../src/components/PlayerStrip';
 import { WinBanner } from '../../src/components/WinBanner';
 import { TurnDeadline } from '../../src/components/TurnDeadline';
 import { ChatPanel } from '../../src/components/ChatPanel';
@@ -29,6 +31,7 @@ import { Toast } from '../../src/components/Toast';
 import { OnboardingTooltip, useOnboarding } from '../../src/components/OnboardingTooltip';
 import { gameAudio, triggerHaptic } from '../../src/utils/gameAudio';
 import { fetchVideoToken } from '../../src/net/videoToken';
+import type { EngineColor } from '../../src/theme/tokens';
 
 export default function OnlineGameScreen() {
   const router = useRouter();
@@ -427,13 +430,12 @@ export default function OnlineGameScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0B0B0C',
   },
   container: {
     flexGrow: 1,
-    padding: 16,
     alignItems: 'center',
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#0B0B0C',
   },
   loadingContainer: {
     flex: 1,
@@ -443,37 +445,31 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#D4AF37',
+    color: '#FED100',
   },
   reconnectingBanner: {
     width: '100%',
-    backgroundColor: '#4a3a1a',
+    backgroundColor: '#FED100',
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
     alignItems: 'center',
   },
   reconnectingText: {
-    color: '#FDD835',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  header: {
-    width: '100%',
-    maxWidth: 500,
-    marginBottom: 16,
-  },
-  leaveButton: {
-    alignSelf: 'flex-start',
-    marginBottom: 8,
-  },
-  leaveButtonText: {
-    color: '#D4AF37',
+    color: '#0B0B0C',
     fontSize: 14,
     fontWeight: '600',
   },
   boardContainer: {
     marginVertical: 16,
+    alignItems: 'center',
+  },
+  railsAndTurnCard: {
+    width: '100%',
+    marginTop: 16,
+    alignItems: 'center',
+  },
+});
     borderRadius: 12,
     backgroundColor: '#2a2a2a',
     padding: 8,
