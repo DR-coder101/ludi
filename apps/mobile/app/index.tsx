@@ -1,5 +1,20 @@
-import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
+/**
+ * Home Screen - Dancehall Premium UI
+ * Matches approved mockup with vinyl hero, glossy pieces, gold CTA
+ */
+
+import React, { useState, useEffect } from 'react';
+import { 
+  StyleSheet, 
+  Text, 
+  View, 
+  TouchableOpacity, 
+  ScrollView, 
+  TextInput, 
+  ActivityIndicator,
+  StatusBar,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import type { Color } from '@ludi/rules';
 import { socketManager } from '../src/net/socket';
@@ -7,8 +22,11 @@ import { useAuthStore } from '../src/stores/authStore';
 import { useToastStore } from '../src/stores/toastStore';
 import { Toast } from '../src/components/Toast';
 import { DancehallBackground } from '../src/components/DancehallBackground';
+import { VinylHero } from '../src/components/home/VinylHero';
+import { PieceChips } from '../src/components/home/PieceChips';
 import { useDancehallFonts } from '../src/theme/fonts';
 import { colors, typography, spacing, radii, shadows } from '../src/theme/tokens';
+import { Feather } from '@expo/vector-icons';
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
@@ -154,7 +172,7 @@ export default function HomeScreen() {
   if (!fontsLoaded && !fontError) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.gold} />
       </View>
     );
   }
@@ -162,6 +180,7 @@ export default function HomeScreen() {
   if (mode === null) {
     return (
       <DancehallBackground>
+        <StatusBar barStyle="light-content" />
         <ScrollView contentContainerStyle={styles.container}>
           <Toast
             visible={visible}
@@ -170,69 +189,78 @@ export default function HomeScreen() {
             duration={duration}
             onDismiss={hideToast}
           />
-          <View style={styles.headerNav}>
-            {isAuthenticated && (
-              <>
-                <TouchableOpacity
-                  style={styles.navButton}
-                  onPress={() => router.push('/profile')}
-                >
-                  <Text style={styles.navButtonText}>👤 Profile</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.navButton}
-                  onPress={() => router.push('/history')}
-                >
-                  <Text style={styles.navButtonText}>📜 History</Text>
-                </TouchableOpacity>
-              </>
+
+          {/* Vinyl Hero with Wordmark */}
+          <VinylHero />
+
+          {/* Piece Chips */}
+          <View style={styles.piecesContainer}>
+            <PieceChips />
+          </View>
+
+          {/* Mode Cards */}
+          <View style={styles.cardsContainer}>
+            {/* Gold CTA - Online Multiplayer */}
+            <TouchableOpacity style={styles.goldCard} onPress={handleQuickPlay}>
+              {/* Halftone texture overlay */}
+              <View style={styles.halftoneOverlay} />
+              
+              <View style={styles.cardIcon}>
+                <Feather name="globe" size={26} color={colors.gold} />
+              </View>
+              
+              <View style={styles.cardContent}>
+                <Text style={styles.goldCardTitle}>ONLINE MULTIPLAYER</Text>
+                <Text style={styles.goldCardSubtitle}>Private rooms · voice & video</Text>
+              </View>
+              
+              <View style={styles.cardArrow}>
+                <Feather name="chevron-right" size={22} color={colors.bg} />
+              </View>
+            </TouchableOpacity>
+
+            {/* Dark Card - Local Pass & Play */}
+            <TouchableOpacity style={styles.darkCard} onPress={() => setMode('local')}>
+              {/* Halftone texture overlay */}
+              <View style={styles.halftoneOverlayDark} />
+              
+              <View style={styles.cardIconDark}>
+                <Feather name="smartphone" size={26} color={colors.greenBright} />
+              </View>
+              
+              <View style={styles.cardContent}>
+                <Text style={styles.darkCardTitle}>LOCAL PASS & PLAY</Text>
+                <Text style={styles.darkCardSubtitle}>One phone, 2–4 players</Text>
+              </View>
+              
+              <View style={styles.cardArrow}>
+                <Feather name="chevron-right" size={22} color={colors.greenBright} />
+              </View>
+            </TouchableOpacity>
+
+            {/* Account prompt */}
+            {!isAuthenticated && (
+              <View style={styles.accountPrompt}>
+                <Text style={styles.accountText}>
+                  <Text style={styles.accountBold}>Save your wins.</Text> Create an account to keep your stats & friends.
+                </Text>
+                <View style={styles.accountButtons}>
+                  <TouchableOpacity 
+                    style={styles.signInButton}
+                    onPress={() => router.push('/auth/signin')}
+                  >
+                    <Text style={styles.signInText}>SIGN IN</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.signUpButton}
+                    onPress={() => router.push('/auth/signup')}
+                  >
+                    <Text style={styles.signUpText}>SIGN UP</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             )}
           </View>
-
-          <Text style={styles.title}>LUDI</Text>
-          <Text style={styles.subtitle}>Jamaican Dancehall Edition</Text>
-
-          <View style={styles.modeContainer}>
-            <TouchableOpacity
-              style={styles.modeButton}
-              onPress={handleQuickPlay}
-            >
-              <Text style={styles.modeButtonIcon}>🌐</Text>
-              <Text style={styles.modeButtonText}>ONLINE PLAY</Text>
-              <Text style={styles.modeButtonSubtext}>Link up with friends</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.modeButton}
-              onPress={() => setMode('local')}
-            >
-              <Text style={styles.modeButtonIcon}>👥</Text>
-              <Text style={styles.modeButtonText}>PASS & PLAY</Text>
-              <Text style={styles.modeButtonSubtext}>One device vibes</Text>
-            </TouchableOpacity>
-          </View>
-
-          {!isAuthenticated && (
-            <View style={styles.authPrompt}>
-              <Text style={styles.authPromptText}>
-                Sign up to save your progress and compete
-              </Text>
-              <View style={styles.authButtonRow}>
-                <TouchableOpacity
-                  style={styles.authButton}
-                  onPress={() => router.push('/auth/signin')}
-                >
-                  <Text style={styles.authButtonText}>SIGN IN</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.authButton, styles.authButtonPrimary]}
-                  onPress={() => router.push('/auth/signup')}
-                >
-                  <Text style={[styles.authButtonText, styles.authButtonTextPrimary]}>SIGN UP</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          )}
         </ScrollView>
       </DancehallBackground>
     );
@@ -241,6 +269,7 @@ export default function HomeScreen() {
   if (mode === 'online') {
     return (
       <DancehallBackground>
+        <StatusBar barStyle="light-content" />
         <ScrollView contentContainerStyle={styles.container}>
           <Toast
             visible={visible}
@@ -250,17 +279,18 @@ export default function HomeScreen() {
             onDismiss={hideToast}
           />
           <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
-            <Text style={styles.backButtonText}>← BACK</Text>
+            <Feather name="arrow-left" size={20} color={colors.cream} />
+            <Text style={styles.backButtonText}>BACK</Text>
           </TouchableOpacity>
 
-          <Text style={styles.title}>ONLINE PLAY</Text>
+          <Text style={styles.pageTitle}>ONLINE PLAY</Text>
 
           <View style={styles.setupCard}>
             <Text style={styles.sectionTitle}>YOUR NAME</Text>
             <TextInput
               style={styles.input}
               placeholder="Enter your name"
-              placeholderTextColor={colors.textTertiary}
+              placeholderTextColor={colors.textMuted}
               value={displayName}
               onChangeText={setDisplayName}
               maxLength={50}
@@ -273,7 +303,7 @@ export default function HomeScreen() {
               disabled={isCreatingRoom}
             >
               {isCreatingRoom ? (
-                <ActivityIndicator color={colors.textOnAccent} />
+                <ActivityIndicator color={colors.bg} />
               ) : (
                 <Text style={styles.primaryButtonText}>CREATE ROOM</Text>
               )}
@@ -289,7 +319,7 @@ export default function HomeScreen() {
             <TextInput
               style={styles.input}
               placeholder="Enter 6-character code"
-              placeholderTextColor={colors.textTertiary}
+              placeholderTextColor={colors.textMuted}
               value={roomCode}
               onChangeText={(text) => setRoomCode(text.toUpperCase())}
               maxLength={6}
@@ -302,7 +332,7 @@ export default function HomeScreen() {
               disabled={isJoiningRoom}
             >
               {isJoiningRoom ? (
-                <ActivityIndicator color={colors.accent} />
+                <ActivityIndicator color={colors.green} />
               ) : (
                 <Text style={styles.secondaryButtonText}>JOIN ROOM</Text>
               )}
@@ -322,6 +352,7 @@ export default function HomeScreen() {
   // Local mode
   return (
     <DancehallBackground>
+      <StatusBar barStyle="light-content" />
       <ScrollView contentContainerStyle={styles.container}>
         <Toast
           visible={visible}
@@ -331,10 +362,11 @@ export default function HomeScreen() {
           onDismiss={hideToast}
         />
         <TouchableOpacity onPress={() => setMode(null)} style={styles.backButton}>
-          <Text style={styles.backButtonText}>← BACK</Text>
+          <Feather name="arrow-left" size={20} color={colors.cream} />
+          <Text style={styles.backButtonText}>BACK</Text>
         </TouchableOpacity>
 
-        <Text style={styles.title}>PASS & PLAY</Text>
+        <Text style={styles.pageTitle}>PASS & PLAY</Text>
 
         <View style={styles.setupCard}>
           <Text style={styles.sectionTitle}>NUMBER OF PLAYERS</Text>
@@ -395,153 +427,271 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.bg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     flexGrow: 1,
-    padding: spacing.lg,
+    paddingBottom: spacing.screenPadding * 2,
+  },
+  piecesContainer: {
+    marginTop: 376,
     alignItems: 'center',
   },
-  headerNav: {
+  cardsContainer: {
+    marginTop: 32,
+    paddingHorizontal: spacing.screenPadding,
+    gap: 10,
+  },
+  goldCard: {
+    height: 80,
+    borderRadius: radii.card,
     flexDirection: 'row',
-    alignSelf: 'flex-end',
-    gap: spacing.sm,
-    marginTop: spacing.lg,
-    marginBottom: spacing.md,
+    alignItems: 'center',
+    paddingLeft: 16,
+    paddingRight: 18,
+    gap: 14,
+    overflow: 'hidden',
+    // Gold gradient (approximated with solid + shadows)
+    backgroundColor: colors.gold,
+    ...shadows.gold,
+    // Inner highlight
+    borderTopWidth: Platform.OS === 'ios' ? 1 : 0,
+    borderTopColor: 'rgba(255,255,255,0.6)',
   },
-  navButton: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.md,
+  halftoneOverlay: {
+    position: 'absolute',
+    right: -20,
+    top: -20,
+    width: 170,
+    height: 130,
+    backgroundColor: 'rgba(0,0,0,0.14)',
+    borderRadius: 85,
+  },
+  halftoneOverlayDark: {
+    position: 'absolute',
+    right: -20,
+    top: -20,
+    width: 170,
+    height: 130,
+    backgroundColor: 'rgba(0,155,58,0.22)',
+    borderRadius: 85,
+  },
+  cardIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardIconDark: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: 'rgba(0,155,58,0.15)',
     borderWidth: 1,
-    borderColor: colors.accent,
+    borderColor: 'rgba(25,196,90,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  navButtonText: {
-    color: colors.accent,
-    fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.bodySemiBold,
+  cardContent: {
+    flex: 1,
+  },
+  goldCardTitle: {
+    fontFamily: typography.fonts.display,
+    fontSize: 25,
+    letterSpacing: 0.6,
+    lineHeight: 25,
+    color: colors.bg,
+    textTransform: 'uppercase',
+  },
+  goldCardSubtitle: {
+    fontSize: 12.5,
+    marginTop: 5,
+    fontWeight: '500',
+    color: colors.bg,
+  },
+  darkCard: {
+    height: 80,
+    borderRadius: radii.card,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 16,
+    paddingRight: 18,
+    gap: 14,
+    overflow: 'hidden',
+    backgroundColor: colors.surface,
+    borderWidth: 1.5,
+    borderColor: colors.green,
+    shadowColor: 'rgba(0,0,0,0.6)',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 1,
+    shadowRadius: 26,
+    elevation: 10,
+  },
+  darkCardTitle: {
+    fontFamily: typography.fonts.display,
+    fontSize: 25,
+    letterSpacing: 0.6,
+    lineHeight: 25,
+    color: colors.cream,
+    textTransform: 'uppercase',
+  },
+  darkCardSubtitle: {
+    fontSize: 12.5,
+    marginTop: 5,
+    fontWeight: '500',
+    color: colors.textMuted,
+  },
+  cardArrow: {
+    marginLeft: 'auto',
+  },
+  accountPrompt: {
+    marginTop: 4,
+    borderRadius: radii.card,
+    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.035)',
+    borderWidth: 1,
+    borderColor: colors.surfaceLine,
+  },
+  accountText: {
+    fontSize: 13,
+    color: 'rgba(246,239,217,0.78)',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  accountBold: {
+    color: colors.cream,
+  },
+  accountButtons: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  signInButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: radii.button,
+    borderWidth: 1.5,
+    borderColor: 'rgba(246,239,217,0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  signInText: {
+    fontFamily: typography.fonts.sticker,
+    fontSize: 13,
+    letterSpacing: 1,
+    color: colors.cream,
+    textTransform: 'uppercase',
+  },
+  signUpButton: {
+    flex: 1,
+    height: 46,
+    borderRadius: radii.button,
+    backgroundColor: colors.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: 'rgba(0,155,58,0.35)',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    elevation: 6,
+    // Inner highlight
+    borderTopWidth: Platform.OS === 'ios' ? 1 : 0,
+    borderTopColor: 'rgba(255,255,255,0.25)',
+  },
+  signUpText: {
+    fontFamily: typography.fonts.sticker,
+    fontSize: 13,
+    letterSpacing: 1,
+    color: '#fff',
+    textTransform: 'uppercase',
   },
   backButton: {
-    alignSelf: 'flex-start',
-    marginTop: spacing.lg,
-    marginBottom: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 60,
+    paddingLeft: spacing.screenPadding,
+    paddingBottom: spacing.md,
   },
   backButtonText: {
-    color: colors.accent,
-    fontSize: typography.sizes.bodyMedium,
-    fontFamily: typography.fonts.bodyBold,
-    letterSpacing: typography.letterSpacing.wide,
+    fontFamily: typography.fonts.sticker,
+    fontSize: 13,
+    letterSpacing: 1,
+    color: colors.cream,
   },
-  title: {
-    fontSize: typography.sizes.displayHero,
+  pageTitle: {
     fontFamily: typography.fonts.display,
-    textAlign: 'center',
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
+    fontSize: 48,
+    letterSpacing: 1,
     color: colors.gold,
-    letterSpacing: typography.letterSpacing.displayWide,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+    textTransform: 'uppercase',
     textShadowColor: colors.greenDeep,
     textShadowOffset: { width: 4, height: 4 },
     textShadowRadius: 0,
   },
-  subtitle: {
-    fontSize: typography.sizes.bodyLarge,
-    fontFamily: typography.fonts.bodySemiBold,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing['2xl'],
-    letterSpacing: typography.letterSpacing.wider,
-  },
-  modeContainer: {
-    width: '100%',
-    maxWidth: 400,
-    gap: spacing.md,
-  },
-  modeButton: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.xl,
-    padding: spacing.xl,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: colors.gold,
-    ...shadows.gold,
-  },
-  modeButtonIcon: {
-    fontSize: 48,
-    marginBottom: spacing.md,
-  },
-  modeButtonText: {
-    fontSize: typography.sizes.headingMedium,
-    fontFamily: typography.fonts.sticker,
-    color: colors.gold,
-    marginBottom: spacing.xs,
-    letterSpacing: typography.letterSpacing.stickerWide,
-    textTransform: 'uppercase',
-  },
-  modeButtonSubtext: {
-    fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.body,
-    color: colors.textSecondary,
-  },
   setupCard: {
-    width: '100%',
-    maxWidth: 400,
+    marginHorizontal: spacing.screenPadding,
+    padding: spacing.lg,
+    borderRadius: radii.card,
     backgroundColor: colors.surface,
-    borderRadius: radii.xl,
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.accent,
-    ...shadows.gold,
+    borderWidth: 1,
+    borderColor: colors.surfaceLine,
   },
   sectionTitle: {
-    fontSize: typography.sizes.bodyLarge,
-    fontFamily: typography.fonts.heading,
-    marginBottom: spacing.md,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.wide,
+    fontFamily: typography.fonts.sticker,
+    fontSize: 11,
+    letterSpacing: 2,
+    color: colors.cream,
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
   },
   input: {
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radii.lg,
-    padding: spacing.md,
-    fontSize: typography.sizes.bodyMedium,
-    fontFamily: typography.fonts.body,
-    color: colors.textPrimary,
+    height: 48,
+    borderRadius: radii.button,
+    borderWidth: 1.5,
+    borderColor: colors.surfaceLine,
+    paddingHorizontal: spacing.md,
+    fontSize: 15,
+    fontWeight: '500',
+    color: colors.cream,
+    backgroundColor: 'rgba(255,255,255,0.03)',
     marginBottom: spacing.md,
-    borderWidth: 2,
-    borderColor: colors.border,
   },
   primaryButton: {
+    height: 52,
+    borderRadius: radii.buttonLarge,
     backgroundColor: colors.gold,
-    paddingVertical: spacing.md,
-    borderRadius: radii.lg,
     alignItems: 'center',
+    justifyContent: 'center',
     ...shadows.gold,
   },
   primaryButtonText: {
-    fontSize: typography.sizes.bodyLarge,
     fontFamily: typography.fonts.sticker,
+    fontSize: 15,
+    letterSpacing: 1.2,
     color: colors.bg,
-    letterSpacing: typography.letterSpacing.stickerWide,
     textTransform: 'uppercase',
   },
   secondaryButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: spacing.md,
-    borderRadius: radii.lg,
-    alignItems: 'center',
+    height: 52,
+    borderRadius: radii.buttonLarge,
     borderWidth: 2,
-    borderColor: colors.accent,
+    borderColor: colors.green,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   secondaryButtonText: {
-    fontSize: typography.sizes.bodyLarge,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.wider,
+    fontFamily: typography.fonts.sticker,
+    fontSize: 15,
+    letterSpacing: 1.2,
+    color: colors.green,
+    textTransform: 'uppercase',
   },
   buttonDisabled: {
     opacity: 0.5,
@@ -549,152 +699,112 @@ const styles = StyleSheet.create({
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: spacing.xl,
+    marginVertical: spacing.lg,
+    gap: spacing.md,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.border,
+    backgroundColor: colors.surfaceLine,
   },
   dividerText: {
-    color: colors.textTertiary,
-    paddingHorizontal: spacing.md,
-    fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.bodySemiBold,
-    letterSpacing: typography.letterSpacing.wider,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textMuted,
+    letterSpacing: 1,
   },
   errorContainer: {
     marginTop: spacing.md,
-    padding: spacing.md,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radii.md,
+    padding: spacing.sm,
+    borderRadius: radii.button,
+    backgroundColor: 'rgba(228,32,46,0.1)',
     borderWidth: 1,
-    borderColor: colors.error,
+    borderColor: 'rgba(228,32,46,0.3)',
   },
   errorText: {
-    color: colors.error,
-    fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.body,
+    color: colors.red,
+    fontSize: 13,
     textAlign: 'center',
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: spacing.md,
-    marginBottom: spacing.xl,
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   playerButton: {
     flex: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.lg,
-    backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
+    height: 48,
+    borderRadius: radii.button,
     borderWidth: 2,
-    borderColor: colors.border,
+    borderColor: colors.surfaceLine,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   playerButtonSelected: {
-    backgroundColor: colors.accent,
-    borderColor: colors.accent,
+    borderColor: colors.gold,
+    backgroundColor: 'rgba(254,209,0,0.1)',
   },
   playerButtonText: {
-    fontSize: typography.sizes.headingSmall,
-    fontFamily: typography.fonts.heading,
-    color: colors.textTertiary,
+    fontFamily: typography.fonts.sticker,
+    fontSize: 20,
+    color: colors.textMuted,
   },
   playerButtonTextSelected: {
-    color: colors.textOnAccent,
+    color: colors.gold,
   },
   colorsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
-    marginBottom: spacing.xl,
-    justifyContent: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   colorCard: {
+    flex: 1,
+    minWidth: '45%',
+    padding: spacing.md,
+    borderRadius: radii.card,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: colors.surfaceLine,
     alignItems: 'center',
-    width: 100,
+    gap: spacing.sm,
   },
   colorCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: radii.full,
-    marginBottom: spacing.sm,
-    borderWidth: 3,
-    borderColor: colors.accent,
-    ...shadows.md,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
   },
   colorCircleNegril: {
-    borderColor: colors.negrilSilver,
+    borderWidth: 2,
+    borderColor: colors.silver,
   },
   colorName: {
-    fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.bodySemiBold,
-    color: colors.textPrimary,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.cream,
     textAlign: 'center',
   },
   infoCard: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: colors.surface,
-    borderRadius: radii.xl,
+    marginHorizontal: spacing.screenPadding,
+    marginTop: spacing.lg,
     padding: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.border,
+    borderRadius: radii.card,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderWidth: 1,
+    borderColor: colors.surfaceLine,
   },
   infoTitle: {
-    fontSize: typography.sizes.bodyMedium,
-    fontFamily: typography.fonts.heading,
-    marginBottom: spacing.md,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.wide,
+    fontFamily: typography.fonts.sticker,
+    fontSize: 13,
+    letterSpacing: 2,
+    color: colors.gold,
+    marginBottom: spacing.sm,
+    textTransform: 'uppercase',
   },
   infoText: {
-    fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.body,
-    color: colors.textSecondary,
-    marginBottom: spacing.xs,
-  },
-  authPrompt: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: colors.surface,
-    borderRadius: radii.xl,
-    padding: spacing.lg,
-    marginTop: spacing.lg,
-    borderWidth: 2,
-    borderColor: colors.border,
-    alignItems: 'center',
-  },
-  authPromptText: {
-    fontSize: typography.sizes.bodySmall,
-    fontFamily: typography.fonts.body,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: spacing.md,
-  },
-  authButtonRow: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  authButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.lg,
-    borderWidth: 2,
-    borderColor: colors.accent,
-  },
-  authButtonPrimary: {
-    backgroundColor: colors.accent,
-  },
-  authButtonText: {
-    fontSize: typography.sizes.bodyMedium,
-    fontFamily: typography.fonts.heading,
-    color: colors.accent,
-    letterSpacing: typography.letterSpacing.wide,
-  },
-  authButtonTextPrimary: {
-    color: colors.textOnAccent,
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textMuted,
+    fontWeight: '500',
   },
 });
