@@ -291,56 +291,55 @@ export const BOARD_SIZE = 19;
 export const CELL_SIZE = 1; // relative unit
 
 /**
- * Dancehall Premium Theme - Piece Colors
+ * Dancehall Premium Theme - APPROVED SPEC
  * 
  * Player piece colors (engine color → display color):
- * - KINGSTON (engine: red)     → BRIGHT RED pieces (#FF0000)
- * - OCHO RIOS (engine: green)  → VIBRANT GREEN pieces (#00FF00)
- * - MONTEGO BAY (engine: yellow) → GOLD pieces (#FFD700)
- * - NEGRIL (engine: blue)      → BLACK pieces with SILVER accent (#0A0A0A)
+ * - KINGSTON (engine: red)     → #E4202E pieces
+ * - OCHO RIOS (engine: green)  → #0FAE47 pieces
+ * - MONTEGO BAY (engine: yellow) → #FED100 pieces
+ * - NEGRIL (engine: blue)      → #26272B pieces with SILVER accent (#D9DCE1)
  */
 export const COLORS: Record<Color, string> = {
-  red: '#FF0000',      // KINGSTON - bright red pieces
-  green: '#00FF00',    // OCHO RIOS - vibrant green pieces
-  yellow: '#FFD700',   // MONTEGO BAY - gold pieces
-  blue: '#0A0A0A',     // NEGRIL - BLACK pieces (engine id stays 'blue')
+  red: '#E4202E',      // KINGSTON pieces
+  green: '#0FAE47',    // OCHO RIOS pieces
+  yellow: '#FED100',   // MONTEGO BAY pieces
+  blue: '#26272B',     // NEGRIL pieces
 };
 
 /**
- * Dancehall Premium Theme Palette
- * 
- * Based on vibrant dancehall aesthetic with plywood board texture
+ * Dancehall Premium Theme Palette - APPROVED SPEC
  */
 export const THEME = {
   // Board foundation
-  board: '#1A0F0A',           // Dark brown (plywood base)
-  grid: '#4D3319',            // Medium brown grid lines
+  board: '#0B0B0C',           // bg color
+  grid: '#F6EFD9',            // cream at 75%
   
-  // Jamaican vibrant colors
-  jamaicaGreen: '#00FF00',    // Vibrant green
-  jamaicaGold: '#FFD700',     // Bright gold
-  black: '#0A0A0A',           // Deep black
+  // Jamaican colors (approved)
+  green: '#009B3A',
+  greenBright: '#19C45A',
+  gold: '#FED100',
   
   // Board elements
-  frame: '#000000',           // Black frame
-  comeOut: '#FF6B00',         // Orange come-out cells
-  arrow: '#FFD700',           // Gold direction arrows
-  safe: '#FFD700',            // Gold circle on safe cells
+  frame: '#0B0B0C',
+  comeOut: '#0B0B0C',         // Start cells will have special rendering
+  arrow: '#FED100',
+  safe: '#FED100',
   
   // Center 3×3 pattern
-  centerX: '#FFD700',         // Gold saltire X
-  centerTopBottom: '#FF0000', // Red top/bottom triangles (Kingston)
-  centerLeftRight: '#00FF00', // Green left/right triangles (Ocho Rios)
-  centerSilhouette: '#000000', // Jamaica island silhouette
+  centerX: '#FED100',
+  centerTopBottom: '#009B3A',  // Green triangles top/bottom
+  centerLeftRight: '#0B0B0C',  // Black triangles left/right
+  centerSilhouette: '#0B0B0C',
   
-  // Home stretch pattern (alternating vibrant colors)
-  homePattern: ['#FFD700', '#00FF00', '#FF0000', '#FFD700', '#00FF00', '#FF0000'],
+  // Home stretch pattern (solid colors per place)
+  homePattern: ['#FED100', '#0FAE47', '#E4202E', '#232428'], // gold, green, red, negril
   
-  // Outer lane pattern
-  outerLane: {
-    green: '#00FF00',
-    yellow: '#FFD700',
-    black: '#0A0A0A',
+  // Accents
+  accents: {
+    montego: '#FED100',
+    ocho: '#19C45A',
+    kingston: '#FF3340',
+    negril: '#D9DCE1',
   },
 } as const;
 
