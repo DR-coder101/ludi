@@ -7,8 +7,8 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, typography, radii, PLACE_NAMES } from '../../theme/tokens';
-import type { EngineColor } from '../../theme/tokens';
+import { colors, typography, radii, PLACE_NAMES } from '../theme/tokens';
+import type { EngineColor } from '../theme/tokens';
 import { DicePair } from './DicePair';
 
 interface TurnCardProps {

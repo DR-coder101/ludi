@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { colors, typography, sizes, radii } from '../../theme/tokens';
+import { colors, typography, sizes, radii } from '../theme/tokens';
 
 interface BoardTopBarProps {
   roomCode?: string;

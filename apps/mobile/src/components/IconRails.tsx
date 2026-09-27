@@ -8,7 +8,7 @@
 
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet, Text } from 'react-native';
-import { colors, sizes, radii } from '../../theme/tokens';
+import { colors, sizes, radii } from '../theme/tokens';
 
 interface IconRailsProps {
   onMenu?: () => void;

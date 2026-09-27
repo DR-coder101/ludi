@@ -11,7 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@babel/runtime": "^8.0.5",
+    "@babel/runtime": "^7.29.7",
     "@expo-google-fonts/anton": "^0.2.3",
     "@expo-google-fonts/archivo-black": "^0.2.3",
     "@expo-google-fonts/inter": "^0.2.3",
