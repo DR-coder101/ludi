@@ -1,37 +1,37 @@
 import { useState, useEffect, useMemo } from 'react';
-import {
-  StyleSheet,
-  View,
-  useWindowDimensions,
-  ScrollView,
-  SafeAreaView,
-} from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import type { Color, GameState, TokenPos } from '@ludi/rules';
-import {
-  createGame,
-  rollDice,
-  legalMoves,
-  applyMove,
-} from '@ludi/rules';
-import { GameBoard } from '../src/components/board/GameBoard';
-import { Dice } from '../src/components/Dice';
-import { TurnIndicator } from '../src/components/TurnIndicator';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import type { Color, GameState } from '@ludi/rules';
+import { createGame, rollDice, legalMoves, applyMove } from '@ludi/rules';
+import { BoardScreen } from '../src/components/game/BoardScreen';
+import { makeHop, type HopAnimation } from '../src/components/board/BoardView';
 import { WinBanner } from '../src/components/WinBanner';
 import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
 import { OnboardingTooltip, useOnboarding } from '../src/components/OnboardingTooltip';
 
+interface PendingMove {
+  anim: HopAnimation;
+  next: GameState;
+  captures: boolean;
+}
+
 export default function GameScreen() {
   const router = useRouter();
   const { colors } = useLocalSearchParams<{ colors: string }>();
-  const { width } = useWindowDimensions();
-  
+
   const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
-  
+
   const playerColors = useMemo(() => {
     if (!colors) return ['red', 'green'] as Color[];
     return colors.split(',') as Color[];
   }, [colors]);
+
+  const names = useMemo(() => {
+    const out: Partial<Record<Color, string>> = {};
+    playerColors.forEach((c, i) => {
+      out[c] = `Player ${i + 1}`;
+    });
+    return out;
+  }, [playerColors]);
 
   const [gameState, setGameState] = useState<GameState>(() =>
     createGame({
@@ -45,24 +45,15 @@ export default function GameScreen() {
       },
     })
   );
-
-  const [animatingToken, setAnimatingToken] = useState<{
-    tokenIndex: number;
-    from: TokenPos;
-    to: TokenPos;
-  } | null>(null);
-
-  const [capturedToken, setCapturedToken] = useState<{
-    tokenIndex: number;
-    pos: TokenPos;
-  } | null>(null);
-  
+  const [lastRoll, setLastRoll] = useState<number | null>(null);
+  const [rollKey, setRollKey] = useState(0);
+  const [pending, setPending] = useState<PendingMove | null>(null);
   const [previousTurn, setPreviousTurn] = useState<Color | null>(null);
 
   useEffect(() => {
     gameAudio.initialize();
     gameAudio.loadSounds();
-    
+
     return () => {
       gameAudio.cleanup();
     };
@@ -82,136 +73,72 @@ export default function GameScreen() {
     }
   }, [gameState.phase]);
 
-  const legalMovesArray = useMemo(() => {
+  const moves = useMemo(() => {
     if (gameState.phase !== 'awaiting_move') return [];
     return legalMoves(gameState);
   }, [gameState]);
 
-  const legalTokenIndices = useMemo(() => {
-    return legalMovesArray.map((move) => move.tokenIndex);
-  }, [legalMovesArray]);
-
   const handleRoll = () => {
-    if (gameState.phase !== 'awaiting_roll') return;
-    
+    if (gameState.phase !== 'awaiting_roll' || pending) return;
     const result = rollDice(gameState, Math.random);
+    gameAudio.play('roll');
+    triggerHaptic.medium();
+    setLastRoll(result.value);
+    setRollKey((k) => k + 1);
     setGameState(result.state);
   };
 
   const handleTokenPress = (tokenIndex: number) => {
-    if (gameState.phase !== 'awaiting_move') return;
-    
-    const move = legalMovesArray.find((m) => m.tokenIndex === tokenIndex);
+    if (gameState.phase !== 'awaiting_move' || pending) return;
+    const move = moves.find((m) => m.tokenIndex === tokenIndex);
     if (!move) return;
 
-    const oldPos = gameState.tokens[tokenIndex].pos;
-    
-    if (move.captures) {
-      const capturedTokenIndex = gameState.tokens.findIndex(
-        (t) => t.color === move.captures!.color && t.index === move.captures!.index
-      );
-      
-      if (capturedTokenIndex !== -1) {
-        const capturedPos = gameState.tokens[capturedTokenIndex].pos;
-        setCapturedToken({ tokenIndex: capturedTokenIndex, pos: capturedPos });
-      }
+    const next = applyMove(gameState, tokenIndex).state;
+    const anim = makeHop(gameState, tokenIndex, move.resulting);
+    if (!anim) {
+      setGameState(next);
+      return;
     }
-    
-    setAnimatingToken({
-      tokenIndex,
-      from: oldPos,
-      to: move.resulting,
-    });
-    
-    const result = applyMove(gameState, tokenIndex);
-    
-    setTimeout(() => {
-      setGameState(result.state);
-      setAnimatingToken(null);
-      setCapturedToken(null);
-    }, 800);
+    setPending({ anim, next, captures: !!move.captures });
   };
 
-  const handleNewGame = () => {
-    router.back();
+  const handleHopDone = () => {
+    if (!pending) return;
+    if (pending.captures) {
+      gameAudio.play('capture');
+      triggerHaptic.heavy();
+    }
+    setGameState(pending.next);
+    setPending(null);
   };
-
-  const boardWidth = Math.min(width - 32, 500);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      {shouldShowOnboarding && (
-        <OnboardingTooltip onDismiss={dismissOnboarding} />
-      )}
-      <ScrollView contentContainerStyle={styles.container}>
-        <View style={styles.header}>
-          <TurnIndicator
-            currentPlayer={gameState.turn}
-            lastRoll={gameState.dice}
-            phase={gameState.phase}
-          />
-        </View>
-
-        <View style={styles.boardContainer}>
-          <GameBoard
-            width={boardWidth}
-            gameState={gameState}
-            legalTokenIndices={legalTokenIndices}
-            onTokenPress={handleTokenPress}
-            animatingToken={animatingToken}
-            capturedToken={capturedToken}
-          />
-        </View>
-
-        <View style={styles.controls}>
-          <Dice
-            value={gameState.dice}
-            onRoll={handleRoll}
-            disabled={gameState.phase !== 'awaiting_roll'}
-          />
-        </View>
-
-        {gameState.phase === 'finished' && gameState.winner && (
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <BoardScreen
+        state={gameState}
+        moves={moves}
+        me={null}
+        names={names}
+        roomCode={null}
+        lastRoll={lastRoll}
+        rollKey={rollKey}
+        hop={pending?.anim ?? null}
+        onHopDone={handleHopDone}
+        onRoll={handleRoll}
+        onTokenPress={handleTokenPress}
+        onMenu={() => router.back()}
+        onProfile={() => router.push('/profile')}
+      >
+        {gameState.phase === 'finished' && gameState.winner ? (
           <WinBanner
             winner={gameState.winner}
             placements={gameState.placements}
-            onNewGame={handleNewGame}
+            onNewGame={() => router.back()}
           />
-        )}
-      </ScrollView>
-    </SafeAreaView>
+        ) : null}
+        {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
+      </BoardScreen>
+    </>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-  },
-  container: {
-    flexGrow: 1,
-    padding: 16,
-    alignItems: 'center',
-    backgroundColor: '#1a1a1a',
-  },
-  header: {
-    width: '100%',
-    maxWidth: 500,
-    marginBottom: 16,
-  },
-  boardContainer: {
-    marginVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#2a2a2a',
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  controls: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-});

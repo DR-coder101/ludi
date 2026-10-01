@@ -11,9 +11,9 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import type { Color } from '@ludi/rules';
+import type { Color, GameState, TokenPos } from '@ludi/rules';
 import { YARDS, type CellPosition } from './boardLayout';
-import type { BoardModel } from './boardModel';
+import { cellOf, hopCells, type BoardModel } from './boardModel';
 import { BoardArt, C, pieceCentre, TRACK_PIECE_R, UNITS, yardSlot, type YardLabels } from './BoardArt';
 import { PieceDefs, PieceGlyph } from './PieceGlyph';
 import { accent, color, layout, motion, PLACES, type PieceColor } from '../../theme/tokens';
@@ -25,6 +25,27 @@ export interface HopAnimation {
   /** Board-unit start point (cell centre or yard slot). */
   from: { x: number; y: number };
   cells: CellPosition[];
+}
+
+/** Hop for one engine move, starting from wherever the token is drawn now. */
+export function makeHop(state: GameState, tokenIndex: number, to: TokenPos): HopAnimation | null {
+  const token = state.tokens[tokenIndex];
+  if (!token) return null;
+  const cells = hopCells(token.pos, to, token.color);
+  if (cells.length === 0) return null;
+  let from: { x: number; y: number };
+  if (token.pos.zone === 'yard') {
+    const waiting = state.tokens
+      .map((t, i) => ({ t, i }))
+      .filter(({ t }) => t.color === token.color && t.pos.zone === 'yard');
+    const slot = yardSlot(token.color, Math.max(0, waiting.findIndex(({ i }) => i === tokenIndex)));
+    from = { x: slot.x, y: slot.y - 1 };
+  } else {
+    const cell = cellOf(token.pos, token.color);
+    if (!cell) return null;
+    from = pieceCentre(cell.row, cell.col);
+  }
+  return { tokenIndex, color: token.color, from, cells };
 }
 
 interface BoardViewProps {
