@@ -1,43 +1,56 @@
 /**
  * Board topology helpers for Ludi (Jamaican/Caribbean Ludo)
- * 
+ *
+ * Geometry is the 19×19 plywood board from the approved design pack
+ * (lib.js cellType/STARTS/ENTRIES); see docs/board/track-68.svg.
+ *
  * The board has:
- * - 52-cell main track (circular, absolute indices 0-51)
- * - 4 start cells (one per color): Red=0, Green=13, Yellow=26, Blue=39
- * - 4 safe/star cells: indices 8, 21, 34, 47
- * - 4 home columns (6 steps each per color)
- * - Total journey from start cell to home: 57 steps
- * 
- * Source: docs/GAME_RULES.md §1, §7
+ * - 68-cell main track (circular, absolute indices 0-67), 17 cells per arm
+ * - 4 start cells (one per color), 17 apart: Red=0, Green=17, Yellow=34, Blue=51
+ * - Safe cells: the 4 start cells (the only star cells on the board)
+ * - Home column entry = start − 2 (the arm end cell with the entry arrow):
+ *   Red=66, Green=15, Yellow=32, Blue=49
+ * - 4 home columns of 7 cells each (homeColumn.step 1..7), then the centre (home)
+ * - Journey from start cell to home: 66 track + 7 home column + 1 centre = 74 steps
+ *
+ * Source: docs/GAME_RULES.md §1, §7, §8
  */
 
 import type { Color, TokenPos } from "./types";
 
+export const TRACK_SIZE = 68;
+export const ARM_LENGTH = TRACK_SIZE / 4;
+export const HOME_COLUMN_LENGTH = 7;
+
 export const START_CELLS: Record<Color, number> = {
   red: 0,
-  green: 13,
-  yellow: 26,
-  blue: 39,
+  green: ARM_LENGTH,
+  yellow: ARM_LENGTH * 2,
+  blue: ARM_LENGTH * 3,
 };
 
-export const SAFE_CELLS = new Set([
-  0, 13, 26, 39,  // start cells
-  8, 21, 34, 47,  // star-marked cells
-]);
+/** Steps from a colour's start cell to its home column entry cell. */
+export const HOME_ENTRY_DISTANCE = TRACK_SIZE - 2;
 
 export const HOME_COLUMN_ENTRY: Record<Color, number> = {
-  red: 51,
-  green: 12,
-  yellow: 25,
-  blue: 38,
+  red: normalizeTrackCell(START_CELLS.red + HOME_ENTRY_DISTANCE),
+  green: normalizeTrackCell(START_CELLS.green + HOME_ENTRY_DISTANCE),
+  yellow: normalizeTrackCell(START_CELLS.yellow + HOME_ENTRY_DISTANCE),
+  blue: normalizeTrackCell(START_CELLS.blue + HOME_ENTRY_DISTANCE),
 };
 
-export const TRACK_SIZE = 52;
-export const HOME_COLUMN_LENGTH = 6;
-export const TOTAL_JOURNEY_STEPS = 57;
+/** Start cell → home (centre), counting every single-step move. */
+export const TOTAL_JOURNEY_STEPS = HOME_ENTRY_DISTANCE + HOME_COLUMN_LENGTH + 1;
+
+export const SAFE_CELLS = new Set([
+  START_CELLS.red,
+  START_CELLS.green,
+  START_CELLS.yellow,
+  START_CELLS.blue,
+]);
 
 /**
- * Convert a track cell index to its absolute position on the 52-cell circular track.
+ * Convert a track cell index to its absolute position on the circular track.
  */
 export function normalizeTrackCell(cell: number): number {
   return ((cell % TRACK_SIZE) + TRACK_SIZE) % TRACK_SIZE;
@@ -67,11 +80,12 @@ export function isHomeColumnEntry(cell: number, color: Color): boolean {
 /**
  * Compute the path for a token from its current position, moving `steps` forward.
  * Returns the resulting TokenPos after moving, or null if the move is invalid.
- * 
+ *
  * Path logic:
  * - From yard: can only move to start cell on roll of 6 (handled by caller)
- * - On track: advance clockwise; enter home column after passing entry point
- * - In home column: advance steps, must land exactly on home (step 6 + 1 = home)
+ * - On track: advance in increasing index order; the step after the home
+ *   column entry cell is homeColumn step 1
+ * - In home column: advance steps, must land exactly on home (step 7 + 1 = home)
  * - Home: cannot move
  */
 export function computePath(
@@ -96,48 +110,37 @@ export function computePath(
 
   // In home column: advance steps, must not overshoot home
   if (currentPos.zone === "homeColumn") {
-    const newStep = currentPos.step + steps;
-    if (newStep === HOME_COLUMN_LENGTH + 1) {
-      return { zone: "home" };
-    }
-    if (newStep > HOME_COLUMN_LENGTH + 1) {
-      return null; // overshoot
-    }
-    return { zone: "homeColumn", step: newStep };
+    return homeColumnOrHome(currentPos.step + steps);
   }
 
-  // On track: advance clockwise
-  const startCell = START_CELLS[color];
-  const entryCell = HOME_COLUMN_ENTRY[color];
-  
-  let stepsOnTrack = 0;
-  let currentCell = currentPos.cell;
-  
-  // Count how many steps from start cell this token has taken
-  if (currentCell >= startCell) {
-    stepsOnTrack = currentCell - startCell;
-  } else {
-    stepsOnTrack = TRACK_SIZE - startCell + currentCell;
+  const stepsOnTrack = distanceFromStart(currentPos.cell, color);
+
+  // start − 1 is never on this colour's route (it turns off at start − 2)
+  if (stepsOnTrack > HOME_ENTRY_DISTANCE) {
+    return null;
   }
-  
+
   const totalStepsFromStart = stepsOnTrack + steps;
-  
-  // Check if we should enter home column
-  // Token enters home column after completing full track (52 steps from start)
-  if (totalStepsFromStart >= TRACK_SIZE) {
-    const stepsIntoHomeColumn = totalStepsFromStart - TRACK_SIZE + 1;
-    if (stepsIntoHomeColumn > HOME_COLUMN_LENGTH + 1) {
-      return null; // overshoot
-    }
-    if (stepsIntoHomeColumn === HOME_COLUMN_LENGTH + 1) {
-      return { zone: "home" };
-    }
-    return { zone: "homeColumn", step: stepsIntoHomeColumn };
+
+  if (totalStepsFromStart > HOME_ENTRY_DISTANCE) {
+    return homeColumnOrHome(totalStepsFromStart - HOME_ENTRY_DISTANCE);
   }
-  
-  // Still on track
-  const newCell = normalizeTrackCell(startCell + totalStepsFromStart);
-  return { zone: "track", cell: newCell };
+
+  return { zone: "track", cell: normalizeTrackCell(START_CELLS[color] + totalStepsFromStart) };
+}
+
+function homeColumnOrHome(step: number): TokenPos | null {
+  if (step === HOME_COLUMN_LENGTH + 1) {
+    return { zone: "home" };
+  }
+  if (step > HOME_COLUMN_LENGTH + 1) {
+    return null; // overshoot
+  }
+  return { zone: "homeColumn", step };
+}
+
+function distanceFromStart(cell: number, color: Color): number {
+  return normalizeTrackCell(cell - START_CELLS[color]);
 }
 
 /**
@@ -160,13 +163,5 @@ export function getSafeCells(): number[] {
  */
 export function getDistanceFromStart(pos: TokenPos, color: Color): number | null {
   if (pos.zone !== "track") return null;
-  
-  const startCell = START_CELLS[color];
-  const currentCell = pos.cell;
-  
-  if (currentCell >= startCell) {
-    return currentCell - startCell;
-  } else {
-    return TRACK_SIZE - startCell + currentCell;
-  }
+  return distanceFromStart(pos.cell, color);
 }

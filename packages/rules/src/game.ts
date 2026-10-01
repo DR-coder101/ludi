@@ -8,7 +8,8 @@ import type { GameConfig, GameState, TokenState, Color } from "./types";
 /**
  * Create a new game with the given configuration.
  * All tokens start in their respective yards.
- * Turn order is clockwise: Red → Green → Yellow → Blue.
+ * Turn order follows track order: Red → Green → Yellow → Blue
+ * (counter-clockwise on the board as drawn).
  * First player is the first color in playerColors array.
  */
 export function createGame(config: GameConfig): GameState {

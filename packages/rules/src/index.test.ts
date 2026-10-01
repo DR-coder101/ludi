@@ -5,7 +5,9 @@ import {
   SAFE_CELLS,
   HOME_COLUMN_ENTRY,
   TRACK_SIZE,
+  ARM_LENGTH,
   HOME_COLUMN_LENGTH,
+  HOME_ENTRY_DISTANCE,
   TOTAL_JOURNEY_STEPS,
   getStartCell,
   getSafeCells,
@@ -21,6 +23,7 @@ import {
   type Color,
   type GameConfig,
   type GameState,
+  type TokenPos,
 } from "./index";
 
 describe("Game Types and Configuration", () => {
@@ -161,92 +164,106 @@ describe("Game Types and Configuration", () => {
 describe("Board Topology - Start Cells", () => {
   it("should have correct start cell indices per GAME_RULES.md", () => {
     expect(START_CELLS.red).toBe(0);
-    expect(START_CELLS.green).toBe(13);
-    expect(START_CELLS.yellow).toBe(26);
-    expect(START_CELLS.blue).toBe(39);
+    expect(START_CELLS.green).toBe(17);
+    expect(START_CELLS.yellow).toBe(34);
+    expect(START_CELLS.blue).toBe(51);
   });
 
   it("should return correct start cells via getStartCell", () => {
     expect(getStartCell("red")).toBe(0);
-    expect(getStartCell("green")).toBe(13);
-    expect(getStartCell("yellow")).toBe(26);
-    expect(getStartCell("blue")).toBe(39);
+    expect(getStartCell("green")).toBe(17);
+    expect(getStartCell("yellow")).toBe(34);
+    expect(getStartCell("blue")).toBe(51);
   });
 
   it("should identify start cells correctly", () => {
     expect(isStartCell(0, "red")).toBe(true);
-    expect(isStartCell(13, "green")).toBe(true);
-    expect(isStartCell(26, "yellow")).toBe(true);
-    expect(isStartCell(39, "blue")).toBe(true);
+    expect(isStartCell(17, "green")).toBe(true);
+    expect(isStartCell(34, "yellow")).toBe(true);
+    expect(isStartCell(51, "blue")).toBe(true);
 
     expect(isStartCell(0, "green")).toBe(false);
-    expect(isStartCell(13, "red")).toBe(false);
-    expect(isStartCell(26, "blue")).toBe(false);
+    expect(isStartCell(17, "red")).toBe(false);
+    expect(isStartCell(34, "blue")).toBe(false);
+    expect(isStartCell(68, "red")).toBe(true); // wraps to 0
   });
 
-  it("should verify start cells are 13 positions apart", () => {
-    expect(START_CELLS.green - START_CELLS.red).toBe(13);
-    expect(START_CELLS.yellow - START_CELLS.green).toBe(13);
-    expect(START_CELLS.blue - START_CELLS.yellow).toBe(13);
-    expect(TRACK_SIZE - START_CELLS.blue + START_CELLS.red).toBe(13);
+  it("should verify start cells are 17 positions apart (one arm)", () => {
+    expect(ARM_LENGTH).toBe(17);
+    expect(START_CELLS.green - START_CELLS.red).toBe(17);
+    expect(START_CELLS.yellow - START_CELLS.green).toBe(17);
+    expect(START_CELLS.blue - START_CELLS.yellow).toBe(17);
+    expect(TRACK_SIZE - START_CELLS.blue + START_CELLS.red).toBe(17);
   });
 });
 
 describe("Board Topology - Safe Cells", () => {
-  it("should have correct safe cell indices per GAME_RULES.md §7", () => {
-    const safeCells = getSafeCells();
-    expect(safeCells).toEqual([0, 8, 13, 21, 26, 34, 39, 47]);
+  it("should have safe cells only at the four start stars (GAME_RULES.md §7)", () => {
+    expect(getSafeCells()).toEqual([0, 17, 34, 51]);
   });
 
   it("should identify all start cells as safe", () => {
     expect(isSafeCell(0)).toBe(true); // red start
-    expect(isSafeCell(13)).toBe(true); // green start
-    expect(isSafeCell(26)).toBe(true); // yellow start
-    expect(isSafeCell(39)).toBe(true); // blue start
+    expect(isSafeCell(17)).toBe(true); // green start
+    expect(isSafeCell(34)).toBe(true); // yellow start
+    expect(isSafeCell(51)).toBe(true); // blue start
+    expect(isSafeCell(68)).toBe(true); // wraps to red start
   });
 
-  it("should identify all star-marked cells as safe", () => {
-    expect(isSafeCell(8)).toBe(true);
-    expect(isSafeCell(21)).toBe(true);
-    expect(isSafeCell(34)).toBe(true);
-    expect(isSafeCell(47)).toBe(true);
+  it("should not treat the old 52-track star cells as safe", () => {
+    expect(isSafeCell(8)).toBe(false);
+    expect(isSafeCell(21)).toBe(false);
+    expect(isSafeCell(47)).toBe(false);
   });
 
   it("should identify non-safe cells correctly", () => {
     expect(isSafeCell(1)).toBe(false);
     expect(isSafeCell(5)).toBe(false);
-    expect(isSafeCell(10)).toBe(false);
-    expect(isSafeCell(20)).toBe(false);
-    expect(isSafeCell(50)).toBe(false);
+    expect(isSafeCell(13)).toBe(false);
+    expect(isSafeCell(26)).toBe(false);
+    expect(isSafeCell(39)).toBe(false);
+    expect(isSafeCell(66)).toBe(false); // red home entry
+    expect(isSafeCell(67)).toBe(false);
+  });
+
+  it("should have exactly one safe cell per arm", () => {
+    expect(SAFE_CELLS.size).toBe(4);
+    for (let arm = 0; arm < 4; arm++) {
+      const armCells = Array.from({ length: ARM_LENGTH }, (_, i) => arm * ARM_LENGTH + i);
+      expect(armCells.filter((c) => isSafeCell(c))).toHaveLength(1);
+    }
   });
 });
 
 describe("Board Topology - Home Column Entry", () => {
   it("should have correct home column entry points", () => {
-    expect(HOME_COLUMN_ENTRY.red).toBe(51);
-    expect(HOME_COLUMN_ENTRY.green).toBe(12);
-    expect(HOME_COLUMN_ENTRY.yellow).toBe(25);
-    expect(HOME_COLUMN_ENTRY.blue).toBe(38);
+    expect(HOME_COLUMN_ENTRY.red).toBe(66);
+    expect(HOME_COLUMN_ENTRY.green).toBe(15);
+    expect(HOME_COLUMN_ENTRY.yellow).toBe(32);
+    expect(HOME_COLUMN_ENTRY.blue).toBe(49);
   });
 
   it("should identify home column entry points correctly", () => {
-    expect(isHomeColumnEntry(51, "red")).toBe(true);
-    expect(isHomeColumnEntry(12, "green")).toBe(true);
-    expect(isHomeColumnEntry(25, "yellow")).toBe(true);
-    expect(isHomeColumnEntry(38, "blue")).toBe(true);
+    expect(isHomeColumnEntry(66, "red")).toBe(true);
+    expect(isHomeColumnEntry(15, "green")).toBe(true);
+    expect(isHomeColumnEntry(32, "yellow")).toBe(true);
+    expect(isHomeColumnEntry(49, "blue")).toBe(true);
 
-    expect(isHomeColumnEntry(51, "green")).toBe(false);
-    expect(isHomeColumnEntry(12, "red")).toBe(false);
+    expect(isHomeColumnEntry(66, "green")).toBe(false);
+    expect(isHomeColumnEntry(15, "red")).toBe(false);
+    expect(isHomeColumnEntry(67, "red")).toBe(false);
   });
 
-  it("should verify home column entry is one cell before start", () => {
+  it("should verify home column entry is two cells before start (arm end cell)", () => {
     const colors: Color[] = ["red", "green", "yellow", "blue"];
     for (const color of colors) {
       const startCell = START_CELLS[color];
       const entryCell = HOME_COLUMN_ENTRY[color];
-      const expectedEntry = (startCell - 1 + TRACK_SIZE) % TRACK_SIZE;
+      const expectedEntry = (startCell - 2 + TRACK_SIZE) % TRACK_SIZE;
       expect(entryCell).toBe(expectedEntry);
+      expect(getDistanceFromStart({ zone: "track", cell: entryCell }, color)).toBe(HOME_ENTRY_DISTANCE);
     }
+    expect(HOME_ENTRY_DISTANCE).toBe(66);
   });
 });
 
@@ -254,20 +271,20 @@ describe("Board Topology - Track Normalization", () => {
   it("should normalize positive track cells", () => {
     expect(normalizeTrackCell(0)).toBe(0);
     expect(normalizeTrackCell(25)).toBe(25);
-    expect(normalizeTrackCell(51)).toBe(51);
+    expect(normalizeTrackCell(67)).toBe(67);
   });
 
   it("should normalize cells beyond track size", () => {
-    expect(normalizeTrackCell(52)).toBe(0);
-    expect(normalizeTrackCell(53)).toBe(1);
-    expect(normalizeTrackCell(65)).toBe(13);
-    expect(normalizeTrackCell(104)).toBe(0); // 2 full laps
+    expect(normalizeTrackCell(68)).toBe(0);
+    expect(normalizeTrackCell(69)).toBe(1);
+    expect(normalizeTrackCell(85)).toBe(17);
+    expect(normalizeTrackCell(136)).toBe(0); // 2 full laps
   });
 
   it("should normalize negative cells", () => {
-    expect(normalizeTrackCell(-1)).toBe(51);
-    expect(normalizeTrackCell(-13)).toBe(39);
-    expect(normalizeTrackCell(-52)).toBe(0);
+    expect(normalizeTrackCell(-1)).toBe(67);
+    expect(normalizeTrackCell(-17)).toBe(51);
+    expect(normalizeTrackCell(-68)).toBe(0);
   });
 });
 
@@ -284,15 +301,15 @@ describe("Board Topology - Path Computation", () => {
     });
     expect(computePath({ zone: "yard" }, 1, "green")).toEqual({
       zone: "track",
-      cell: 13,
+      cell: 17,
     });
     expect(computePath({ zone: "yard" }, 1, "yellow")).toEqual({
       zone: "track",
-      cell: 26,
+      cell: 34,
     });
     expect(computePath({ zone: "yard" }, 1, "blue")).toEqual({
       zone: "track",
-      cell: 39,
+      cell: 51,
     });
   });
 
@@ -315,34 +332,54 @@ describe("Board Topology - Path Computation", () => {
   });
 
   it("should handle wraparound on track", () => {
-    const pos = { zone: "track" as const, cell: 5 };
-    const path = computePath(pos, 10, "red");
-    expect(path).toEqual({ zone: "track", cell: 15 });
+    expect(computePath({ zone: "track", cell: 5 }, 10, "red")).toEqual({ zone: "track", cell: 15 });
+    expect(computePath({ zone: "track", cell: 65 }, 5, "green")).toEqual({ zone: "track", cell: 2 });
+    expect(computePath({ zone: "track", cell: 67 }, 1, "blue")).toEqual({ zone: "track", cell: 0 });
   });
 
-  it("should enter home column after completing track (52 steps from start)", () => {
-    const pos = { zone: "track" as const, cell: 51 };
+  it("should enter home column on the step after the entry cell (66 steps from start)", () => {
+    const pos = { zone: "track" as const, cell: 66 };
     const path = computePath(pos, 1, "red");
     expect(path).toEqual({ zone: "homeColumn", step: 1 });
   });
 
   it("should enter home column for all colors at correct positions", () => {
-    expect(computePath({ zone: "track", cell: 51 }, 1, "red")).toEqual({
+    expect(computePath({ zone: "track", cell: 66 }, 1, "red")).toEqual({
       zone: "homeColumn",
       step: 1,
     });
-    expect(computePath({ zone: "track", cell: 12 }, 1, "green")).toEqual({
+    expect(computePath({ zone: "track", cell: 15 }, 1, "green")).toEqual({
       zone: "homeColumn",
       step: 1,
     });
-    expect(computePath({ zone: "track", cell: 25 }, 1, "yellow")).toEqual({
+    expect(computePath({ zone: "track", cell: 32 }, 1, "yellow")).toEqual({
       zone: "homeColumn",
       step: 1,
     });
-    expect(computePath({ zone: "track", cell: 38 }, 1, "blue")).toEqual({
+    expect(computePath({ zone: "track", cell: 49 }, 1, "blue")).toEqual({
       zone: "homeColumn",
       step: 1,
     });
+  });
+
+  it("should let other colours run past a colour's entry and start − 1 cells", () => {
+    expect(computePath({ zone: "track", cell: 66 }, 1, "green")).toEqual({ zone: "track", cell: 67 });
+    expect(computePath({ zone: "track", cell: 15 }, 2, "red")).toEqual({ zone: "track", cell: 17 });
+    expect(computePath({ zone: "track", cell: 32 }, 1, "blue")).toEqual({ zone: "track", cell: 33 });
+  });
+
+  it("should never route a colour onto its own start − 1 cell", () => {
+    const colors: Color[] = ["red", "green", "yellow", "blue"];
+    for (const color of colors) {
+      const skipped = normalizeTrackCell(START_CELLS[color] - 1);
+      for (let d = 0; d <= HOME_ENTRY_DISTANCE; d++) {
+        const cell = normalizeTrackCell(START_CELLS[color] + d);
+        for (let roll = 1; roll <= 6; roll++) {
+          expect(computePath({ zone: "track", cell }, roll, color)).not.toEqual({ zone: "track", cell: skipped });
+        }
+      }
+      expect(computePath({ zone: "track", cell: skipped }, 1, color)).toBeNull();
+    }
   });
 
   it("should advance in home column", () => {
@@ -356,14 +393,22 @@ describe("Board Topology - Path Computation", () => {
     });
   });
 
-  it("should reach home from home column step 6", () => {
-    const path = computePath({ zone: "homeColumn", step: 6 }, 1, "red");
+  it("should advance onto the 7th (last) home column cell", () => {
+    expect(computePath({ zone: "homeColumn", step: 6 }, 1, "red")).toEqual({
+      zone: "homeColumn",
+      step: 7,
+    });
+  });
+
+  it("should reach home from home column step 7", () => {
+    const path = computePath({ zone: "homeColumn", step: 7 }, 1, "red");
     expect(path).toEqual({ zone: "home" });
   });
 
   it("should reject overshoot in home column", () => {
-    expect(computePath({ zone: "homeColumn", step: 6 }, 2, "red")).toBeNull();
-    expect(computePath({ zone: "homeColumn", step: 5 }, 3, "red")).toBeNull();
+    expect(computePath({ zone: "homeColumn", step: 7 }, 2, "red")).toBeNull();
+    expect(computePath({ zone: "homeColumn", step: 6 }, 3, "red")).toBeNull();
+    expect(computePath({ zone: "homeColumn", step: 1 }, 8, "red")).toBeNull();
   });
 
   it("should reject movement from home", () => {
@@ -371,32 +416,59 @@ describe("Board Topology - Path Computation", () => {
     expect(computePath({ zone: "home" }, 6, "red")).toBeNull();
   });
 
-  it("should compute 57-step journey from start to home", () => {
-    let pos = { zone: "track" as const, cell: 0 };
+  it("should take exactly TOTAL_JOURNEY_STEPS (74) single steps from start to home", () => {
+    const colors: Color[] = ["red", "green", "yellow", "blue"];
+    for (const color of colors) {
+      let pos: TokenPos = { zone: "track", cell: START_CELLS[color] };
+      const visitedTrack = new Set<number>([START_CELLS[color]]);
+      let steps = 0;
 
-    // 52 steps to complete track and enter home column
-    for (let i = 0; i < 51; i++) {
-      const nextPos = computePath(pos, 1, "red");
-      expect(nextPos).not.toBeNull();
-      expect(nextPos!.zone).toBe("track");
-      pos = nextPos as { zone: "track"; cell: number };
+      while (pos.zone !== "home") {
+        const next = computePath(pos, 1, color);
+        expect(next).not.toBeNull();
+        steps++;
+        if (next!.zone === "homeColumn" && pos.zone === "track") {
+          expect(pos.cell).toBe(HOME_COLUMN_ENTRY[color]);
+          expect(next).toEqual({ zone: "homeColumn", step: 1 });
+        }
+        if (next!.zone === "track") visitedTrack.add(next!.cell);
+        pos = next!;
+      }
+
+      expect(steps).toBe(TOTAL_JOURNEY_STEPS);
+      expect(steps).toBe(74);
+      // start..entry inclusive = 67 distinct track cells (all but start − 1)
+      expect(visitedTrack.size).toBe(HOME_ENTRY_DISTANCE + 1);
+      expect(visitedTrack.has(normalizeTrackCell(START_CELLS[color] - 1))).toBe(false);
     }
+  });
 
-    // Step 52: enter home column
-    let nextPos = computePath(pos, 1, "red");
-    expect(nextPos).toEqual({ zone: "homeColumn", step: 1 });
-
-    // Steps 53-57: advance through home column
-    pos = nextPos as any;
-    for (let step = 2; step <= 6; step++) {
-      nextPos = computePath(pos, 1, "red");
-      expect(nextPos).toEqual({ zone: "homeColumn", step });
-      pos = nextPos as any;
+  it("should break the 74-step journey into 66 track + 7 home column + 1 centre", () => {
+    let pos: TokenPos = { zone: "track", cell: 0 };
+    const zones: string[] = [];
+    while (pos.zone !== "home") {
+      pos = computePath(pos, 1, "red")!;
+      zones.push(pos.zone);
     }
+    expect(zones.filter((z) => z === "track")).toHaveLength(HOME_ENTRY_DISTANCE);
+    expect(zones.filter((z) => z === "homeColumn")).toHaveLength(HOME_COLUMN_LENGTH);
+    expect(zones.filter((z) => z === "home")).toHaveLength(1);
+  });
 
-    // Step 58: reach home
-    nextPos = computePath(pos, 1, "red");
-    expect(nextPos).toEqual({ zone: "home" });
+  it("should agree between single-step and multi-step paths for every reachable position", () => {
+    const colors: Color[] = ["red", "green", "yellow", "blue"];
+    for (const color of colors) {
+      const route: TokenPos[] = [{ zone: "track", cell: START_CELLS[color] }];
+      while (route[route.length - 1].zone !== "home") {
+        route.push(computePath(route[route.length - 1], 1, color)!);
+      }
+      for (let i = 0; i < route.length; i++) {
+        for (let roll = 1; roll <= 6; roll++) {
+          const expected = i + roll < route.length ? route[i + roll] : null;
+          expect(computePath(route[i], roll, color)).toEqual(expected);
+        }
+      }
+    }
   });
 
   it("should handle multi-step moves correctly", () => {
@@ -405,20 +477,24 @@ describe("Board Topology - Path Computation", () => {
       zone: "track",
       cell: 6,
     });
-    expect(computePath(startPos, 13, "red")).toEqual({
+    expect(computePath(startPos, 17, "red")).toEqual({
       zone: "track",
-      cell: 13,
+      cell: 17,
     });
   });
 
   it("should enter home column with multi-step move", () => {
-    const pos = { zone: "track" as const, cell: 48 };
-    const path = computePath(pos, 4, "red");
-    expect(path).toEqual({ zone: "homeColumn", step: 1 });
+    expect(computePath({ zone: "track", cell: 63 }, 4, "red")).toEqual({ zone: "homeColumn", step: 1 });
+    expect(computePath({ zone: "track", cell: 61 }, 6, "red")).toEqual({ zone: "homeColumn", step: 1 });
+    expect(computePath({ zone: "track", cell: 66 }, 6, "red")).toEqual({ zone: "homeColumn", step: 6 });
+    expect(computePath({ zone: "track", cell: 12 }, 6, "green")).toEqual({ zone: "homeColumn", step: 3 });
   });
 
   it("should reach home with multi-step move from home column", () => {
-    expect(computePath({ zone: "homeColumn", step: 4 }, 3, "red")).toEqual({
+    expect(computePath({ zone: "homeColumn", step: 5 }, 3, "red")).toEqual({
+      zone: "home",
+    });
+    expect(computePath({ zone: "homeColumn", step: 2 }, 6, "red")).toEqual({
       zone: "home",
     });
   });
@@ -428,13 +504,13 @@ describe("Board Topology - Distance Calculation", () => {
   it("should calculate distance from start cell", () => {
     expect(getDistanceFromStart({ zone: "track", cell: 0 }, "red")).toBe(0);
     expect(getDistanceFromStart({ zone: "track", cell: 5 }, "red")).toBe(5);
-    expect(getDistanceFromStart({ zone: "track", cell: 13 }, "red")).toBe(13);
+    expect(getDistanceFromStart({ zone: "track", cell: 17 }, "red")).toBe(17);
   });
 
   it("should calculate distance with wraparound", () => {
-    expect(getDistanceFromStart({ zone: "track", cell: 51 }, "red")).toBe(51);
-    expect(getDistanceFromStart({ zone: "track", cell: 0 }, "green")).toBe(39);
-    expect(getDistanceFromStart({ zone: "track", cell: 12 }, "green")).toBe(51);
+    expect(getDistanceFromStart({ zone: "track", cell: 66 }, "red")).toBe(66);
+    expect(getDistanceFromStart({ zone: "track", cell: 0 }, "green")).toBe(51);
+    expect(getDistanceFromStart({ zone: "track", cell: 15 }, "green")).toBe(66);
   });
 
   it("should return null for non-track positions", () => {
@@ -446,28 +522,30 @@ describe("Board Topology - Distance Calculation", () => {
   });
 
   it("should calculate correct distances for all colors", () => {
-    expect(getDistanceFromStart({ zone: "track", cell: 13 }, "green")).toBe(0);
-    expect(getDistanceFromStart({ zone: "track", cell: 26 }, "yellow")).toBe(0);
-    expect(getDistanceFromStart({ zone: "track", cell: 39 }, "blue")).toBe(0);
+    expect(getDistanceFromStart({ zone: "track", cell: 17 }, "green")).toBe(0);
+    expect(getDistanceFromStart({ zone: "track", cell: 34 }, "yellow")).toBe(0);
+    expect(getDistanceFromStart({ zone: "track", cell: 51 }, "blue")).toBe(0);
 
-    expect(getDistanceFromStart({ zone: "track", cell: 20 }, "green")).toBe(7);
-    expect(getDistanceFromStart({ zone: "track", cell: 30 }, "yellow")).toBe(4);
-    expect(getDistanceFromStart({ zone: "track", cell: 45 }, "blue")).toBe(6);
+    expect(getDistanceFromStart({ zone: "track", cell: 24 }, "green")).toBe(7);
+    expect(getDistanceFromStart({ zone: "track", cell: 38 }, "yellow")).toBe(4);
+    expect(getDistanceFromStart({ zone: "track", cell: 57 }, "blue")).toBe(6);
+    expect(getDistanceFromStart({ zone: "track", cell: 49 }, "blue")).toBe(66);
   });
 });
 
 describe("Board Constants", () => {
-  it("should have correct track size", () => {
-    expect(TRACK_SIZE).toBe(52);
+  it("should have correct track size (4 arms × 17)", () => {
+    expect(TRACK_SIZE).toBe(68);
+    expect(TRACK_SIZE).toBe(ARM_LENGTH * 4);
   });
 
   it("should have correct home column length", () => {
-    expect(HOME_COLUMN_LENGTH).toBe(6);
+    expect(HOME_COLUMN_LENGTH).toBe(7);
   });
 
   it("should have correct total journey steps", () => {
-    expect(TOTAL_JOURNEY_STEPS).toBe(57);
-    expect(TOTAL_JOURNEY_STEPS).toBe(TRACK_SIZE + HOME_COLUMN_LENGTH - 1);
+    expect(TOTAL_JOURNEY_STEPS).toBe(74);
+    expect(TOTAL_JOURNEY_STEPS).toBe(HOME_ENTRY_DISTANCE + HOME_COLUMN_LENGTH + 1);
   });
 });
 
@@ -622,7 +700,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
     it("should allow exact count to reach home", () => {
       const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
       
-      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[0].pos = { zone: "homeColumn", step: 7 };
       
       const stateWithDice = {
         ...game,
@@ -644,7 +722,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
     it("should reject overshoot from home column", () => {
       const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
       
-      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[0].pos = { zone: "homeColumn", step: 7 };
       
       const stateWithDice = {
         ...game,
@@ -662,26 +740,12 @@ describe("Legal Moves - M1 Step 1.2", () => {
       expect(overshootMove).toBeUndefined();
     });
 
-    it("should reject overshoot into home column from track", () => {
+    it("should move from track into the home column past the entry cell", () => {
+      // A single die (max 6) from the track reaches at most homeColumn step 6
+      // (from the entry cell 66), so track moves can never overshoot home.
       const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
       
-      // Red home entry is at cell 51 (one before start 0)
-      // After 52 steps from start (0), enters home column at step 1
-      // From cell 45 (45 steps from start), rolling 6 would be 51 steps total
-      // That puts us at entry point 51, next step enters home column at step 1
-      // We need to be at a position where rolling would put us past home column step 6
-      // 
-      // Actually from track, we can NEVER overshoot because computePath handles it
-      // The overshoot only happens from WITHIN home column
-      // This test is testing the wrong thing - remove or fix it
-      
-      // Better test: token very close to home entry, large roll would overshoot
-      // From cell 46 (46 steps from start), need 52-46=6 more to complete track
-      // Then 7 steps into home column = past home
-      // But max dice is 6, so from track we enter at most step 6 of home column
-      
-      // Actually, let's test entering home column with exact count
-      game.tokens[0].pos = { zone: "track", cell: 50 };
+      game.tokens[0].pos = { zone: "track", cell: 65 };
       
       const stateWithDice = {
         ...game,
@@ -696,7 +760,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
         return token.color === "red" && token.index === 0;
       });
 
-      // From 50, +2 = 52 steps from start = enters home column at step 1
+      // 65 → 66 (entry) → homeColumn step 1; red never lands on 67
       expect(homeColumnMove).toBeDefined();
       expect(homeColumnMove?.resulting).toEqual({ zone: "homeColumn", step: 1 });
     });
@@ -763,7 +827,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
     it("should annotate captures correctly", () => {
       const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
       
-      // Use cell 7 which is NOT safe (safe cells are 0,8,13,21,26,34,39,47)
+      // Cell 7 is NOT safe (safe cells are the start stars 0, 17, 34, 51)
       game.tokens[0].pos = { zone: "track", cell: 5 };
       game.tokens[4].pos = { zone: "track", cell: 7 };
       
@@ -787,9 +851,9 @@ describe("Legal Moves - M1 Step 1.2", () => {
     it("should not capture on safe cells", () => {
       const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
       
-      // Cell 8 IS safe
-      game.tokens[0].pos = { zone: "track", cell: 5 };
-      game.tokens[4].pos = { zone: "track", cell: 8 };
+      // Cell 17 (green start star) IS safe
+      game.tokens[0].pos = { zone: "track", cell: 14 };
+      game.tokens[4].pos = { zone: "track", cell: 17 };
       
       const stateWithDice = {
         ...game,
@@ -812,9 +876,9 @@ describe("Legal Moves - M1 Step 1.2", () => {
     it("should allow coexistence on safe cells", () => {
       const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
       
-      // Both tokens can coexist on safe cell 8
-      game.tokens[0].pos = { zone: "track", cell: 5 };
-      game.tokens[4].pos = { zone: "track", cell: 8 };
+      // Both tokens can coexist on safe cell 17
+      game.tokens[0].pos = { zone: "track", cell: 14 };
+      game.tokens[4].pos = { zone: "track", cell: 17 };
       
       const stateWithDice = {
         ...game,
@@ -824,7 +888,18 @@ describe("Legal Moves - M1 Step 1.2", () => {
 
       const moves = legalMoves(stateWithDice);
 
-      expect(moves.length).toBeGreaterThan(0);
+      expect(moves.find((m) => m.tokenIndex === 0)?.resulting).toEqual({ zone: "track", cell: 17 });
+    });
+
+    it("should capture on a cell that was a star on the old 52 track", () => {
+      const game = createGame({ ...baseConfig, playerColors: ["red", "green"] });
+
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+      game.tokens[4].pos = { zone: "track", cell: 8 };
+
+      const moves = legalMoves({ ...game, phase: "awaiting_move" as const, dice: 3 });
+
+      expect(moves.find((m) => m.tokenIndex === 0)?.captures).toEqual({ color: "green", index: 0 });
     });
 
     it("should not allow moves when phase is not awaiting_move", () => {
@@ -1019,9 +1094,10 @@ describe("Apply Move - M1 Step 1.3", () => {
     it("should allow multiple colors on safe cells", () => {
       const game = createGame(baseConfig);
       
-      game.tokens[0].pos = { zone: "track", cell: 5 };
-      game.tokens[4].pos = { zone: "track", cell: 8 };
-      game.tokens[8].pos = { zone: "track", cell: 8 };
+      // Green start star (17) with green and yellow singles on it
+      game.tokens[0].pos = { zone: "track", cell: 14 };
+      game.tokens[4].pos = { zone: "track", cell: 17 };
+      game.tokens[8].pos = { zone: "track", cell: 17 };
 
       const stateWithDice = {
         ...game,
@@ -1031,9 +1107,9 @@ describe("Apply Move - M1 Step 1.3", () => {
 
       const result = applyMove(stateWithDice, 0);
 
-      expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 8 });
-      expect(result.state.tokens[4].pos).toEqual({ zone: "track", cell: 8 });
-      expect(result.state.tokens[8].pos).toEqual({ zone: "track", cell: 8 });
+      expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 17 });
+      expect(result.state.tokens[4].pos).toEqual({ zone: "track", cell: 17 });
+      expect(result.state.tokens[8].pos).toEqual({ zone: "track", cell: 17 });
       
       const captureEvent = result.events.find((e) => e.type === "captured");
       expect(captureEvent).toBeUndefined();
@@ -1291,7 +1367,7 @@ describe("Apply Move - M1 Step 1.3", () => {
         },
       });
 
-      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[0].pos = { zone: "homeColumn", step: 7 };
 
       const stateWithDice = {
         ...game,
@@ -1316,7 +1392,7 @@ describe("Apply Move - M1 Step 1.3", () => {
       game.tokens[0].pos = { zone: "home" };
       game.tokens[1].pos = { zone: "home" };
       game.tokens[2].pos = { zone: "home" };
-      game.tokens[3].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[3].pos = { zone: "homeColumn", step: 7 };
 
       const stateWithDice = {
         ...game,
@@ -1347,7 +1423,7 @@ describe("Apply Move - M1 Step 1.3", () => {
       game.tokens[0].pos = { zone: "home" };
       game.tokens[1].pos = { zone: "home" };
       game.tokens[2].pos = { zone: "home" };
-      game.tokens[3].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[3].pos = { zone: "homeColumn", step: 7 };
 
       const stateWithDice = {
         ...game,
@@ -1376,7 +1452,7 @@ describe("Apply Move - M1 Step 1.3", () => {
       game.tokens[0].pos = { zone: "home" };
       game.tokens[1].pos = { zone: "home" };
       game.tokens[2].pos = { zone: "home" };
-      game.tokens[3].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[3].pos = { zone: "homeColumn", step: 7 };
 
       const stateWithDice = {
         ...game,
@@ -1411,7 +1487,7 @@ describe("Apply Move - M1 Step 1.3", () => {
     it("should emit entered_home_column event", () => {
       const game = createGame(baseConfig);
 
-      game.tokens[0].pos = { zone: "track", cell: 51 };
+      game.tokens[0].pos = { zone: "track", cell: HOME_COLUMN_ENTRY.red };
 
       const stateWithDice = {
         ...game,
@@ -1428,7 +1504,7 @@ describe("Apply Move - M1 Step 1.3", () => {
     it("should emit got_home event", () => {
       const game = createGame(baseConfig);
 
-      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[0].pos = { zone: "homeColumn", step: 7 };
 
       const stateWithDice = {
         ...game,
@@ -1561,8 +1637,8 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
       if (greenBlockade.length >= 2) {
         const redToken = state.tokens.find((t) => t.color === "red");
         if (redToken && redToken.pos.zone === "track") {
-          const distance = (redToken.pos.cell - 5 + 52) % 52;
-          if (distance > 5 && distance < 52 - 5) {
+          const distance = (redToken.pos.cell - 5 + TRACK_SIZE) % TRACK_SIZE;
+          if (distance > 5 && distance < TRACK_SIZE - 5) {
             throw new Error(
               `Invariant violated: red token passed blockade at cell 10, now at ${redToken.pos.cell}`
             );
@@ -1611,14 +1687,54 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
       for (const token of state.tokens) {
         if (token.pos.zone === "track") {
           expect(token.pos.cell).toBeGreaterThanOrEqual(0);
-          expect(token.pos.cell).toBeLessThan(52);
+          expect(token.pos.cell).toBeLessThan(TRACK_SIZE);
         } else if (token.pos.zone === "homeColumn") {
           expect(token.pos.step).toBeGreaterThanOrEqual(1);
-          expect(token.pos.step).toBeLessThanOrEqual(6);
+          expect(token.pos.step).toBeLessThanOrEqual(HOME_COLUMN_LENGTH);
         }
       }
     }
 
     expect(true).toBe(true);
+  });
+
+  it("should play a seeded 4-player game to completion within 68/7 bounds", () => {
+    let state = createGame(baseConfig);
+
+    const rng = (() => {
+      let seed = 2026;
+      return () => {
+        seed = (seed * 9301 + 49297) % 233280;
+        return seed / 233280;
+      };
+    })();
+
+    const reachedHomeStep = new Set<number>();
+    for (let turn = 0; turn < 20000 && state.phase !== "finished"; turn++) {
+      if (state.phase === "awaiting_roll") {
+        state = rollDice(state, rng).state;
+      } else {
+        const moves = legalMoves(state);
+        state = applyMove(state, moves[Math.floor(rng() * moves.length)].tokenIndex).state;
+      }
+
+      for (const token of state.tokens) {
+        if (token.pos.zone === "track") {
+          expect(Number.isInteger(token.pos.cell)).toBe(true);
+          expect(token.pos.cell).toBeGreaterThanOrEqual(0);
+          expect(token.pos.cell).toBeLessThan(TRACK_SIZE);
+          expect(token.pos.cell).not.toBe(normalizeTrackCell(START_CELLS[token.color] - 1));
+        } else if (token.pos.zone === "homeColumn") {
+          expect(token.pos.step).toBeGreaterThanOrEqual(1);
+          expect(token.pos.step).toBeLessThanOrEqual(HOME_COLUMN_LENGTH);
+          reachedHomeStep.add(token.pos.step);
+        }
+      }
+    }
+
+    expect(state.phase).toBe("finished");
+    expect(state.winner).not.toBeNull();
+    expect(state.tokens.filter((t) => t.color === state.winner).every((t) => t.pos.zone === "home")).toBe(true);
+    expect(Math.max(...reachedHomeStep)).toBe(HOME_COLUMN_LENGTH);
   });
 });
