@@ -34,8 +34,9 @@ Board geometry comes from `apps/mobile/src/components/board/boardLayout.ts` coor
 - 8×8 yards
 - 3×8 arms
 - 3×3 centre
-- 52 track positions + 6 home positions
-- Engine colour order: Red=0, Green=13, Yellow=26, Blue=39
+- 68 track positions (17 per arm) + 7 home-column positions per colour
+- Engine colour order: Red=0, Green=17, Yellow=34, Blue=51; home entry = start − 2
+- Numbered mapping: `docs/board/track-68.svg`
 
 **Do not invent alternate track indices.** Use the existing geometry from `boardLayout.ts`.
 

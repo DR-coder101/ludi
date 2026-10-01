@@ -23,7 +23,7 @@
 ## PHASE 1 — Rules engine (M1)
 
 **Prompt 1.1 — Core state + board topology**
-> Read docs/GAME_RULES.md fully. In packages/rules, implement: types (Color, TokenPos, GameState, GameConfig per §11), createGame, and board topology helpers: absolute track index mapping per colour, start cell indices (Red=0, Green=13, Yellow=26, Blue=39), safe cells (§7), and path computation for any token (yard→track→homeColumn→home, 57 total steps). Pure functions, immutable state, no I/O. Unit tests for topology: correct start cells, safe cells, home-column entry points for all 4 colours.
+> Read docs/GAME_RULES.md fully. In packages/rules, implement: types (Color, TokenPos, GameState, GameConfig per §11), createGame, and board topology helpers: absolute track index mapping per colour, start cell indices (Red=0, Green=17, Yellow=34, Blue=51), safe cells (§7), and path computation for any token (yard→track→homeColumn→home, 74 steps from start cell to home). Pure functions, immutable state, no I/O. Unit tests for topology: correct start cells, safe cells, home-column entry points for all 4 colours.
 
 **Prompt 1.2 — Movement & legal moves**
 > In packages/rules, implement legalMoves(state) per docs/GAME_RULES.md §3–§8: coming out only on 6, blockades (§6) blocking everyone including owner, safe-cell semantics, exact-count home entry, no-legal-move detection. Do NOT implement capture resolution or turn advancement yet — just move generation. Write tests covering edge cases 1, 4, 5, 6, 10 from §10.
@@ -39,7 +39,7 @@
 ## PHASE 2 — Local pass-and-play app (M2)
 
 **Prompt 2.1 — Board rendering**
-> In apps/mobile, build the Ludi board per docs/ARCHITECTURE.md §4: a 15×15 grid in react-native-svg driven entirely by a data file src/components/board/boardLayout.ts (cell coordinates for the 52-cell track, 4 yards, 4 home columns, start/star safe-cell markers). Colour the yards, home columns, and centre triangles. No game logic — render a static board with 16 tokens placed in yards. Fit to screen width, support portrait phones.
+> In apps/mobile, build the Ludi board per docs/ARCHITECTURE.md §4: a 19×19 grid in react-native-svg driven entirely by a data file src/components/board/boardLayout.ts (cell coordinates for the 68-cell track, 4 yards, 4 seven-cell home columns, start/star safe-cell markers). Colour the yards, home columns, and centre triangles. No game logic — render a static board with 16 tokens placed in yards. Fit to screen width, support portrait phones.
 
 **Prompt 2.2 — Local game screen**
 > Wire packages/rules into the app: a pass-and-play screen for 2–4 players (colour count selected on home screen). Dice component with roll animation, tap-to-roll, legal tokens pulse-highlighted, tap token to move, token hop animation along its path with react-native-reanimated, capture knock-out animation, turn indicator. Show whose turn, last roll, and a win banner with final placements per house rules.
