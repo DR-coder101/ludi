@@ -74,7 +74,7 @@ export function BoardScreen(props: BoardScreenProps) {
     winner: state.winner,
     isMine,
     name: names[state.turn],
-    canBringOut: activeMoves.some((m) => state.tokens[m.tokenIndex]?.pos.zone === 'yard'),
+    canBringOut: moves.some((m) => state.tokens[m.tokenIndex]?.pos.zone === 'yard'),
   });
 
   const left: RailItem[] = [
@@ -111,7 +111,7 @@ export function BoardScreen(props: BoardScreenProps) {
             <BoardView
               size={boardSize}
               model={model}
-              labels={{ names, me, muted: muted ?? {} }}
+              labels={{ names, me, muted: muted ?? {}, video: roomCode !== null }}
               onTokenPress={onTokenPress}
               hop={hop}
               onHopDone={onHopDone}
@@ -136,7 +136,7 @@ export function BoardScreen(props: BoardScreenProps) {
                 <PlayerStrip order={seatedOrder} turn={state.turn} names={names} timer={timer} />
               </View>
               <View style={styles.eq}>
-                <Equalizer />
+                <Equalizer width={columnWidth - CENTRE_INSET * 2} />
               </View>
             </View>
           </View>

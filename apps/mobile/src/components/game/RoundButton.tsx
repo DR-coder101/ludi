@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Defs, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Path, RadialGradient, Stop } from 'react-native-svg';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { color, font, motion } from '../../theme/tokens';
 import { triggerHaptic } from '../../utils/gameAudio';
@@ -18,9 +18,17 @@ interface RoundButtonProps {
 }
 
 const FACE: Record<'dark' | 'gold', [string, string, string, number]> = {
-  dark: ['#2a2a2f', '#141416', '#141416', 0.7],
+  dark: ['#2a2a2f', color.ink, color.ink, 0.7],
   gold: [color.goldHot, color.gold, color.goldDeep, 0.6],
 };
+
+/** `inset 0 1px 0` highlight: the upper rim, one pixel inside the edge. */
+function topArc(size: number) {
+  const r = size / 2 - 1.5;
+  const c = size / 2;
+  const a = (Math.PI * 35) / 180;
+  return `M${c - r * Math.cos(a)} ${c - r * Math.sin(a)}A${r} ${r} 0 0 1 ${c + r * Math.cos(a)} ${c - r * Math.sin(a)}`;
+}
 
 /** Circle button from the pack's `.cbtn`: radial face, gold hairline, press scale. */
 export function RoundButton({ icon, size, tone = 'dark', badge, label, onPress }: RoundButtonProps) {
@@ -52,7 +60,7 @@ export function RoundButton({ icon, size, tone = 'dark', badge, label, onPress }
       <Animated.View
         style={[
           styles.button,
-          { width: size, height: size, borderRadius: size / 2, borderColor: border },
+          { width: size, height: size, borderRadius: size / 2 },
           tone === 'gold' ? styles.goldGlow : null,
           style,
         ]}
@@ -66,9 +74,12 @@ export function RoundButton({ icon, size, tone = 'dark', badge, label, onPress }
             </RadialGradient>
           </Defs>
           <Circle cx={size / 2} cy={size / 2} r={size / 2} fill={`url(#cb-${face})`} />
-          <Circle cx={size / 2} cy={size / 2} r={size / 2 - 1} fill="none" stroke={color.white} strokeOpacity={0.06} />
+          <Path d={topArc(size)} fill="none" stroke={color.white} strokeOpacity={0.08} strokeWidth={1} />
+          <Circle cx={size / 2} cy={size / 2} r={size / 2 - 0.5} fill="none" stroke={border} strokeWidth={1} />
         </Svg>
-        <Icon name={icon} size={iconSize} color={ink} strokeWidth={icon === 'dice' ? 2 : 1.8} />
+        <View>
+          <Icon name={icon} size={iconSize} color={ink} strokeWidth={icon === 'dice' ? 2 : 1.8} />
+        </View>
         {badge ? (
           <View style={styles.badge}>
             <Text style={styles.badgeText}>{badge}</Text>
@@ -83,7 +94,6 @@ const styles = StyleSheet.create({
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.6,

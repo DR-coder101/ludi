@@ -21,7 +21,7 @@ function CardFace() {
       <Defs>
         <LinearGradient id="tc-bg" x1="0" y1="0" x2="0" y2="1">
           <Stop offset="0" stopColor="#1a1a1d" />
-          <Stop offset="1" stopColor="#0e0e10" />
+          <Stop offset="1" stopColor={color.yard} />
         </LinearGradient>
         <Pattern id="tc-dots" width={6} height={6} patternUnits="userSpaceOnUse">
           <Circle cx={3} cy={3} r={1.2} fill={color.red} fillOpacity={0.22} />

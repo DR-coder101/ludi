@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Circle, Ellipse } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, Ellipse, G } from 'react-native-svg';
 import type { Color } from '@ludi/rules';
 import { accent, color, font, PLACES } from '../../theme/tokens';
 
@@ -22,19 +22,27 @@ const RING = 52;
 const RING_R = 24;
 const RING_LEN = 2 * Math.PI * RING_R;
 
+/** `.order .av` background: head at 26% of the farthest-corner radius, shoulders a 60%×45% ellipse on the bottom edge. */
 function Silhouette() {
   return (
     <Svg width={AV - 4} height={AV - 4} viewBox="0 0 36 36">
-      <Circle cx={18} cy={18} r={18} fill="#35363b" />
-      <Circle cx={18} cy={13.7} r={6.6} fill="#8a8c92" />
-      <Ellipse cx={18} cy={36} rx={10.8} ry={11.4} fill="#8a8c92" />
+      <Defs>
+        <ClipPath id="av-clip">
+          <Circle cx={18} cy={18} r={18} />
+        </ClipPath>
+      </Defs>
+      <G clipPath="url(#av-clip)">
+        <Circle cx={18} cy={18} r={18} fill="#35363b" />
+        <Circle cx={18} cy={13.68} r={7.45} fill="#8a8c92" />
+        <Ellipse cx={18} cy={36} rx={21.2} ry={15.9} fill="#8a8c92" />
+      </G>
     </Svg>
   );
 }
 
 export function PlayerStrip({ order, turn, names, timer }: PlayerStripProps) {
   return (
-    <View style={styles.strip}>
+    <View style={[styles.strip, order.length < 4 ? styles.stripFew : null]}>
       {order.map((engine) => {
         const place = PLACES[engine];
         const tint = accent[place.piece];
@@ -75,6 +83,9 @@ const styles = StyleSheet.create({
   strip: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  stripFew: {
+    justifyContent: 'space-evenly',
   },
   player: {
     width: 52,

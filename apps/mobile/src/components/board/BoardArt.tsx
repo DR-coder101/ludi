@@ -284,8 +284,8 @@ function MicGlyph({ x, y, muted }: { x: number; y: number; muted: boolean }) {
   );
 }
 
-/** Player video tile placeholder: silhouette, name bar, mic state, LIVE badge on the active player. */
-function VideoTile({ id, x, y, name, tint, active, muted }: { id: string; x: number; y: number; name: string; tint: string; active: boolean; muted: boolean }) {
+/** Player video tile placeholder: silhouette, name bar, and with video on, mic state and a LIVE badge on the active player. */
+function VideoTile({ id, x, y, name, tint, active, muted, video }: { id: string; x: number; y: number; name: string; tint: string; active: boolean; muted: boolean; video: boolean }) {
   const w = 57;
   const h = 70;
   const mid = x + w / 2;
@@ -306,8 +306,8 @@ function VideoTile({ id, x, y, name, tint, active, muted }: { id: string; x: num
       <Text x={x + 5} y={y + h - 4.5} fontFamily={font.bodyBold} fontSize={7.6} fill={color.white}>
         {name}
       </Text>
-      <MicGlyph x={x + w - 11} y={y + h - 12.5} muted={muted} />
-      {active ? (
+      {video ? <MicGlyph x={x + w - 11} y={y + h - 12.5} muted={muted} /> : null}
+      {video && active ? (
         <G>
           <Rect x={x + 4} y={y + 4} width={20} height={9} rx={4.5} fill={color.hot} />
           <Text x={x + 14} y={y + 10.6} fontFamily={font.sticker} fontSize={5.6} fill={color.white} textAnchor="middle">
@@ -323,6 +323,8 @@ export interface YardLabels {
   names: Partial<Record<Color, string>>;
   me: Color | null;
   muted: Partial<Record<Color, boolean>>;
+  /** A voice/video call is running (online rooms); pass-and-play has none. */
+  video: boolean;
 }
 
 /** Centre of yard slot `i` (0..3) for a colour, in board units. */
@@ -418,6 +420,7 @@ function Yard({ view, labels }: { view: YardView; labels: YardLabels }) {
           tint={a}
           active={view.active}
           muted={labels.muted[engine] ?? false}
+          video={labels.video}
         />
       ) : null}
       {[0, 1, 2, 3].map((i) => {

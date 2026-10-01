@@ -7,7 +7,6 @@ import type { Color as EngineColor } from '@ludi/rules';
 export const color = {
   bg: '#0B0B0C',
   ink: '#141416',
-  panel: '#18181B',
   yard: '#0E0E10',
   line: 'rgba(255,255,255,0.08)',
   cream: '#F6EFD9',
@@ -94,8 +93,6 @@ export const motion = {
 } as const;
 
 export const layout = {
-  /** Mockup frame the board screen was drawn for. */
-  designWidth: 390,
   topBarHeight: 56,
   topBarGap: 12,
   boardInset: 4,
