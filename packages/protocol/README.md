@@ -23,4 +23,6 @@ const io = new Server<ClientToServerEvents, ServerToClientEvents>();
 
 - Fully typed Socket.IO events for compile-time safety
 - Shared types prevent drift between client and server
-- Pure type definitions, no runtime code
+- Zod schemas for payload validation; `TokenPosSchema` bounds `track.cell` to
+  0–67 and `homeColumn.step` to 1–7 (`BOARD_TRACK_SIZE` / `BOARD_HOME_COLUMN_LENGTH`,
+  which must match `@ludi/rules`)

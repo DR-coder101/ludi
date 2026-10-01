@@ -171,7 +171,7 @@ apps/mobile/
     theme/                # colors per player: red/green/yellow/blue + JA-inspired accent
 ```
 
-**Board rendering:** draw the 15×15 grid in `react-native-svg` (or Skia). Coordinates for the 52-cell main track, 4 yards, 4 home columns, and 4 start cells are defined as **data** (`boardLayout.ts`), not hardcoded in components — this lets agents and tests reason about positions.
+**Board rendering:** draw the 19×19 plywood grid in `react-native-svg` (or Skia). Coordinates for the 68-cell main track (17 per arm), 4 yards, 4 seven-cell home columns, and 4 start cells are defined as **data** (`boardLayout.ts`), not hardcoded in components — this lets agents and tests reason about positions. Track size, home-column length, start cells, home entries and safe cells come from `@ludi/rules`; `boardLayout.test.ts` checks the coordinates against the design-pack geometry (unique cells, adjacent steps, home columns joined only at their entry). The numbered mapping is [`docs/board/track-68.svg`](board/track-68.svg).
 
 **Game feel checklist (do not skip):** dice shake + tumble animation, token hop along path cells, capture "knock out" animation, slide-up chat, subtle sound effects, haptics on your turn.
 

@@ -74,10 +74,17 @@ export interface RoomJoinResponse {
   playerId?: string;
 }
 
+/**
+ * Board bounds for TokenPos. Must equal @ludi/rules TRACK_SIZE / HOME_COLUMN_LENGTH
+ * (asserted in server/src/boardGeometry.test.ts); see docs/board/track-68.svg.
+ */
+export const BOARD_TRACK_SIZE = 68;
+export const BOARD_HOME_COLUMN_LENGTH = 7;
+
 export const TokenPosSchema = z.union([
   z.object({ zone: z.literal('yard') }),
-  z.object({ zone: z.literal('track'), cell: z.number() }),
-  z.object({ zone: z.literal('homeColumn'), step: z.number() }),
+  z.object({ zone: z.literal('track'), cell: z.number().int().min(0).max(BOARD_TRACK_SIZE - 1) }),
+  z.object({ zone: z.literal('homeColumn'), step: z.number().int().min(1).max(BOARD_HOME_COLUMN_LENGTH) }),
   z.object({ zone: z.literal('home') }),
 ]);
 export type TokenPos = z.infer<typeof TokenPosSchema>;
