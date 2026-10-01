@@ -23,6 +23,15 @@ This repository includes verified agent skills in `.cursor/skills/` to guide Cur
 
 - **ludi-board-ui** — Ludi board and UI work rules: enforces GAME_RULES.md as source of truth, forbids packages/rules changes for UI work, requires theme constants to be rendered, and requires screenshot/render proof with on-screen coordinates
 
+## Pstack Agent Workflow Pack (MIT)
+
+- **poteto-mode** — For non-trivial work, use poteto-mode workflow (loads the full pstack philosophy)
+- **unslop** — Run unslop on all prose and code before finishing any task
+- **Proof required** — Prove work with real command output (typecheck, tests, lint). Never present screenshots or results you did not actually produce
+- **Game rules** — `docs/GAME_RULES.md` remains the authoritative source of truth for Ludi game rules
+
+The pstack pack (by Lauren Tan, v0.15.5) provides 44+ skills covering principles, verification patterns, and agent workflows. See `.cursor/skills/PSTACK.md` for details.
+
 ## Important: Expo SDK Version
 
 **Ludi is on Expo SDK 52.** Some vendored Expo skills may reference newer SDK APIs (SDK 56+), such as:
