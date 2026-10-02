@@ -240,6 +240,60 @@ describe('Room Lifecycle', () => {
     });
   });
 
+  describe('room:requestState', () => {
+    it('should return room state for player in room', async () => {
+      const client = createTestClient();
+      await waitForConnection(client);
+
+      const createResponse = await new Promise<any>((resolve) => {
+        client.emit('room:create', {
+          displayName: 'TestHost',
+          houseRules: {
+            maxConsecutiveSixes: 2,
+            extraRollOnCapture: false,
+            blockadeCanMoveTogether: false,
+            exactFinishBonus: false,
+            playForPlacements: true,
+          },
+        }, resolve);
+      });
+
+      expect(createResponse.success).toBe(true);
+      const roomCode = createResponse.roomCode;
+
+      const statePromise = new Promise<RoomState>((resolve) => {
+        client.once('room:state', resolve);
+      });
+
+      client.emit('room:requestState');
+
+      const state = await statePromise;
+
+      expect(state.roomCode).toBe(roomCode);
+      expect(state.players).toHaveLength(1);
+      expect(state.players[0].displayName).toBe('TestHost');
+
+      client.disconnect();
+    });
+
+    it('should send error when not in a room', async () => {
+      const client = createTestClient();
+      await waitForConnection(client);
+
+      const errorPromise = new Promise<string>((resolve) => {
+        client.once('error', resolve);
+      });
+
+      client.emit('room:requestState');
+
+      const error = await errorPromise;
+
+      expect(error).toBe('Not in a room');
+
+      client.disconnect();
+    });
+  });
+
   describe('room:selectSeat', () => {
     it('should allow selecting an empty seat', async () => {
       const host = createTestClient();

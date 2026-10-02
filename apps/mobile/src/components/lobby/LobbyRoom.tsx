@@ -108,7 +108,43 @@ export function LobbyRoom(props: LobbyRoomProps) {
 }
 
 /** Before the first `room:state` arrives. */
-export function LobbyLoading({ children }: { children?: ReactNode }) {
+export function LobbyLoading({ 
+  error, 
+  onRetry, 
+  onBack, 
+  children 
+}: { 
+  error?: string | null; 
+  onRetry?: () => void; 
+  onBack?: () => void; 
+  children?: ReactNode;
+}) {
+  const { Pressable, StyleSheet: RNStyleSheet } = require('react-native');
+  
+  if (error) {
+    return (
+      <View style={[styles.screen, styles.loading]}>
+        <StatusBar style="light" />
+        <ScreenBackdrop />
+        <Text style={styles.errorTitle}>Unable to load room</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <View style={styles.errorActions}>
+          {onRetry && (
+            <Pressable onPress={onRetry} style={styles.retryButton}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </Pressable>
+          )}
+          {onBack && (
+            <Pressable onPress={onBack} style={styles.backButtonError}>
+              <Text style={styles.backButtonText}>Back to Home</Text>
+            </Pressable>
+          )}
+        </View>
+        {children}
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.screen, styles.loading]}>
       <StatusBar style="light" />
@@ -193,5 +229,47 @@ const styles = StyleSheet.create({
     fontFamily: font.bodySemi,
     fontSize: 13,
     color: 'rgba(246,239,217,0.6)',
+  },
+  errorTitle: {
+    fontFamily: font.display,
+    fontSize: 20,
+    color: color.cream,
+    marginBottom: 12,
+  },
+  errorMessage: {
+    fontFamily: font.bodySemi,
+    fontSize: 13,
+    color: 'rgba(246,239,217,0.8)',
+    textAlign: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 24,
+  },
+  errorActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  retryButton: {
+    backgroundColor: color.gold,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontFamily: font.bodySemi,
+    fontSize: 14,
+    color: color.bg,
+  },
+  backButtonError: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: color.gold,
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  backButtonText: {
+    fontFamily: font.bodySemi,
+    fontSize: 14,
+    color: color.gold,
   },
 });
