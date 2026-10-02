@@ -655,6 +655,21 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       console.log(`Player ${playerId} joined room ${roomCode} (socket ${socket.id})`);
     });
 
+    socket.on('room:requestState', () => {
+      const roomCode = socketToRoom.get(socket.id);
+      if (!roomCode) {
+        socket.emit('error', 'Not in a room');
+        return;
+      }
+
+      const room = roomRegistry.getRoom(roomCode);
+      if (room) {
+        socket.emit('room:state', room);
+      } else {
+        socket.emit('error', 'Room not found');
+      }
+    });
+
     socket.on('room:selectSeat', (payload, callback) => {
       if (!checkRateLimit(socket)) {
         callback({ success: false, error: 'Rate limit exceeded' });

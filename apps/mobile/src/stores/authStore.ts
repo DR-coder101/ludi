@@ -5,7 +5,7 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 import { authService } from '../services/authService';
 
 const AUTH_USER_ID_KEY = 'ludi_auth_user_id';
@@ -40,8 +40,8 @@ export const useAuthStore = create<AuthState>()(
 
     initializeAuth: async () => {
       try {
-        const userId = await SecureStore.getItemAsync(AUTH_USER_ID_KEY);
-        const accessToken = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
+        const userId = await storage.getItem(AUTH_USER_ID_KEY);
+        const accessToken = await storage.getItem(AUTH_TOKEN_KEY);
 
         if (userId && accessToken) {
           set((state) => {
@@ -65,8 +65,8 @@ export const useAuthStore = create<AuthState>()(
       try {
         const { userId, accessToken } = await authService.createGuest(displayName);
 
-        await SecureStore.setItemAsync(AUTH_USER_ID_KEY, userId);
-        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, accessToken);
+        await storage.setItem(AUTH_USER_ID_KEY, userId);
+        await storage.setItem(AUTH_TOKEN_KEY, accessToken);
 
         set((state) => {
           state.userId = userId;
@@ -93,8 +93,8 @@ export const useAuthStore = create<AuthState>()(
       try {
         const { userId, accessToken } = await authService.signUpWithEmail(email, password, displayName);
 
-        await SecureStore.setItemAsync(AUTH_USER_ID_KEY, userId);
-        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, accessToken);
+        await storage.setItem(AUTH_USER_ID_KEY, userId);
+        await storage.setItem(AUTH_TOKEN_KEY, accessToken);
 
         set((state) => {
           state.userId = userId;
@@ -121,8 +121,8 @@ export const useAuthStore = create<AuthState>()(
       try {
         const { userId, accessToken } = await authService.signInWithEmail(email, password);
 
-        await SecureStore.setItemAsync(AUTH_USER_ID_KEY, userId);
-        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, accessToken);
+        await storage.setItem(AUTH_USER_ID_KEY, userId);
+        await storage.setItem(AUTH_TOKEN_KEY, accessToken);
 
         set((state) => {
           state.userId = userId;
@@ -155,8 +155,8 @@ export const useAuthStore = create<AuthState>()(
       try {
         const result = await authService.upgradeGuestToEmail(userId, accessToken, email, password);
 
-        await SecureStore.setItemAsync(AUTH_USER_ID_KEY, result.userId);
-        await SecureStore.setItemAsync(AUTH_TOKEN_KEY, result.accessToken);
+        await storage.setItem(AUTH_USER_ID_KEY, result.userId);
+        await storage.setItem(AUTH_TOKEN_KEY, result.accessToken);
 
         set((state) => {
           state.userId = result.userId;
@@ -176,8 +176,8 @@ export const useAuthStore = create<AuthState>()(
 
     signOut: async () => {
       try {
-        await SecureStore.deleteItemAsync(AUTH_USER_ID_KEY);
-        await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
+        await storage.deleteItem(AUTH_USER_ID_KEY);
+        await storage.deleteItem(AUTH_TOKEN_KEY);
 
         set((state) => {
           state.userId = null;

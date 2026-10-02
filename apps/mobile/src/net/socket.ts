@@ -5,7 +5,7 @@
 
 import { io, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@ludi/protocol';
-import * as SecureStore from 'expo-secure-store';
+import { storage } from '../utils/storage';
 
 export type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -24,8 +24,8 @@ class SocketManager {
   async initialize(): Promise<void> {
     // Load persisted session token and player ID
     try {
-      this.sessionToken = await SecureStore.getItemAsync(SESSION_TOKEN_KEY);
-      this.playerId = await SecureStore.getItemAsync(PLAYER_ID_KEY);
+      this.sessionToken = await storage.getItem(SESSION_TOKEN_KEY);
+      this.playerId = await storage.getItem(PLAYER_ID_KEY);
     } catch (error) {
       console.warn('Failed to load session data:', error);
     }
@@ -117,7 +117,7 @@ class SocketManager {
   async saveSessionToken(token: string): Promise<void> {
     this.sessionToken = token;
     try {
-      await SecureStore.setItemAsync(SESSION_TOKEN_KEY, token);
+      await storage.setItem(SESSION_TOKEN_KEY, token);
       console.log('[Socket] Session token saved:', token);
     } catch (error) {
       console.error('[Socket] Failed to save session token:', error);
@@ -131,7 +131,7 @@ class SocketManager {
   async savePlayerId(id: string): Promise<void> {
     this.playerId = id;
     try {
-      await SecureStore.setItemAsync(PLAYER_ID_KEY, id);
+      await storage.setItem(PLAYER_ID_KEY, id);
       console.log('[Socket] Player ID saved:', id);
     } catch (error) {
       console.error('[Socket] Failed to save player ID:', error);
@@ -146,8 +146,8 @@ class SocketManager {
     this.sessionToken = null;
     this.playerId = null;
     try {
-      await SecureStore.deleteItemAsync(SESSION_TOKEN_KEY);
-      await SecureStore.deleteItemAsync(PLAYER_ID_KEY);
+      await storage.deleteItem(SESSION_TOKEN_KEY);
+      await storage.deleteItem(PLAYER_ID_KEY);
       console.log('[Socket] Session data cleared');
     } catch (error) {
       console.error('[Socket] Failed to clear session data:', error);
