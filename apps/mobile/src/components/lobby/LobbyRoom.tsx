@@ -114,6 +114,11 @@ export function LobbyLoading({ children }: { children?: ReactNode }) {
   );
 }
 
+/**
+ * Lobby line heights are Chrome's `normal` for each font and size, with ascent and
+ * descent rounded separately (Inter 12 → 15, Archivo Black 10 → 11, Anton 20 → 31).
+ * A smaller fractional value floors the half-leading and lifts web glyphs by 1px.
+ */
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -146,15 +151,17 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: font.display,
+    // Faux bold, as the mockup's <h2> gets in the browser.
+    fontWeight: '700',
     fontSize: 20,
-    lineHeight: 30.11,
+    lineHeight: 31,
     letterSpacing: 0.8,
     color: color.cream,
   },
   sectionNote: {
     fontFamily: font.bodySemi,
     fontSize: 11.5,
-    lineHeight: 13.92,
+    lineHeight: 14,
     color: 'rgba(246,239,217,0.6)',
   },
   grid: {

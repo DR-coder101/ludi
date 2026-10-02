@@ -233,13 +233,13 @@ const styles = StyleSheet.create({
   player: {
     fontFamily: font.bodyBold,
     fontSize: 12,
-    lineHeight: 14.52,
+    lineHeight: 15,
     color: color.cream,
   },
   status: {
     fontFamily: font.bodySemi,
     fontSize: 10,
-    lineHeight: 12.1,
+    lineHeight: 12,
     color: 'rgba(246,239,217,0.55)',
   },
   statusReady: {
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: font.bodyBold,
     fontSize: 12,
-    lineHeight: 14.52,
+    lineHeight: 15,
     color: 'rgba(246,239,217,0.75)',
   },
 });

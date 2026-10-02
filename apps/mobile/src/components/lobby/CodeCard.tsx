@@ -124,7 +124,7 @@ const styles = StyleSheet.create({
     top: 16,
     fontFamily: font.sticker,
     fontSize: 10,
-    lineHeight: 10.88,
+    lineHeight: 11,
     letterSpacing: 2,
     color: color.greenBright,
   },
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   tileText: {
     fontFamily: font.display,
     fontSize: 36,
-    lineHeight: 54.2,
+    lineHeight: 54,
     color: color.gold,
   },
   sticker: {
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
   stickerText: {
     fontFamily: font.sticker,
     fontSize: 10,
-    lineHeight: 10.88,
+    lineHeight: 11,
     letterSpacing: 1,
     color: color.white,
   },
@@ -207,14 +207,14 @@ const styles = StyleSheet.create({
   chipText: {
     fontFamily: font.bodyBold,
     fontSize: 12,
-    lineHeight: 14.52,
+    lineHeight: 15,
   },
   note: {
     flexShrink: 1,
     marginLeft: 'auto',
     fontFamily: font.bodySemi,
     fontSize: 11,
-    lineHeight: 13.31,
+    lineHeight: 14,
     color: 'rgba(246,239,217,0.55)',
   },
   noteWarn: {

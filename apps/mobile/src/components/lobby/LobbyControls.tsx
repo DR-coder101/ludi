@@ -160,6 +160,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: font.display,
+    // The mockup's <h1> asks single-weight Anton for bold, so the browser emboldens it (web and Android
+    // synthesise the same; iOS draws plain Anton).
+    fontWeight: '700',
     fontSize: 26,
     lineHeight: 26,
     letterSpacing: 0.8,
@@ -172,7 +175,7 @@ const styles = StyleSheet.create({
     marginTop: 3,
     fontFamily: font.body,
     fontSize: 11.5,
-    lineHeight: 13.92,
+    lineHeight: 14,
     color: 'rgba(246,239,217,0.6)',
   },
   seg: {
@@ -196,7 +199,7 @@ const styles = StyleSheet.create({
   tabText: {
     fontFamily: font.sticker,
     fontSize: 12,
-    lineHeight: 13.06,
+    lineHeight: 14,
     letterSpacing: 1.2,
     color: 'rgba(246,239,217,0.6)',
   },
@@ -218,7 +221,7 @@ const styles = StyleSheet.create({
   optText: {
     fontFamily: font.bodySemi,
     fontSize: 12,
-    lineHeight: 14.52,
+    lineHeight: 15,
     color: color.cream,
   },
   switch: {
@@ -262,14 +265,14 @@ const styles = StyleSheet.create({
   startText: {
     fontFamily: font.display,
     fontSize: 24,
-    lineHeight: 36.13,
+    lineHeight: 36,
     letterSpacing: 1.2,
     color: color.bg,
   },
   startDetail: {
     fontFamily: font.bodyBold,
     fontSize: 12,
-    lineHeight: 14.52,
+    lineHeight: 15,
     color: color.bg,
     opacity: 0.7,
   },
