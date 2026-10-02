@@ -336,7 +336,7 @@ describe('Room Lifecycle', () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       const selectResponse = await new Promise<any>((resolve) => {
-        host.emit('room:selectSeat', { color: 'yellow' }, resolve);
+        host.emit('room:selectSeat', { color: 'blue' }, resolve);
       });
 
       expect(selectResponse.success).toBe(false);
