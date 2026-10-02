@@ -24,26 +24,34 @@
 - The **home entry** is the arm-end cell with the entry arrow, **two cells before** the colour's own start (start − 2). A token never steps onto its own start − 1; from the entry it turns into its home column.
 - A token's journey: leave yard → start cell → 66 track steps to its home entry → 7 home-column steps → 1 step into the centre (home). Total steps from start cell to home = **74** (66 + 7 + 1).
 
-## 2. Starting & Turn Order
+## 2. Starting, Turn Order & the Two Dice
 
 - Highest opening roll goes first **[HOUSE: or youngest/host choice]**; play proceeds in turn order (§1).
-- On your turn: roll one die (1–6), then move one legal token exactly that many steps.
+- Ludi is played with **two dice**. On your turn you **throw both dice together** (each 1–6).
+- **Each die is its own move.** Pick a die and a token; the token moves exactly that die's value. Then play the other die. You choose the order.
+- **Split or total:** the two dice may move two different tokens, or the same token twice. Moving one token "by the total" (e.g. 2 + 4 = 6) is played as two moves, one per die, and **the landing in between is a real landing**: it must be legal on its own, and it captures (§5) or forms a blockade (§6) as normal. A total move cannot hop a blockade the single dice could not pass.
+- **Doubles** are just two dice of the same value: two moves, nothing extra (6-6 earns its bonus roll under §4 like any throw with a 6).
+- **Use every die you can.** After each move, if the remaining die has any legal move, you must play it. If it has none, it is forfeited. There is no look-ahead: you do not have to choose an order that lets both dice be used.
 
 ## 3. Leaving the Yard ("Coming Out")
 
-- A token may leave the yard **only on a roll of exactly 6**, and is placed on its colour's start cell.
+- A token may leave the yard **only with a die showing exactly 6**. That die is spent bringing the token out onto its colour's start cell; the other die is still yours to play (it may move the token that just came out).
+- 6-6 may bring two tokens out (they form a blockade on the start cell, §6), or bring one out and move it 6.
 - The start cell is a **safe cell** while occupied by its own colour's newly-entered token(s).
 - **[HOUSE]** Some play that you cannot come out if your own start cell is occupied by an opponent blockade — standard: blockades block everyone (see §6).
 
-## 4. Rolling a 6
+## 4. Rolling a 6 (Bonus Roll)
 
-- Rolling a 6 grants **another roll** after completing the move.
-- **[HOUSE — Jamaican standard]** Maximum **two consecutive sixes**: if you roll a third consecutive 6, the turn is forfeited (no move) and play passes on. Toggle: `maxConsecutiveSixes: 2 | 3 | unlimited`.
+- A throw that shows **a 6 on either die** (6-x or 6-6) earns **one bonus throw**, taken after both dice of the current throw are played or forfeited.
+- The bonus is earned by the throw itself, so it stands even when neither die can be played.
+- A throw earns **at most one** bonus throw, however many triggers it has (a 6, a capture under `extraRollOnCapture`, a token home under `exactFinishBonus`).
+- **[HOUSE — Jamaican standard]** Maximum **two consecutive throws showing a 6**: if the third consecutive throw of your turn shows a 6 (on either die), that throw is forfeited (no move) and play passes on. A throw without a 6 resets the streak. Toggle: `maxConsecutiveSixes: 2 | 3 | unlimited` (counts throws, not individual dice).
+- Family variants **not supported yet** (candidates for future `[HOUSE]` toggles): a bonus throw on any doubles instead of on a 6; moving the total as one jump that skips the in-between landing.
 
 ## 5. Capturing ("Licking" / sending home)
 
 - Landing on a cell occupied by a **single** opponent token captures it: the opponent token returns to its yard, and your token takes the cell.
-- Capturing grants **no extra roll** in standard Jamaican play **[HOUSE: some families award an extra roll on capture — toggle `extraRollOnCapture`]**.
+- Capturing grants **no extra roll** in standard Jamaican play **[HOUSE: some families award an extra roll on capture — toggle `extraRollOnCapture`]**. With the toggle on, the bonus throw comes after the current throw's other die is played (§4).
 - You **cannot** capture on a safe cell (see §7).
 - A token in its home column or centre can never be captured.
 
@@ -52,7 +60,7 @@
 - **Two tokens of the same colour on one cell form a blockade.**
 - A blockade **cannot be captured** and **cannot be passed or landed on by any token** — including the blockade owner's other tokens and including tokens of the same colour not part of the blockade.
 - A blockade may be formed on safe cells and start cells.
-- **[HOUSE]** `blockadeCanMoveTogether: boolean` — some families allow a blockade to move as a pair when the dice value permits; standard Jamaican: **false**, each token moves individually and moving one off the cell breaks the blockade.
+- **[HOUSE]** `blockadeCanMoveTogether: boolean` — some families allow a blockade to move as a pair (e.g. on doubles); standard Jamaican: **false**, each token moves individually and moving one off the cell breaks the blockade. *Not implemented yet: the engine always plays standard regardless of this flag.*
 - Three or four tokens stacked = still treated as a blockade (2-token unit); the extras are just stacked tokens and may leave individually, but the cell remains impassable while ≥2 same-colour tokens remain.
 
 ## 7. Safe Cells
@@ -63,9 +71,10 @@
 ## 8. Movement Rules
 
 - Tokens move **forward only** (increasing track index, counter-clockwise on the board as drawn); no backward movement, ever.
-- You must move if you have any legal move. If no token can legally move (all blocked / overshooting home / blocked by blockades), the turn passes.
+- You must play each die that has a legal move (§2). If **neither** die can be played (all blocked / overshooting home / blocked by blockades), the throw ends at once: you take your bonus throw if it showed a 6 (§4), otherwise the turn passes. The same applies when the second die alone has no legal move.
 - A token enters its home column from its home entry cell (§1); the home column requires **exact count** — an overshooting roll is not a legal move for that token.
 - Reaching the centre ("getting home") removes the token from play. **[HOUSE]** `exactFinishBonus` — some award an extra roll for bringing a token home; standard: no extra roll.
+- Bringing your **last** token home ends your throw: any unplayed die is void.
 
 ## 9. Winning
 
@@ -74,8 +83,8 @@
 
 ## 10. Edge Cases the Engine MUST Handle (test list)
 
-1. Rolling 6 with all tokens in yard → must come out (no other move exists).
-2. Third consecutive 6 → forfeit, even if moves were available.
+1. Throwing a 6 with all tokens in yard → must come out with the 6 (no other move exists); the other die may then move that token.
+2. Third consecutive throw showing a 6 → forfeit, even if moves were available.
 3. Landing on opponent single token → capture; on opponent blockade → illegal move.
 4. Moving onto own single token → forms blockade.
 5. Blockade directly ahead → token cannot pass even with sufficient roll.
@@ -85,7 +94,13 @@
 9. All 4 tokens of a colour stacked on one non-safe cell: opponent landing attempt is illegal (blockade present).
 10. No-legal-move auto-pass, including the case where the only movable token would overshoot home.
 11. 2-player and 3-player games: unused colours' cells are plain track cells.
-12. Turn timeout → server picks a random legal move (online mode only).
+12. Turn timeout → server plays a random legal move for each remaining playable die (online mode only).
+13. Two dice: split between two tokens, or one token takes both (intermediate landing captures / is blocked like any landing).
+14. Second die forfeited when it has no legal move after the first is played (e.g. only an overshoot remains).
+15. 6-6: two tokens may come out; one bonus throw, not two.
+16. Neither die playable but the throw shows a 6 → bonus throw; no 6 → turn passes.
+17. Capture bonus (`extraRollOnCapture`) earned on the first die waits until the second die is played.
+18. Last token home with a die unplayed → game over (or turn passes when `playForPlacements`); the die is void.
 
 ## 11. Engine API Contract (`packages/rules`)
 
@@ -107,21 +122,26 @@ interface TokenState { color: Color; index: 0|1|2|3; pos: TokenPos; }
 // TokenPos: { zone: "yard" } | { zone: "track"; cell: number } /* 0–67 absolute */
 //         | { zone: "homeColumn"; step: 1..7 } | { zone: "home" }
 
+interface Die { value: number; used: boolean; }   // value 1–6
+
 interface GameState {
   config: GameConfig;
   tokens: TokenState[];            // 4 per active colour
   turn: Color;
   phase: "awaiting_roll" | "awaiting_move" | "finished";
-  dice: number | null;
-  consecutiveSixes: number;
+  dice: [Die, Die] | null;         // current throw; null while awaiting a roll
+  extraRollEarned: boolean;        // this throw has earned its bonus throw (§4)
+  consecutiveSixes: number;        // consecutive throws this turn showing a 6
   winner: Color | null;
   placements: Color[];
 }
 
 createGame(config): GameState
-rollDice(state, rng): { state, value }        // server supplies rng
-legalMoves(state): { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[]
-applyMove(state, tokenIndex): { state, events: GameEvent[] }
+rollDice(state, rng): { state, values: [number, number], events }   // server supplies rng; called once per die
+legalMoves(state): { tokenIndex; dieIndex: 0 | 1; steps; resulting: TokenPos; captures?: TokenRef }[]
+                                   // one entry per (token, unused die); equal dice are listed separately
+applyMove(state, tokenIndex, dieIndex): { state, events: GameEvent[] }
+                                   // plays one die; phase stays "awaiting_move" while the other die is playable
 // GameEvent: "moved" | "came_out" | "captured" | "blockade_formed" | "blockade_broken"
 //          | "entered_home_column" | "got_home" | "extra_turn" | "turn_passed" | "game_over"
 ```
