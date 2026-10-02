@@ -1,0 +1,52 @@
+# Node modules (will be installed in container)
+node_modules/
+**/node_modules/
+
+# Build outputs (will be built in container)
+**/dist/
+**/.next/
+**/build/
+
+# Development and test files
+**/*.test.ts
+**/*.test.js
+**/vitest.config.ts
+**/.env
+**/.env.*
+!**/.env.example
+
+# Git and version control
+.git/
+.gitignore
+.gitattributes
+
+# IDE and editor configs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Cursor AI agent artifacts
+.cursor/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+docs/
+*.md
+!server/README.md
+
+# Mobile app (not needed for server deployment)
+apps/
+
+# CI/CD
+.github/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
