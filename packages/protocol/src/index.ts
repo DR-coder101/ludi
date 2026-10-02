@@ -102,12 +102,23 @@ export const GameConfigSchema = z.object({
 });
 export type GameConfig = z.infer<typeof GameConfigSchema>;
 
+export const DieValueSchema = z.number().int().min(1).max(6);
+export const DieIndexSchema = z.union([z.literal(0), z.literal(1)]);
+
+/** One die of the current throw; mirrors @ludi/rules `Die` (GAME_RULES.md §2). */
+export const DieSchema = z.object({
+  value: DieValueSchema,
+  used: z.boolean(),
+});
+export type Die = z.infer<typeof DieSchema>;
+
 export const GameStateSchema = z.object({
   config: GameConfigSchema,
   tokens: z.array(TokenStateSchema),
   turn: ColorSchema,
   phase: z.enum(['awaiting_roll', 'awaiting_move', 'finished']),
-  dice: z.number().nullable(),
+  dice: z.tuple([DieSchema, DieSchema]).nullable(),
+  extraRollEarned: z.boolean(),
   consecutiveSixes: z.number(),
   winner: ColorSchema.nullable(),
   placements: z.array(ColorSchema),
@@ -117,13 +128,17 @@ export type GameState = z.infer<typeof GameStateSchema>;
 export const GameRollPayloadSchema = z.object({});
 export type GameRollPayload = z.infer<typeof GameRollPayloadSchema>;
 
+/** Intent only: which token, moved by which die of the server's throw. */
 export const GameMovePayloadSchema = z.object({
   tokenIndex: z.number().int().min(0),
+  dieIndex: DieIndexSchema,
 });
 export type GameMovePayload = z.infer<typeof GameMovePayloadSchema>;
 
 export const LegalMoveSchema = z.object({
   tokenIndex: z.number(),
+  dieIndex: DieIndexSchema,
+  steps: DieValueSchema,
   resulting: TokenPosSchema,
   captures: z.object({
     color: ColorSchema,
@@ -146,6 +161,8 @@ export interface GameMoveResponse {
 export interface TokenMovedPayload {
   playerId: PlayerId;
   tokenIndex: number;
+  dieIndex: 0 | 1;
+  steps: number;
   from: TokenPos;
   to: TokenPos;
   captured?: {
@@ -161,7 +178,9 @@ export interface GameOverPayload {
 
 export interface DiceRolledPayload {
   playerId: PlayerId;
-  value: number;
+  /** Both faces, in die order; sent even when the throw is forfeited or unplayable. */
+  values: [number, number];
+  /** Moves for the fresh throw; after each move clients derive the rest from `game:state`. */
   legalMoves: LegalMove[];
 }
 

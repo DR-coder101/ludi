@@ -76,7 +76,9 @@ describe('Board geometry contract (68 track / 7 home)', () => {
           maxHomeStep = Math.max(maxHomeStep, move.resulting.step);
         }
       }
-      const result = registry.applyMove(roomCode, moves[pick++ % moves.length].tokenIndex);
+      const move = moves[pick++ % moves.length];
+      expect(move.steps).toBe(game.state.dice![move.dieIndex].value);
+      const result = registry.applyMove(roomCode, move.tokenIndex, move.dieIndex);
       expect(result.success).toBe(true);
     }
 
