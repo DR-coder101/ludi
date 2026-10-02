@@ -130,7 +130,7 @@ describe('Video Token Endpoint', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          roomCode: 'NOTFND',
+          roomCode: 'NOTFD',
           userId: 'user123',
         }),
       });

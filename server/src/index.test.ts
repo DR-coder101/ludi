@@ -66,7 +66,7 @@ describe('Room Lifecycle', () => {
 
       expect(response.success).toBe(true);
       expect(response.roomCode).toBeDefined();
-      expect(response.roomCode).toHaveLength(6);
+      expect(response.roomCode).toHaveLength(5);
 
       const roomState = await roomStatePromise;
 
@@ -161,7 +161,7 @@ describe('Room Lifecycle', () => {
 
       const response = await new Promise<any>((resolve) => {
         client.emit('room:join', {
-          roomCode: 'FAKE99',
+          roomCode: 'FAKE9',
           displayName: 'Test',
         }, resolve);
       });
