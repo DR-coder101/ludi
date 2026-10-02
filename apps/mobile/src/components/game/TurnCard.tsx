@@ -84,24 +84,27 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
               {dice.map((die, i) => {
                 const index = i as DieIndex;
                 const pickable = !idle && !die.used && !!onPickDie;
+                const isActive = activeDie === index;
                 return (
                   <Pressable
                     key={i}
                     accessibilityRole="button"
                     accessibilityLabel={`Die ${i + 1} shows ${die.value}${die.used ? ', played' : ''}`}
-                    accessibilityState={{ disabled: !pickable, selected: activeDie === index }}
+                    accessibilityState={{ disabled: !pickable, selected: isActive }}
                     disabled={!pickable}
                     onPress={() => onPickDie?.(index)}
-                    style={[styles.dieSlot, activeDie === index && styles.dieActive, die.used && styles.dieUsed]}
+                    style={[styles.dieSlot, isActive && styles.dieActive]}
                   >
-                    <DiceFace
-                      value={die.value}
-                      size={DIE_SIZE}
-                      rollKey={rollKey}
-                      idle={idle}
-                      spin={i === 0 ? 1 : -1}
-                      buzz={i === 0 && buzzOn}
-                    />
+                    <View style={die.used && styles.dieUsed}>
+                      <DiceFace
+                        value={die.value}
+                        size={DIE_SIZE}
+                        rollKey={rollKey}
+                        idle={idle}
+                        spin={i === 0 ? 1 : -1}
+                        buzz={i === 0 && buzzOn}
+                      />
+                    </View>
                   </Pressable>
                 );
               })}
@@ -200,7 +203,7 @@ const styles = StyleSheet.create({
     borderColor: color.gold,
   },
   dieUsed: {
-    opacity: 0.35,
+    opacity: 0.3,
   },
   pill: {
     flexShrink: 1,

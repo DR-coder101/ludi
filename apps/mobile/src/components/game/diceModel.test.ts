@@ -54,3 +54,43 @@ describe('moveForToken', () => {
     expect(moveForToken(moves, 2, 0)).toBeUndefined();
   });
 });
+
+describe('die switching workflow', () => {
+  it('switches active die when player picks the other unused die', () => {
+    const moves = [move(0, 0, 3), move(0, 1, 6), move(1, 0, 3), move(1, 1, 6)];
+    
+    // Initially no pick, first playable die is active
+    expect(activeDie(moves, null)).toBe(0);
+    
+    // Player picks die 1
+    expect(activeDie(moves, 1)).toBe(1);
+    
+    // Player switches back to die 0
+    expect(activeDie(moves, 0)).toBe(0);
+  });
+
+  it('keeps selection on unused die after first die is spent', () => {
+    const allMoves = [move(0, 0, 3), move(0, 1, 6), move(1, 0, 3), move(1, 1, 6)];
+    
+    // Player picked die 1 (the 6)
+    expect(activeDie(allMoves, 1)).toBe(1);
+    
+    // After using die 1, only die 0 moves remain
+    const remainingMoves = [move(0, 0, 3), move(1, 0, 3)];
+    
+    // Pick is now stale (die 1 has no moves), falls back to first playable
+    expect(activeDie(remainingMoves, 1)).toBe(0);
+    
+    // If they had picked die 0 instead, it stays active
+    expect(activeDie(remainingMoves, 0)).toBe(0);
+  });
+
+  it('selection is irrelevant when only one die is playable', () => {
+    const singleDieMoves = [move(0, 1, 6), move(1, 1, 6)];
+    
+    // Player pick doesn't matter - only die 1 has moves
+    expect(activeDie(singleDieMoves, 0)).toBe(1);
+    expect(activeDie(singleDieMoves, 1)).toBe(1);
+    expect(activeDie(singleDieMoves, null)).toBe(1);
+  });
+});
