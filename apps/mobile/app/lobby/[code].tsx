@@ -38,6 +38,7 @@ export default function LobbyScreen() {
 
   const [isStarting, setIsStarting] = useState(false);
   const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const socket = socketManager.getSocket();
@@ -66,6 +67,7 @@ export default function LobbyScreen() {
       console.log('[Lobby] Room state update:', state);
       setRoomState(state);
       clearTimeout(timeout);
+      setLoadingError(null);
       
       // Update myPlayerId if we don't have it yet and can find ourselves
       const storedPlayerId = socketManager.getPlayerId();
@@ -126,7 +128,7 @@ export default function LobbyScreen() {
       socket.off('player:connectionChanged');
       socket.off('error');
     };
-  }, [roomCode, router]);
+  }, [roomCode, router, retryCount]);
 
   const handleLeave = async () => {
     const socket = socketManager.getSocket();
@@ -195,10 +197,7 @@ export default function LobbyScreen() {
     return (
       <LobbyLoading error={loadingError} onRetry={() => {
         setLoadingError(null);
-        const socket = socketManager.getSocket();
-        if (socket) {
-          socket.emit('room:requestState');
-        }
+        setRetryCount(prev => prev + 1);
       }} onBack={() => router.replace('/')}>
         {header}
         {toast}
