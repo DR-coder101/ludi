@@ -29,7 +29,7 @@ export interface LegalMove {
  *
  * Rules enforced:
  * - §2: Each die is played separately; spent dice offer no moves
- * - §3: Can only leave yard with a die showing 6
+ * - §3: Double-6 required to start (first piece out); then any 6 brings subsequent pieces out
  * - §6: Blockades (2+ same-color tokens) block everyone, cannot pass or land
  * - §7: Safe cells allow multi-color coexistence, no captures
  * - §8: Exact count required for home column/home entry (no overshoot)
@@ -43,7 +43,7 @@ export function legalMoves(state: GameState): LegalMove[] {
   const moves: LegalMove[] = [];
   state.dice.forEach((die, dieIndex) => {
     if (die.used) return;
-    for (const move of movesForSteps(state, die.value)) {
+    for (const move of movesForSteps(state, die.value, dieIndex)) {
       moves.push({ ...move, dieIndex: dieIndex as 0 | 1, steps: die.value });
     }
   });
@@ -52,17 +52,31 @@ export function legalMoves(state: GameState): LegalMove[] {
 
 function movesForSteps(
   state: GameState,
-  steps: number
+  steps: number,
+  dieIndex: number
 ): { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] {
   const moves: { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] = [];
+
+  // Check if the current player has started (has any pieces out of yard)
+  const hasStarted = state.tokens.some(
+    (t) => t.color === state.turn && t.pos.zone !== "yard"
+  );
 
   state.tokens.forEach((token, tokenIndex) => {
     if (token.color !== state.turn || token.pos.zone === "home") return;
 
     let resulting: TokenPos | null;
     if (token.pos.zone === "yard") {
-      // Leaving the yard needs a die showing exactly 6
+      // §3: Leaving the yard requires a die showing 6
       if (steps !== 6) return;
+
+      // §3: If player hasn't started yet, need BOTH dice to show 6 (double-6)
+      if (!hasStarted) {
+        // Check if both dice show 6
+        const bothSixes = state.dice![0].value === 6 && state.dice![1].value === 6;
+        if (!bothSixes) return; // Double-6 required for first piece
+      }
+
       resulting = computePath(token.pos, 1, token.color);
     } else {
       resulting = computePath(token.pos, steps, token.color);

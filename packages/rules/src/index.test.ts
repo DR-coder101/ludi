@@ -589,13 +589,27 @@ describe("Legal Moves - M1 Step 1.2", () => {
     },
   };
 
-  describe("Edge Case 1: Rolling 6 with all tokens in yard", () => {
-    it("should allow coming out when rolling 6 from yard", () => {
+  describe("Edge Case 1: Rolling to start (double-6 requirement)", () => {
+    it("should NOT allow coming out with single 6 when player hasn't started", () => {
       const game = createGame(baseConfig);
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        ...oneDie(6),
+        ...throwOf(6, 3),
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      // No legal moves because double-6 is required to start
+      expect(moves.length).toBe(0);
+    });
+
+    it("should allow coming out with double-6 when player hasn't started", () => {
+      const game = createGame(baseConfig);
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        ...throwOf(6, 6),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -607,11 +621,38 @@ describe("Legal Moves - M1 Step 1.2", () => {
         return token.color === "red";
       });
 
-      expect(redMoves.length).toBe(4);
+      // 4 tokens × 2 dice = 8 moves (both 6s can bring each token out)
+      expect(redMoves.length).toBe(8);
       
       for (const move of redMoves) {
         expect(move.resulting).toEqual({ zone: "track", cell: 0 });
       }
+    });
+
+    it("should allow coming out with single 6 once player has started", () => {
+      const game = createGame(baseConfig);
+      // Put one red token on track to show player has started
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        ...throwOf(6, 3),
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      // Should have moves: the 6 can bring out any of the 3 remaining yard tokens,
+      // and the 3 can move the token on track
+      expect(moves.length).toBeGreaterThan(0);
+      
+      const comeOutMoves = moves.filter((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.pos.zone === "yard";
+      });
+
+      // 3 tokens in yard can come out with the 6
+      expect(comeOutMoves.length).toBe(3);
     });
 
     it("should not allow coming out on roll other than 6", () => {
@@ -1843,17 +1884,40 @@ describe("Two dice (GAME_RULES.md §2-§4, §8)", () => {
       expect(legalMoves(state).map((m) => m.dieIndex)).toEqual([1]);
     });
 
-    it("only the die showing 6 can bring a token out", () => {
-      const moves = legalMoves(rolled(twoPlayer(), 3, 6));
+    it("with no pieces started, need double-6 to come out (6-3 offers no moves)", () => {
+      const moves = legalMoves(rolled(twoPlayer(), 6, 3));
 
-      expect(moves).toHaveLength(4);
-      expect(moves.every((m) => m.dieIndex === 1 && m.resulting.zone === "track")).toBe(true);
+      expect(moves).toHaveLength(0);
+    });
+
+    it("with no pieces started, double-6 allows coming out", () => {
+      const moves = legalMoves(rolled(twoPlayer(), 6, 6));
+
+      // 4 red tokens × 2 dice (both showing 6) = 8 come-out moves
+      expect(moves).toHaveLength(8);
+      expect(moves.every((m) => m.resulting.zone === "track" && m.resulting.cell === 0)).toBe(true);
+    });
+
+    it("once started, any single 6 can bring a token out", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5); // Red has started
+
+      const moves = legalMoves(rolled(game, 3, 6));
+
+      // 3 red tokens in yard can come out with the 6 (die 1)
+      // 1 red token on track can move 3 (die 0) or 6 (die 1)
+      expect(moves.length).toBeGreaterThan(0);
+      const comeOutMoves = moves.filter((m) => {
+        const token = game.tokens[m.tokenIndex];
+        return token.pos.zone === "yard" && m.steps === 6;
+      });
+      expect(comeOutMoves).toHaveLength(3);
     });
   });
 
   describe("playing a throw", () => {
-    it("6 + 3 from the yard: come out with the 6, then move that token 3", () => {
-      const state = rolled(twoPlayer(), 6, 3);
+    it("6 + 6 from the yard (double-6): come out with first 6, then use second 6", () => {
+      const state = rolled(twoPlayer(), 6, 6);
 
       const first = applyMove(state, 0, 0);
       expect(first.events.map((e) => e.type)).toEqual(["came_out"]);
@@ -1861,17 +1925,24 @@ describe("Two dice (GAME_RULES.md §2-§4, §8)", () => {
       expect(first.state.turn).toBe("red");
       expect(first.state.dice).toEqual([
         { value: 6, used: true },
-        { value: 3, used: false },
-      ]);
-      expect(legalMoves(first.state)).toEqual([
-        { tokenIndex: 0, dieIndex: 1, steps: 3, resulting: track(3), captures: undefined },
+        { value: 6, used: false },
       ]);
 
+      // Now player has started, so the second 6 can move the token or bring another out
+      const movesAfterFirst = legalMoves(first.state);
+      expect(movesAfterFirst.length).toBeGreaterThan(0);
+
       const second = applyMove(first.state, 0, 1);
-      expect(second.state.tokens[0].pos).toEqual(track(3));
+      expect(second.state.tokens[0].pos).toEqual(track(6));
       // The throw showed a 6: bonus roll for red
       expect(second.events.map((e) => e.type)).toEqual(["moved", "extra_turn"]);
       expect(second.state).toMatchObject({ turn: "red", phase: "awaiting_roll", dice: null, extraRollEarned: false });
+    });
+
+    it("6 + 3 from the yard: no legal moves (needs double-6 to start)", () => {
+      const state = rolled(twoPlayer(), 6, 3);
+      const moves = legalMoves(state);
+      expect(moves).toHaveLength(0);
     });
 
     it("splits the dice between two tokens", () => {
