@@ -4,7 +4,9 @@ import type { Color, GameState } from '@ludi/rules';
 import { createGame, rollDice, legalMoves, applyMove } from '@ludi/rules';
 import { BoardScreen } from '../src/components/game/BoardScreen';
 import { makeHop, type HopAnimation } from '../src/components/board/BoardView';
-import { WinBanner } from '../src/components/WinBanner';
+import { WinScreen } from '../src/components/win/WinScreen';
+import { winView } from '../src/components/win/winModel';
+import { useMatchStats } from '../src/components/win/useMatchStats';
 import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
 import { OnboardingTooltip, useOnboarding } from '../src/components/OnboardingTooltip';
 
@@ -33,7 +35,7 @@ export default function GameScreen() {
     return out;
   }, [playerColors]);
 
-  const [gameState, setGameState] = useState<GameState>(() =>
+  const newGame = () =>
     createGame({
       playerColors,
       houseRules: {
@@ -43,12 +45,13 @@ export default function GameScreen() {
         exactFinishBonus: false,
         playForPlacements: false,
       },
-    })
-  );
+    });
+  const [gameState, setGameState] = useState<GameState>(newGame);
   const [lastRoll, setLastRoll] = useState<number | null>(null);
   const [rollKey, setRollKey] = useState(0);
   const [pending, setPending] = useState<PendingMove | null>(null);
   const [previousTurn, setPreviousTurn] = useState<Color | null>(null);
+  const match = useMatchStats(gameState.phase === 'finished');
 
   useEffect(() => {
     gameAudio.initialize();
@@ -81,6 +84,7 @@ export default function GameScreen() {
   const handleRoll = () => {
     if (gameState.phase !== 'awaiting_roll' || pending) return;
     const result = rollDice(gameState, Math.random);
+    match.roll(gameState.turn, result.value);
     gameAudio.play('roll');
     triggerHaptic.medium();
     setLastRoll(result.value);
@@ -92,6 +96,7 @@ export default function GameScreen() {
     if (gameState.phase !== 'awaiting_move' || pending) return;
     const move = moves.find((m) => m.tokenIndex === tokenIndex);
     if (!move) return;
+    if (move.captures) match.capture(gameState.turn);
 
     const next = applyMove(gameState, tokenIndex).state;
     const anim = makeHop(gameState, tokenIndex, move.resulting);
@@ -112,6 +117,15 @@ export default function GameScreen() {
     setPending(null);
   };
 
+  const handleRematch = () => {
+    setGameState(newGame());
+    setLastRoll(null);
+    setPending(null);
+    match.reset();
+  };
+
+  const results = winView({ state: gameState, names, roomCode: null, stats: match.stats });
+
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -130,14 +144,10 @@ export default function GameScreen() {
         onMenu={() => router.back()}
         onProfile={() => router.push('/profile')}
       >
-        {gameState.phase === 'finished' && gameState.winner ? (
-          <WinBanner
-            winner={gameState.winner}
-            placements={gameState.placements}
-            onNewGame={() => router.back()}
-          />
-        ) : null}
         {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
+        {gameState.phase === 'finished' && results ? (
+          <WinScreen view={results} onRematch={handleRematch} onLobby={() => router.back()} />
+        ) : null}
       </BoardScreen>
     </>
   );
