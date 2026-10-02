@@ -48,7 +48,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 1. Tap "Online Multiplayer"
 2. Enter display name (e.g., "Player 1")
 3. Tap "Create Room"
-4. ✅ Room code appears (6 characters, e.g., "ABC123")
+4. ✅ Room code appears (5 characters, e.g., "ABC12")
 5. ✅ Lobby screen shows Player 1 as host (crown icon)
 6. Tap "📤 Share" button
 7. ✅ Share sheet opens with room code message

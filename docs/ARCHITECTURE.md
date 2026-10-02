@@ -186,7 +186,7 @@ apps/mobile/
 
 - All validation server-side (see §3.1). Treat every client payload as hostile.
 - Per-socket rate limiting on all events (e.g., `game:roll` ignored unless it's your turn and phase = `awaiting_roll`).
-- Room codes: 6-char human-friendly (no ambiguous chars: 0/O, 1/I), expiring after 2h idle.
+- Room codes: 5-char human-friendly (no ambiguous chars: 0/O, 1/I), expiring after 2h idle.
 - No PII beyond display name for guests; email only for registered accounts.
 
 ---

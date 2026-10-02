@@ -162,6 +162,17 @@ export default function LobbyScreen() {
     }
   };
 
+  const handleSelectSeat = (color: string) => {
+    const socket = socketManager.getSocket();
+    if (!socket) return;
+
+    socket.emit('room:selectSeat', { color }, (response) => {
+      if (!response.success) {
+        showToast(response.error || 'Failed to select seat', 'error');
+      }
+    });
+  };
+
   const toast = <Toast visible={visible} message={message} type={type} duration={duration} onDismiss={hideToast} />;
   const header = <Stack.Screen options={{ headerShown: false }} />;
 
@@ -190,6 +201,7 @@ export default function LobbyScreen() {
       onCopy={handleCopyCode}
       onShare={handleShareCode}
       onStart={handleStartGame}
+      onSelectSeat={handleSelectSeat}
     >
       {header}
       {toast}

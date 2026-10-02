@@ -43,11 +43,16 @@ export const RoomCreatePayloadSchema = z.object({
 export type RoomCreatePayload = z.infer<typeof RoomCreatePayloadSchema>;
 
 export const RoomJoinPayloadSchema = z.object({
-  roomCode: z.string().length(6),
+  roomCode: z.string().length(5),
   displayName: z.string().min(1).max(50),
   sessionToken: z.string().optional(),
 });
 export type RoomJoinPayload = z.infer<typeof RoomJoinPayloadSchema>;
+
+export const SeatSelectPayloadSchema = z.object({
+  color: ColorSchema,
+});
+export type SeatSelectPayload = z.infer<typeof SeatSelectPayloadSchema>;
 
 export const RoomStateSchema = z.object({
   roomCode: z.string(),
@@ -72,6 +77,11 @@ export interface RoomJoinResponse {
   sessionToken?: string;
   isReconnect?: boolean;
   playerId?: string;
+}
+
+export interface SeatSelectResponse {
+  success: boolean;
+  error?: string;
 }
 
 /**
@@ -190,7 +200,7 @@ export interface TurnChangedPayload {
 }
 
 export const VideoTokenPayloadSchema = z.object({
-  roomCode: z.string().length(6),
+  roomCode: z.string().length(5),
   userId: z.string().min(1),
 });
 export type VideoTokenPayload = z.infer<typeof VideoTokenPayloadSchema>;
@@ -204,6 +214,7 @@ export interface VideoTokenResponse {
 export interface ClientToServerEvents {
   'room:create': (payload: RoomCreatePayload, callback: (response: RoomCreateResponse) => void) => void;
   'room:join': (payload: RoomJoinPayload, callback: (response: RoomJoinResponse) => void) => void;
+  'room:selectSeat': (payload: SeatSelectPayload, callback: (response: SeatSelectResponse) => void) => void;
   'room:ready': () => void;
   'room:leave': () => void;
   'game:roll': (payload: GameRollPayload, callback: (response: GameRollResponse) => void) => void;

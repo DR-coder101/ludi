@@ -98,8 +98,8 @@ export default function HomeScreen() {
       showToast('Please enter your name', 'error');
       return;
     }
-    if (!roomCode.trim() || roomCode.trim().length !== 6) {
-      showToast('Please enter a valid 6-character room code', 'error');
+    if (!roomCode.trim() || roomCode.trim().length !== 5) {
+      showToast('Please enter a valid 5-character room code', 'error');
       return;
     }
 
@@ -222,11 +222,11 @@ export default function HomeScreen() {
           <Text style={styles.sectionTitle}>Join Room</Text>
           <TextInput
             style={styles.input}
-            placeholder="Enter 6-character room code"
+            placeholder="Enter 5-character room code"
             placeholderTextColor="#888"
             value={roomCode}
             onChangeText={(text) => setRoomCode(text.toUpperCase())}
-            maxLength={6}
+            maxLength={5}
             autoCapitalize="characters"
           />
 

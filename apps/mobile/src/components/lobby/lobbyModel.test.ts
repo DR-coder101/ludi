@@ -38,9 +38,9 @@ describe('lobbySeats', () => {
       'dean',
     );
     expect(seats.map((s) => [s.color, s.name, s.status, s.ready, s.you])).toEqual([
-      ['yellow', null, 'Invite a friend', false, false],
+      ['yellow', null, 'Tap to sit', false, false],
       ['green', 'Shanice', 'Ready', true, false],
-      ['blue', null, 'Invite a friend', false, false],
+      ['blue', null, 'Tap to sit', false, false],
       ['red', 'Dean (You)', 'Host · Ready', true, true],
     ]);
   });

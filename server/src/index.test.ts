@@ -66,7 +66,7 @@ describe('Room Lifecycle', () => {
 
       expect(response.success).toBe(true);
       expect(response.roomCode).toBeDefined();
-      expect(response.roomCode).toHaveLength(6);
+      expect(response.roomCode).toHaveLength(5);
 
       const roomState = await roomStatePromise;
 
@@ -161,7 +161,7 @@ describe('Room Lifecycle', () => {
 
       const response = await new Promise<any>((resolve) => {
         client.emit('room:join', {
-          roomCode: 'FAKE99',
+          roomCode: 'FAKE9',
           displayName: 'Test',
         }, resolve);
       });
@@ -237,6 +237,141 @@ describe('Room Lifecycle', () => {
       expect(response.error).toBe('Invalid payload');
 
       client.disconnect();
+    });
+  });
+
+  describe('room:selectSeat', () => {
+    it('should allow selecting an empty seat', async () => {
+      const host = createTestClient();
+      await waitForConnection(host);
+
+      const createResponse = await new Promise<any>((resolve) => {
+        host.emit('room:create', {
+          displayName: 'Host',
+          houseRules: {
+            maxConsecutiveSixes: 2,
+            extraRollOnCapture: false,
+            blockadeCanMoveTogether: false,
+            exactFinishBonus: false,
+            playForPlacements: false,
+          },
+        }, resolve);
+      });
+
+      expect(createResponse.success).toBe(true);
+
+      const selectResponse = await new Promise<any>((resolve) => {
+        host.emit('room:selectSeat', { color: 'green' }, resolve);
+      });
+
+      expect(selectResponse.success).toBe(true);
+
+      host.disconnect();
+    });
+
+    it('should reject selecting an occupied seat', async () => {
+      const host = createTestClient();
+      const guest = createTestClient();
+      await waitForConnection(host);
+      await waitForConnection(guest);
+
+      const createResponse = await new Promise<any>((resolve) => {
+        host.emit('room:create', {
+          displayName: 'Host',
+          houseRules: {
+            maxConsecutiveSixes: 2,
+            extraRollOnCapture: false,
+            blockadeCanMoveTogether: false,
+            exactFinishBonus: false,
+            playForPlacements: false,
+          },
+        }, resolve);
+      });
+
+      await new Promise<any>((resolve) => {
+        guest.emit('room:join', {
+          roomCode: createResponse.roomCode,
+          displayName: 'Guest',
+        }, resolve);
+      });
+
+      const selectResponse = await new Promise<any>((resolve) => {
+        guest.emit('room:selectSeat', { color: 'red' }, resolve);
+      });
+
+      expect(selectResponse.success).toBe(false);
+      expect(selectResponse.error).toBe('Seat already taken');
+
+      host.disconnect();
+      guest.disconnect();
+    });
+
+    it('should reject seat selection after game starts', async () => {
+      const host = createTestClient();
+      const guest = createTestClient();
+      await waitForConnection(host);
+      await waitForConnection(guest);
+
+      const createResponse = await new Promise<any>((resolve) => {
+        host.emit('room:create', {
+          displayName: 'Host',
+          houseRules: {
+            maxConsecutiveSixes: 2,
+            extraRollOnCapture: false,
+            blockadeCanMoveTogether: false,
+            exactFinishBonus: false,
+            playForPlacements: false,
+          },
+        }, resolve);
+      });
+
+      await new Promise<any>((resolve) => {
+        guest.emit('room:join', {
+          roomCode: createResponse.roomCode,
+          displayName: 'Guest',
+        }, resolve);
+      });
+
+      host.emit('room:ready');
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const selectResponse = await new Promise<any>((resolve) => {
+        host.emit('room:selectSeat', { color: 'blue' }, resolve);
+      });
+
+      expect(selectResponse.success).toBe(false);
+      expect(selectResponse.error).toBe('Cannot change seats after game starts');
+
+      host.disconnect();
+      guest.disconnect();
+    });
+
+    it('should return success when selecting own current seat', async () => {
+      const host = createTestClient();
+      await waitForConnection(host);
+
+      const createResponse = await new Promise<any>((resolve) => {
+        host.emit('room:create', {
+          displayName: 'Host',
+          houseRules: {
+            maxConsecutiveSixes: 2,
+            extraRollOnCapture: false,
+            blockadeCanMoveTogether: false,
+            exactFinishBonus: false,
+            playForPlacements: false,
+          },
+        }, resolve);
+      });
+
+      expect(createResponse.success).toBe(true);
+
+      const selectResponse = await new Promise<any>((resolve) => {
+        host.emit('room:selectSeat', { color: 'red' }, resolve);
+      });
+
+      expect(selectResponse.success).toBe(true);
+
+      host.disconnect();
     });
   });
 

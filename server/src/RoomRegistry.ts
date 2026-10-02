@@ -55,6 +55,41 @@ export class RoomRegistry {
     return { roomCode, playerId };
   }
 
+  selectSeat(roomCode: string, playerId: string, requestedColor: Color): { success: boolean; error?: string } {
+    const room = this.rooms.get(roomCode);
+    
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    if (room.status !== 'lobby') {
+      return { success: false, error: 'Cannot change seats after game starts' };
+    }
+
+    const player = room.players.find(p => p.id === playerId);
+    if (!player) {
+      return { success: false, error: 'Player not in room' };
+    }
+
+    if (player.color === requestedColor) {
+      return { success: true };
+    }
+
+    const targetSeat = room.players.find(p => p.color === requestedColor);
+    if (targetSeat) {
+      return { success: false, error: 'Seat already taken' };
+    }
+
+    player.color = requestedColor;
+
+    const session = Array.from(this.sessionToPlayer.entries()).find(([_, data]) => data.playerId === playerId && data.roomCode === roomCode);
+    if (session) {
+      this.sessionToPlayer.set(session[0], { roomCode, playerId, color: requestedColor });
+    }
+
+    return { success: true };
+  }
+
   getRoom(roomCode: string): RoomState | undefined {
     return this.rooms.get(roomCode);
   }

@@ -30,6 +30,7 @@ export interface LobbyRoomProps {
   onCopy: () => void;
   onShare: () => void;
   onStart?: () => void;
+  onSelectSeat?: (color: string) => void;
   /** Overrides device safe-area insets (the dev preview simulates an iPhone frame on web). */
   insets?: { top: number; bottom: number };
   children?: ReactNode;
@@ -43,7 +44,7 @@ const TOP_GAP = 7;
 const BOTTOM_GAP = 12;
 
 export function LobbyRoom(props: LobbyRoomProps) {
-  const { code, host, seats, note, start, starting, voice, video, onBack, onCopy, onShare, onStart, children } = props;
+  const { code, host, seats, note, start, starting, voice, video, onBack, onCopy, onShare, onStart, onSelectSeat, children } = props;
   const fontsReady = useLudiFonts();
   const device = useSafeAreaInsets();
   const insets = props.insets ?? device;
@@ -81,7 +82,12 @@ export function LobbyRoom(props: LobbyRoomProps) {
             </View>
             <View style={styles.grid}>
               {seats.map((seat) => (
-                <SeatCard key={seat.color} seat={seat} width={seatWidth} onInvite={onShare} />
+                <SeatCard 
+                  key={seat.color} 
+                  seat={seat} 
+                  width={seatWidth} 
+                  onSelect={seat.name == null && !seat.you && onSelectSeat ? () => onSelectSeat(seat.color) : undefined}
+                />
               ))}
             </View>
             <View style={styles.spring} />

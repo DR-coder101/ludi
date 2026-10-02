@@ -20,6 +20,7 @@ import type {
 import { 
   RoomCreatePayloadSchema, 
   RoomJoinPayloadSchema,
+  SeatSelectPayloadSchema,
   GameRollPayloadSchema,
   GameMovePayloadSchema,
   VideoTokenPayloadSchema,
@@ -654,6 +655,49 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       console.log(`Player ${playerId} joined room ${roomCode} (socket ${socket.id})`);
     });
 
+    socket.on('room:selectSeat', (payload, callback) => {
+      if (!checkRateLimit(socket)) {
+        callback({ success: false, error: 'Rate limit exceeded' });
+        return;
+      }
+
+      const validationResult = SeatSelectPayloadSchema.safeParse(payload);
+      if (!validationResult.success) {
+        callback({ success: false, error: 'Invalid payload' });
+        return;
+      }
+
+      const roomCode = socketToRoom.get(socket.id);
+      if (!roomCode) {
+        callback({ success: false, error: 'Not in a room' });
+        return;
+      }
+
+      const playerId = socketToPlayer.get(socket.id);
+      if (!playerId) {
+        callback({ success: false, error: 'Player ID not found' });
+        return;
+      }
+
+      const { color } = validationResult.data;
+      const result = roomRegistry.selectSeat(roomCode, playerId, color);
+
+      if (!result.success) {
+        callback({ success: false, error: result.error });
+        return;
+      }
+
+      socketToColor.set(socket.id, color);
+
+      const room = roomRegistry.getRoom(roomCode);
+      if (room) {
+        io.to(roomCode).emit('room:state', room);
+      }
+
+      callback({ success: true });
+      console.log(`Player ${playerId} selected seat ${color} in room ${roomCode}`);
+    });
+
     socket.on('room:leave', () => {
       const roomCode = socketToRoom.get(socket.id);
       if (!roomCode) return;
@@ -689,6 +733,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       if (!room || room.players.length < 2) {
         return;
       }
+
+      room.status = 'in_progress';
 
       const playerColors = room.players.map(p => p.color);
       const gameState = gameRegistry.createGame(roomCode, {
