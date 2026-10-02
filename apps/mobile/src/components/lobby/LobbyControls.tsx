@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';
 import { color, font, motion } from '../../theme/tokens';
@@ -160,9 +160,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: font.display,
-    // The mockup's <h1> asks single-weight Anton for bold, so the browser emboldens it (web and Android
-    // synthesise the same; iOS draws plain Anton).
-    fontWeight: '700',
+    // The mockup's <h1> asks single-weight Anton for bold, so the browser emboldens it. Web only:
+    // iOS has no bold Anton and swaps in the system font instead.
+    ...Platform.select({ web: { fontWeight: '700' as const } }),
     fontSize: 26,
     // The mockup's line-height is 1 (26px). Native platforms cut off glyphs above a line box shorter
     // than Anton's ascent + descent, so the box is a full 40px and the margins give back the extra 14.

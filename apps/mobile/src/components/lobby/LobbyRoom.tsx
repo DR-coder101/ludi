@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { color, font } from '../../theme/tokens';
@@ -151,8 +151,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: font.display,
-    // Faux bold, as the mockup's <h2> gets in the browser.
-    fontWeight: '700',
+    // Faux bold, as the mockup's <h2> gets in the browser. Web only, like the header title.
+    ...Platform.select({ web: { fontWeight: '700' as const } }),
     fontSize: 20,
     lineHeight: 31,
     letterSpacing: 0.8,
