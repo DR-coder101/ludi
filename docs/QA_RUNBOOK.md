@@ -94,10 +94,10 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 **Turn 1 (Red player):**
 1. Red player taps dice
-2. ✅ Dice animates and shows random value (1-6)
-3. ✅ If 6: token in yard highlights as legal move
-4. ✅ If not 6: turn passes automatically after 3s
-5. Tap highlighted token to move
+2. ✅ Both dice tumble and settle on two values (1-6 each)
+3. ✅ If either die is a 6: tokens in yard highlight as legal moves for that die
+4. ✅ If no die can be played: the turn card shows the throw and the turn passes
+5. Tap a die to pick it (only when the two values differ), then tap a highlighted token; play the second die the same way
 6. ✅ Token animates along path
 7. ✅ Haptic feedback on roll and move (device-specific)
 8. ✅ Sound effects play (dice, hop)

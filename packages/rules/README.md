@@ -12,24 +12,17 @@ Pure TypeScript game rules engine for Caribbean/Jamaican Ludo.
 ## Usage
 
 ```typescript
-import { hello } from '@ludi/rules';
+import { createGame, rollDice, legalMoves, applyMove } from '@ludi/rules';
 
-console.log(hello()); // "Hello from @ludi/rules"
+let state = createGame({ playerColors: ['red', 'green'], houseRules: { ... } });
+state = rollDice(state, rng).state;            // throws both dice; rng() is called once per die
+const [move] = legalMoves(state);              // { tokenIndex, dieIndex, steps, resulting, captures? }
+state = applyMove(state, move.tokenIndex, move.dieIndex).state;
+// still "awaiting_move" while the other die is playable — see docs/GAME_RULES.md §2, §11
 ```
 
 ## Testing
 
 ```bash
 pnpm test
-```
-
-## Future API (Phase 1)
-
-```typescript
-import { createGame, rollDice, legalMoves, applyMove } from '@ludi/rules';
-
-const game = createGame({ players: 4, houseRules: { ... } });
-const rolled = rollDice(game, cryptoRNG);
-const moves = legalMoves(rolled);
-const nextState = applyMove(rolled, moves[0]);
 ```

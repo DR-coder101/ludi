@@ -60,8 +60,8 @@ ludi/
 
 ### 3.1 Trust model
 - The **server is the single source of truth** for: dice rolls, legal moves, captures, turn order, win state.
-- Dice are rolled **server-side** with crypto-grade RNG (`crypto.randomInt`). Clients never send a dice value.
-- Client sends only *intent*: `{ type: "MOVE_TOKEN", tokenId }`. Server validates against legal moves computed from its own state + its own dice roll.
+- Both dice are rolled **server-side** with crypto-grade RNG (`crypto.randomInt`, one draw per die). Clients never send a dice value.
+- Client sends only *intent*: `game:move { tokenIndex, dieIndex }` — which token, moved by which die of the server's throw. Server validates against legal moves computed from its own state + its own dice.
 - Rejections return `MOVE_REJECTED` with reason; client rolls back optimistic update and re-syncs from server state.
 
 ### 3.2 Match lifecycle
@@ -78,13 +78,18 @@ LOBBY (room created, players join, host sets house rules)
 ### 3.3 Turn loop (server-side state machine)
 
 ```
-awaiting_roll → rolled (dice value, legal moves computed)
-  → if no legal moves: auto-pass after 3s → next player
-  → awaiting_move (30s timer; on timeout server picks random legal move)
-  → move applied (capture check, win check)
-  → rolled a 6 → same player rolls again (max 2 consecutive sixes per Jamaican rules — see GAME_RULES)
-  → else next player
+awaiting_roll → rolled (two dice, legal moves computed per die)
+  → third consecutive throw showing a 6 → forfeit → next player
+  → neither die playable → throw ends at once (bonus throw if it showed a 6, else next player)
+  → awaiting_move (30s timer per die; on timeout server plays a random legal move for every remaining die)
+  → one die applied (capture check, win check)
+      → other die still playable → stay in awaiting_move, same player
+      → else throw over:
+          → throw showed a 6 (or capture/finish bonus house rule) → same player rolls again
+          → else next player
 ```
+
+The engine (`rollDice` / `applyMove`) makes every one of these transitions; the server's `advanceTurn` only reacts to the resulting phase (game over, start a move timer or AI move, or announce `game:turnChanged`). See GAME_RULES §2, §4, §8.
 
 ### 3.4 Networking events (Socket.IO)
 
@@ -96,8 +101,8 @@ All payloads typed in `packages/protocol/src/events.ts`.
 | `room:create` | `{ displayName, houseRules }` | Returns room code |
 | `room:join` | `{ roomCode, displayName }` | |
 | `room:ready` | `{}` | |
-| `game:roll` | `{}` | Server generates the value |
-| `game:move` | `{ tokenId }` | Intent only |
+| `game:roll` | `{}` | Server throws both dice |
+| `game:move` | `{ tokenIndex, dieIndex }` | Intent only: one die per move |
 | `chat:send` | `{ text }` | Rate-limited, 200 char max |
 | `room:leave` | `{}` | Triggers forfeit logic |
 
@@ -106,14 +111,14 @@ All payloads typed in `packages/protocol/src/events.ts`.
 |---|---|---|
 | `room:state` | `RoomState` | Full sync on join/reconnect |
 | `game:state` | `GameState` | Authoritative full state (small — 16 tokens) |
-| `game:diceRolled` | `{ playerId, value, legalMoves }` | |
-| `game:tokenMoved` | `{ playerId, tokenId, from, to, captured? }` | For animation |
+| `game:diceRolled` | `{ playerId, values: [a, b], legalMoves }` | Moves for the fresh throw; later moves are derived from `game:state` |
+| `game:tokenMoved` | `{ playerId, tokenIndex, dieIndex, steps, from, to, captured? }` | For animation |
 | `game:turnChanged` | `{ playerId, deadlineTs }` | |
 | `game:over` | `{ winnerId, placements }` | |
 | `chat:message` | `{ playerId, text, ts }` | |
 | `player:connectionChanged` | `{ playerId, status }` | |
 
-**Full-state-over-delta strategy:** entire `GameState` is < 2 KB serialized. Send full state after every move instead of deltas — eliminates desync classes of bugs entirely. Use `game:tokenMoved` purely for triggering client animations.
+**Full-state-over-delta strategy:** entire `GameState` is < 2 KB serialized. It carries the throw as `dice: [{ value, used }, { value, used }] | null`, so after the first die is played clients recompute the remaining legal moves with `legalMoves(state)` from `packages/rules`. Send full state after every move instead of deltas — eliminates desync classes of bugs entirely. Use `game:tokenMoved` purely for triggering client animations.
 
 ### 3.5 Reconnect & dropout handling
 - Socket auth via short-lived session token → rejoining with the same token reattaches to your seat.
