@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, ActivityIndicator } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import type { Color } from '@ludi/rules';
 import { socketManager } from '../src/net/socket';
 import { useAuthStore } from '../src/stores/authStore';
 import { useToastStore } from '../src/stores/toastStore';
 import { Toast } from '../src/components/Toast';
+import { HomeLanding } from '../src/components/home/HomeLanding';
 
 const COLORS_ARRAY: Color[] = ['red', 'green', 'yellow', 'blue'];
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
@@ -17,7 +18,7 @@ const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { isAuthenticated, createGuest, isLoading: isAuthLoading, initializeAuth } = useAuthStore();
+  const { isAuthenticated, isGuest, createGuest, isLoading: isAuthLoading, initializeAuth } = useAuthStore();
   const { visible, message, type, duration, showToast, hideToast } = useToastStore();
   const [mode, setMode] = useState<'online' | 'local' | null>(null);
   
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const [roomCode, setRoomCode] = useState('');
   const [isCreatingRoom, setIsCreatingRoom] = useState(false);
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
+  const [isStartingOnline, setIsStartingOnline] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -138,95 +140,42 @@ export default function HomeScreen() {
 
   const handleQuickPlay = async () => {
     if (!isAuthenticated && !isAuthLoading) {
+      setIsStartingOnline(true);
       try {
         await createGuest();
       } catch (err) {
         console.error('Failed to create guest account:', err);
+      } finally {
+        setIsStartingOnline(false);
       }
     }
     setMode('online');
   };
 
+  const header = <Stack.Screen options={{ headerShown: mode !== null }} />;
+
   if (mode === null) {
     return (
-      <ScrollView contentContainerStyle={styles.container}>
-        <Toast
-          visible={visible}
-          message={message}
-          type={type}
-          duration={duration}
-          onDismiss={hideToast}
-        />
-        <View style={styles.headerNav}>
-          {isAuthenticated && (
-            <>
-              <TouchableOpacity
-                style={styles.navButton}
-                onPress={() => router.push('/profile')}
-              >
-                <Text style={styles.navButtonText}>👤 Profile</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.navButton}
-                onPress={() => router.push('/history')}
-              >
-                <Text style={styles.navButtonText}>📜 History</Text>
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
-
-        <Text style={styles.title}>🎲 Ludi</Text>
-        <Text style={styles.subtitle}>Caribbean Ludo</Text>
-
-        <View style={styles.modeContainer}>
-          <TouchableOpacity
-            style={styles.modeButton}
-            onPress={handleQuickPlay}
-          >
-            <Text style={styles.modeButtonIcon}>🌐</Text>
-            <Text style={styles.modeButtonText}>Online Multiplayer</Text>
-            <Text style={styles.modeButtonSubtext}>Play with friends online</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.modeButton}
-            onPress={() => setMode('local')}
-          >
-            <Text style={styles.modeButtonIcon}>👥</Text>
-            <Text style={styles.modeButtonText}>Local Pass & Play</Text>
-            <Text style={styles.modeButtonSubtext}>Play on one device</Text>
-          </TouchableOpacity>
-        </View>
-
-        {!isAuthenticated && (
-          <View style={styles.authPrompt}>
-            <Text style={styles.authPromptText}>
-              Create an account to save your progress
-            </Text>
-            <View style={styles.authButtonRow}>
-              <TouchableOpacity
-                style={styles.authButton}
-                onPress={() => router.push('/auth/signin')}
-              >
-                <Text style={styles.authButtonText}>Sign In</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.authButton}
-                onPress={() => router.push('/auth/signup')}
-              >
-                <Text style={styles.authButtonText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </ScrollView>
+      <HomeLanding
+        signedIn={isAuthenticated && !isGuest}
+        onlineBusy={isStartingOnline}
+        onOnline={handleQuickPlay}
+        onLocal={() => setMode('local')}
+        onSignIn={() => router.push('/auth/signin')}
+        onSignUp={() => router.push('/auth/signup')}
+        onProfile={() => router.push('/profile')}
+        onHistory={() => router.push('/history')}
+      >
+        {header}
+        <Toast visible={visible} message={message} type={type} duration={duration} onDismiss={hideToast} />
+      </HomeLanding>
     );
   }
 
   if (mode === 'online') {
     return (
       <ScrollView contentContainerStyle={styles.container}>
+        {header}
         <Toast
           visible={visible}
           message={message}
@@ -306,6 +255,7 @@ export default function HomeScreen() {
   // Local mode
   return (
     <ScrollView contentContainerStyle={styles.container}>
+        {header}
       <Toast
         visible={visible}
         message={message}
@@ -380,26 +330,6 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
   },
-  headerNav: {
-    flexDirection: 'row',
-    alignSelf: 'flex-end',
-    gap: 12,
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  navButton: {
-    backgroundColor: '#2a2a2a',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#D4AF37',
-  },
-  navButtonText: {
-    color: '#D4AF37',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   backButton: {
     alignSelf: 'flex-start',
     marginTop: 20,
@@ -417,45 +347,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 8,
     color: '#D4AF37',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#D4AF37',
-    textAlign: 'center',
-    marginBottom: 40,
-    fontWeight: '500',
-  },
-  modeContainer: {
-    width: '100%',
-    maxWidth: 400,
-    gap: 16,
-  },
-  modeButton: {
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 6,
-  },
-  modeButtonIcon: {
-    fontSize: 48,
-    marginBottom: 12,
-  },
-  modeButtonText: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#D4AF37',
-    marginBottom: 4,
-  },
-  modeButtonSubtext: {
-    fontSize: 14,
-    color: '#ccc',
   },
   setupCard: {
     width: '100%',
@@ -623,39 +514,5 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ccc',
     marginBottom: 4,
-  },
-  authPrompt: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 16,
-    padding: 20,
-    marginTop: 20,
-    borderWidth: 2,
-    borderColor: '#3a3a3a',
-    alignItems: 'center',
-  },
-  authPromptText: {
-    fontSize: 14,
-    color: '#ccc',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  authButtonRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  authButton: {
-    backgroundColor: 'transparent',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#D4AF37',
-  },
-  authButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#D4AF37',
   },
 });
