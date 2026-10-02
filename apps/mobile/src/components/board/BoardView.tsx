@@ -117,6 +117,7 @@ function HopPiece({ hop, s, onDone }: { hop: HopAnimation; s: number; onDone?: (
     const finish = () => onDone?.();
     if (reduce) {
       fade.value = withTiming(1, { duration: 200 }, (ok) => {
+        'worklet';
         if (ok) runOnJS(finish)();
       });
       return;
@@ -127,7 +128,10 @@ function HopPiece({ hop, s, onDone }: { hop: HopAnimation; s: number; onDone?: (
     x.value = withSequence(...target.map((p) => withTiming(p.x * s, ease)));
     y.value = withSequence(
       ...target.map((p, i) =>
-        withTiming(p.y * s, ease, i === target.length - 1 ? (ok) => { if (ok) runOnJS(finish)(); } : undefined),
+        withTiming(p.y * s, ease, i === target.length - 1 ? (ok) => {
+          'worklet';
+          if (ok) runOnJS(finish)();
+        } : undefined),
       ),
     );
     lift.value = withSequence(...target.flatMap(() => [withTiming(motion.hopScale, half), withTiming(1, half)]));
