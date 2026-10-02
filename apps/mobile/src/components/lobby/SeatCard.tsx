@@ -14,6 +14,14 @@ export const SEAT_HEIGHT = 150;
 const RADIUS = 18;
 const BORDER = 1.5;
 const CORNERS: Corner[] = ['TL', 'TR', 'BL', 'BR'];
+/**
+ * Town names: Anton 22 at the mockup's 0.98 line-height, which Chrome draws on a 22px line pitch.
+ * Native platforms cut off glyphs above a line box shorter than Anton's ascent + descent
+ * (1.505em), so each line gets a full 34px box and the boxes overlap to keep that pitch.
+ */
+const NAME_TOP = 10;
+const NAME_STEP = 22;
+const NAME_BOX = 34;
 /** `.pc.sel` glow. The mockup's is Kingston red; other seats glow in their own piece colour. */
 const GLOW: Record<PieceColor, string> = { gold: PIECE.gold.mid, green: PIECE.green.mid, red: PIECE.red.mid, black: color.silver };
 
@@ -78,7 +86,13 @@ export function SeatCard({ seat, width, onInvite }: SeatCardProps) {
   const card = (
     <View style={[styles.card, { width, borderColor: border }]}>
       <CardFace w={inner.w} h={inner.h} />
-      <Text style={[styles.name, { color: a }]}>{place.lines.join('\n')}</Text>
+      <View style={styles.name} pointerEvents="none">
+        {place.lines.map((line, i) => (
+          <Text key={line} style={[styles.nameLine, i > 0 ? styles.nameNext : null, { color: a }]}>
+            {line}
+          </Text>
+        ))}
+      </View>
       <CornerMark corner={place.corner} tint={a} />
       {seat.you ? (
         <View style={[styles.tick, { backgroundColor: PIECE[place.piece].mid }]}>
@@ -165,11 +179,17 @@ const styles = StyleSheet.create({
   name: {
     position: 'absolute',
     left: 12,
-    top: 10,
+    top: NAME_TOP - (NAME_BOX - NAME_STEP) / 2,
+  },
+  nameLine: {
     fontFamily: font.display,
     fontSize: 22,
-    lineHeight: 21.56,
+    lineHeight: NAME_BOX,
     letterSpacing: 0.4,
+    includeFontPadding: false,
+  },
+  nameNext: {
+    marginTop: NAME_STEP - NAME_BOX,
   },
   cornerMark: {
     position: 'absolute',
