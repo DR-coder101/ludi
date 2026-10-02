@@ -26,7 +26,7 @@ describe('turnCopy', () => {
     ).toEqual({
       kicker: 'KINGSTON · DEAN',
       title: 'YOU ROLLED 6 + 3!',
-      sub: 'Bring one out or move — two moves',
+      sub: 'Play both — bring one out?',
       cta: 'PICK A PIECE',
     });
   });
@@ -43,7 +43,7 @@ describe('turnCopy', () => {
       { value: 3, used: false },
     ];
     const copy = turnCopy({ ...base, phase: 'awaiting_move', dice, turn: 'red', isMine: true });
-    expect(copy).toMatchObject({ title: 'PLAY YOUR 3', sub: 'One die left — move a piece 3', cta: 'PICK A PIECE' });
+    expect(copy).toMatchObject({ title: 'PLAY YOUR 3', sub: 'Last die — move a piece 3', cta: 'PICK A PIECE' });
   });
 
   it('calls out the bonus roll after a throw with a 6', () => {

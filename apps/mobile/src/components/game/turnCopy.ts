@@ -62,13 +62,13 @@ export function turnCopy(input: TurnCopyInput): TurnCopy {
     return {
       kicker,
       title: `PLAY YOUR ${n}`,
-      sub: canBringOut ? 'Bring one out or move a piece' : `One die left — move a piece ${n}`,
+      sub: canBringOut ? 'Bring one out or move' : `Last die — move a piece ${n}`,
       cta: 'PICK A PIECE',
     };
   }
 
   let sub = 'Two moves — pick a piece';
-  if (canBringOut) sub = 'Bring one out or move — two moves';
+  if (canBringOut) sub = 'Play both — bring one out?';
   else if (canPickDie) sub = 'Tap a die, then a piece';
   return { kicker, title: `YOU ROLLED ${throwText}${bang}`, sub, cta: 'PICK A PIECE' };
 }
