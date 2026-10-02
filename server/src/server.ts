@@ -820,6 +820,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         return;
       }
 
+      room.status = 'in_progress';
+
       const playerColors = room.players.map(p => p.color);
       const gameState = gameRegistry.createGame(roomCode, {
         playerColors,
