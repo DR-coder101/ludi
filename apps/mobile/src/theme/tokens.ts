@@ -17,6 +17,8 @@ export const color = {
   greenBright: '#19C45A',
   gold: '#FED100',
   goldDeep: '#C9A200',
+  /** Gold CTA gradient end. */
+  goldCta: '#E0B800',
   goldLight: '#FFF3A0',
   goldHot: '#FFE45C',
   red: '#E4202E',
@@ -90,6 +92,13 @@ export const motion = {
   pressMs: 90,
   /** Dice tumble before the face settles. */
   diceRollMs: 650,
+  /** Home speaker cone: kick out, decay, rest (one cycle ≈ 1.25 s, half-time at ~96 BPM). */
+  kickMs: 90,
+  kickDecayMs: 420,
+  kickRestMs: 740,
+  kickScale: 0.014,
+  /** Home vinyl ring, one full turn. */
+  vinylTurnMs: 40000,
 } as const;
 
 export const layout = {
