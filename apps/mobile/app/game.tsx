@@ -3,6 +3,7 @@ import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import type { Color, GameState } from '@ludi/rules';
 import { createGame, rollDice, legalMoves, applyMove } from '@ludi/rules';
 import { BoardScreen } from '../src/components/game/BoardScreen';
+import type { MoveLike } from '../src/components/board/boardModel';
 import { makeHop, type HopAnimation } from '../src/components/board/BoardView';
 import { WinScreen } from '../src/components/win/WinScreen';
 import { winView } from '../src/components/win/winModel';
@@ -47,7 +48,7 @@ export default function GameScreen() {
       },
     });
   const [gameState, setGameState] = useState<GameState>(newGame);
-  const [lastRoll, setLastRoll] = useState<number | null>(null);
+  const [lastRoll, setLastRoll] = useState<[number, number] | null>(null);
   const [rollKey, setRollKey] = useState(0);
   const [pending, setPending] = useState<PendingMove | null>(null);
   const [previousTurn, setPreviousTurn] = useState<Color | null>(null);
@@ -84,21 +85,21 @@ export default function GameScreen() {
   const handleRoll = () => {
     if (gameState.phase !== 'awaiting_roll' || pending) return;
     const result = rollDice(gameState, Math.random);
-    match.roll(gameState.turn, result.value);
+    match.roll(gameState.turn, result.values);
     gameAudio.play('roll');
     triggerHaptic.medium();
-    setLastRoll(result.value);
+    setLastRoll(result.values);
     setRollKey((k) => k + 1);
     setGameState(result.state);
   };
 
-  const handleTokenPress = (tokenIndex: number) => {
+  const handleMove = ({ tokenIndex, dieIndex }: MoveLike) => {
     if (gameState.phase !== 'awaiting_move' || pending) return;
-    const move = moves.find((m) => m.tokenIndex === tokenIndex);
+    const move = moves.find((m) => m.tokenIndex === tokenIndex && m.dieIndex === dieIndex);
     if (!move) return;
     if (move.captures) match.capture(gameState.turn);
 
-    const next = applyMove(gameState, tokenIndex).state;
+    const next = applyMove(gameState, tokenIndex, dieIndex).state;
     const anim = makeHop(gameState, tokenIndex, move.resulting);
     if (!anim) {
       setGameState(next);
@@ -140,7 +141,7 @@ export default function GameScreen() {
         hop={pending?.anim ?? null}
         onHopDone={handleHopDone}
         onRoll={handleRoll}
-        onTokenPress={handleTokenPress}
+        onMove={handleMove}
         onMenu={() => router.back()}
         onProfile={() => router.push('/profile')}
       >

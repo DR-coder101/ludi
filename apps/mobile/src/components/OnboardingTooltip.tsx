@@ -30,14 +30,14 @@ export function OnboardingTooltip({ onDismiss }: OnboardingTooltipProps) {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🎲 Rolling</Text>
             <Text style={styles.text}>
-              Tap the dice to roll. You need a 6 to bring a token out of the yard.
+              Tap the dice to roll both. A die showing 6 brings a token out of the yard, and any 6 earns another roll.
             </Text>
           </View>
 
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🪙 Moving</Text>
             <Text style={styles.text}>
-              After rolling, tap a highlighted token to move it. Land on opponents to send them back!
+              Each die is its own move: tap a die to choose it, then a highlighted token. Land on opponents to send them back!
             </Text>
           </View>
 

@@ -10,6 +10,7 @@ import type {
   GameOverPayload,
   Color,
 } from '@ludi/protocol';
+import { legalMoves, type GameState as RulesGameState } from '@ludi/rules';
 import { createLudiServer } from './server.js';
 
 const SERVER_URL = 'http://localhost:3002';
@@ -111,11 +112,17 @@ describe('Game Turn State Machine', () => {
       });
 
       const diceRolled = await rollPromise;
-      expect(diceRolled.value).toBeGreaterThanOrEqual(1);
-      expect(diceRolled.value).toBeLessThanOrEqual(6);
+      expect(diceRolled.values).toHaveLength(2);
+      for (const value of diceRolled.values) {
+        expect(value).toBeGreaterThanOrEqual(1);
+        expect(value).toBeLessThanOrEqual(6);
+      }
       expect(Array.isArray(diceRolled.legalMoves)).toBe(true);
+      for (const move of diceRolled.legalMoves) {
+        expect(move.steps).toBe(diceRolled.values[move.dieIndex]);
+      }
 
-      console.log(`Test completed successfully - dice: ${diceRolled.value}, legal moves: ${diceRolled.legalMoves.length}`);
+      console.log(`Test completed successfully - dice: ${diceRolled.values.join('+')}, legal moves: ${diceRolled.legalMoves.length}`);
 
     } finally {
       for (const client of clients) {
@@ -137,9 +144,11 @@ describe('Game Turn State Machine', () => {
     let currentGameState: GameState | null = null;
     let gameOverPayload: GameOverPayload | null = null;
     let lastDiceRolled: DiceRolledPayload | null = null;
-    
+    let stateVersion = 0;
+
     const gameStateHandler = (state: GameState) => {
       currentGameState = state;
+      stateVersion++;
     };
     
     const gameOverHandler = (payload: GameOverPayload) => {
@@ -287,33 +296,30 @@ describe('Game Turn State Machine', () => {
           if (lastDiceRolled && lastDiceRolled.legalMoves.length === 0) {
             await new Promise(resolve => setTimeout(resolve, 100));
           }
-        } else if (currentGameState.phase === 'awaiting_move' && lastDiceRolled) {
-          if (lastDiceRolled.legalMoves.length === 0) {
+        } else if (currentGameState.phase === 'awaiting_move') {
+          // Moves left after the first die come from the synced state, not the roll payload
+          const moves = legalMoves(currentGameState as unknown as RulesGameState);
+          if (moves.length === 0) {
             await new Promise(resolve => setTimeout(resolve, 100));
             continue;
           }
 
-          const randomMoveIndex = Math.floor(Math.random() * lastDiceRolled.legalMoves.length);
-          const moveToMake = lastDiceRolled.legalMoves[randomMoveIndex];
+          const moveToMake = moves[Math.floor(Math.random() * moves.length)];
 
           await new Promise<void>((resolve) => {
             const timeout = setTimeout(() => resolve(), 5000);
-            
-            const originalPhase = currentGameState?.phase;
-            const originalTurn = currentGameState?.turn;
-            
+            const versionBefore = stateVersion;
+
             const checkStateChange = () => {
-              if (currentGameState &&
-                  (currentGameState.phase !== originalPhase || 
-                   currentGameState.turn !== originalTurn)) {
+              if (stateVersion !== versionBefore) {
                 clearTimeout(timeout);
                 resolve();
               } else {
                 setTimeout(checkStateChange, 50);
               }
             };
-            
-            currentClient.emit('game:move', { tokenIndex: moveToMake.tokenIndex }, (response) => {
+
+            currentClient.emit('game:move', { tokenIndex: moveToMake.tokenIndex, dieIndex: moveToMake.dieIndex }, (response) => {
               if (response.success) {
                 checkStateChange();
               } else {
@@ -402,7 +408,7 @@ describe('Game Turn State Machine', () => {
       await createPromise;
 
       const movePromise = new Promise<boolean>((resolve) => {
-        client.emit('game:move', { tokenIndex: 0 }, (response) => {
+        client.emit('game:move', { tokenIndex: 0, dieIndex: 0 }, (response)=> {
           resolve(response.success);
         });
       });
@@ -468,7 +474,7 @@ describe('Game Turn State Machine', () => {
 
       const invalidTokenIndex = 99;
       const movePromise = new Promise<{ success: boolean; hint?: string }>((resolve) => {
-        clients[0].emit('game:move', { tokenIndex: invalidTokenIndex }, (response) => {
+        clients[0].emit('game:move', { tokenIndex: invalidTokenIndex, dieIndex: 0 }, (response)=> {
           resolve(response);
         });
       });

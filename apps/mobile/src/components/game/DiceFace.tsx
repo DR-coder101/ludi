@@ -53,9 +53,13 @@ interface DiceFaceProps {
   rollKey: number;
   /** Waiting for a roll: tilted like the start mockup. */
   idle: boolean;
+  /** Tumble direction, so a pair of dice spin against each other. */
+  spin?: 1 | -1;
+  /** Buzz when this die settles; defaults to settling on a 6. */
+  buzz?: boolean;
 }
 
-export function DiceFace({ value, size, rollKey, idle }: DiceFaceProps) {
+export function DiceFace({ value, size, rollKey, idle, spin: dir = 1, buzz }: DiceFaceProps) {
   const reduce = useReducedMotion();
   const [face, setFace] = useState(value);
   const spin = useSharedValue(0);
@@ -77,18 +81,18 @@ export function DiceFace({ value, size, rollKey, idle }: DiceFaceProps) {
     const settle = setTimeout(() => {
       clearInterval(tick);
       setFace(value);
-      if (value === 6) triggerHaptic.success();
+      if (buzz ?? value === 6) triggerHaptic.success();
     }, motion.diceRollMs);
     return () => {
       clearInterval(tick);
       clearTimeout(settle);
     };
-  }, [rollKey, value, reduce, spin, pop]);
+  }, [rollKey, value, reduce, spin, pop, buzz]);
 
-  const tilt = idle ? -8 : 0;
+  const tilt = idle ? -8 * dir : 0;
   const style = useAnimatedStyle(() => ({
     opacity: idle ? 0.95 : 1,
-    transform: [{ rotate: `${tilt + spin.value * 720}deg` }, { scale: pop.value }],
+    transform: [{ rotate: `${tilt + spin.value * 720 * dir}deg` }, { scale: pop.value }],
   }));
 
   return (

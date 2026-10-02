@@ -1,100 +1,69 @@
 /**
  * Dice rolling logic for Ludi
- * Source: docs/GAME_RULES.md §4, §11
+ * Source: docs/GAME_RULES.md §2, §4, §8, §11
  */
 
 import type { GameState } from "./types";
+import type { GameEvent } from "./applyMove";
 import { legalMoves } from "./legalMoves";
+import { endThrow, passTurn } from "./turn";
 
 export interface RollDiceResult {
   state: GameState;
-  value: number;
+  /** Both faces thrown, in die order; returned even when the throw is forfeited. */
+  values: [number, number];
+  /** turn_passed / extra_turn when the throw ends immediately. */
+  events: GameEvent[];
 }
 
 export type RngFunction = () => number;
 
 /**
- * Roll the dice for the current player.
- * 
- * RNG function should return a value in [0, 1) - will be converted to 1-6.
- * 
+ * Throw both dice for the current player.
+ *
+ * RNG function should return a value in [0, 1); it is called once per die.
+ *
  * Handles:
- * - §4: Third consecutive 6 forfeit rule (when maxConsecutiveSixes is 2)
- * - Auto-pass when no legal moves exist after roll
+ * - §4: A throw showing a 6 earns a bonus roll; one throw past
+ *   maxConsecutiveSixes forfeits the throw and passes the turn
+ * - §8: When neither die can be played, the throw ends at once
+ *   (bonus roll if earned, else the turn passes)
  */
 export function rollDice(state: GameState, rng: RngFunction): RollDiceResult {
   if (state.phase !== "awaiting_roll") {
     throw new Error("Cannot roll dice: not in awaiting_roll phase");
   }
 
-  // Roll the dice (1-6)
-  const value = Math.floor(rng() * 6) + 1;
+  const values: [number, number] = [faceFrom(rng()), faceFrom(rng())];
+  const events: GameEvent[] = [];
+  const rolledSix = values.includes(6);
+  const consecutiveSixes = rolledSix ? state.consecutiveSixes + 1 : 0;
 
-  // Check for consecutive sixes forfeit (§4, §10 case 2)
-  const maxConsecutiveSixes = state.config.houseRules.maxConsecutiveSixes;
-  
-  if (value === 6 && maxConsecutiveSixes !== "unlimited") {
-    const wouldBeConsecutive = state.consecutiveSixes + 1;
-    
-    if (wouldBeConsecutive > maxConsecutiveSixes) {
-      // Forfeit: no move, turn passes
-      const currentIndex = state.config.playerColors.indexOf(state.turn);
-      const nextIndex = (currentIndex + 1) % state.config.playerColors.length;
-      
-      // Skip players who have finished
-      let nextColor = state.config.playerColors[nextIndex];
-      let attempts = 0;
-      while (state.placements.includes(nextColor) && attempts < state.config.playerColors.length) {
-        const nextNextIndex = (state.config.playerColors.indexOf(nextColor) + 1) % state.config.playerColors.length;
-        nextColor = state.config.playerColors[nextNextIndex];
-        attempts++;
-      }
-
-      return {
-        state: {
-          ...state,
-          turn: nextColor,
-          phase: "awaiting_roll",
-          dice: null,
-          consecutiveSixes: 0,
-        },
-        value, // Return the value that caused forfeit
-      };
-    }
+  const max = state.config.houseRules.maxConsecutiveSixes;
+  if (rolledSix && max !== "unlimited" && consecutiveSixes > max) {
+    const passed = passTurn(state);
+    events.push({ type: "turn_passed", color: passed.turn });
+    return { state: passed, values, events };
   }
 
-  // Normal roll: set dice value and move to awaiting_move phase
-  let newState: GameState = {
+  const rolled: GameState = {
     ...state,
-    dice: value,
     phase: "awaiting_move",
+    dice: [
+      { value: values[0], used: false },
+      { value: values[1], used: false },
+    ],
+    extraRollEarned: rolledSix,
+    consecutiveSixes,
   };
 
-  // Check if any legal moves exist
-  const moves = legalMoves(newState);
-  
-  if (moves.length === 0) {
-    // No legal moves: auto-pass (§10 case 10)
-    const currentIndex = newState.config.playerColors.indexOf(newState.turn);
-    const nextIndex = (currentIndex + 1) % newState.config.playerColors.length;
-    
-    // Skip players who have finished
-    let nextColor = newState.config.playerColors[nextIndex];
-    let attempts = 0;
-    while (newState.placements.includes(nextColor) && attempts < newState.config.playerColors.length) {
-      const nextNextIndex = (newState.config.playerColors.indexOf(nextColor) + 1) % newState.config.playerColors.length;
-      nextColor = newState.config.playerColors[nextNextIndex];
-      attempts++;
-    }
-
-    newState = {
-      ...newState,
-      turn: nextColor,
-      phase: "awaiting_roll",
-      dice: null,
-      consecutiveSixes: 0,
-    };
+  if (legalMoves(rolled).length === 0) {
+    return { state: endThrow(rolled, events), values, events };
   }
 
-  return { state: newState, value };
+  return { state: rolled, values, events };
+}
+
+function faceFrom(r: number): number {
+  return Math.min(6, Math.floor(r * 6) + 1);
 }

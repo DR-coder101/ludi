@@ -29,6 +29,7 @@ export const WIN_STATE: GameState = {
   phase: 'finished',
   dice: null,
   consecutiveSixes: 0,
+  extraRollEarned: false,
   winner: 'red',
   placements: ['red'],
 };

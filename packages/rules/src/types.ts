@@ -28,12 +28,24 @@ export interface GameConfig {
   };
 }
 
+/** One of the two dice in the current throw (§2). */
+export interface Die {
+  value: number;
+  used: boolean;
+}
+
+export type Dice = [Die, Die];
+
 export interface GameState {
   config: GameConfig;
   tokens: TokenState[];
   turn: Color;
   phase: "awaiting_roll" | "awaiting_move" | "finished";
-  dice: number | null;
+  /** The current throw; null while awaiting a roll. */
+  dice: Dice | null;
+  /** Whether this throw has earned a bonus roll, taken once both dice are done (§4). */
+  extraRollEarned: boolean;
+  /** Consecutive throws this turn showing at least one 6 (§4). */
   consecutiveSixes: number;
   winner: Color | null;
   placements: Color[];

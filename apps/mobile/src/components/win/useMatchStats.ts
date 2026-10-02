@@ -15,7 +15,11 @@ export function useMatchStats(finished: boolean) {
     if (finished) setEndedAt((t) => t ?? Date.now());
   }, [finished]);
 
-  const roll = useCallback((color: Color, value: number) => setTally((s) => recordRoll(s, color, value)), []);
+  const roll = useCallback(
+    (color: Color, values: readonly number[]) =>
+      setTally((s) => values.reduce((acc, value) => recordRoll(acc, color, value), s)),
+    [],
+  );
   const capture = useCallback((color: Color) => setTally((s) => recordCapture(s, color)), []);
   const reset = useCallback(() => {
     startedAt.current = Date.now();

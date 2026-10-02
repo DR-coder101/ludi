@@ -2,17 +2,25 @@ import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Mask, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { color, font, layout } from '../../theme/tokens';
+import type { Die } from '@ludi/rules';
 import type { TurnCopy } from './turnCopy';
 import { DiceFace } from './DiceFace';
+import type { DieIndex } from './diceModel';
 
 interface TurnCardProps {
   copy: TurnCopy;
-  dice: number;
+  dice: readonly Die[];
   rollKey: number;
-  /** Awaiting a roll: tilted die, roll on press. */
+  /** Awaiting a roll: tilted dice, roll on press. */
   idle: boolean;
+  /** Die a piece tap plays, ringed in gold; null when none is in play. */
+  activeDie: DieIndex | null;
   onRoll?: () => void;
+  /** Set while the player may choose which die to play. */
+  onPickDie?: (dieIndex: DieIndex) => void;
 }
+
+const DIE_SIZE = 40;
 
 /** Card face: dark gradient, flag band, red halftone fading in from the bottom-right corner. */
 function CardFace() {
@@ -43,8 +51,10 @@ function CardFace() {
   );
 }
 
-export function TurnCard({ copy, dice, rollKey, idle, onRoll }: TurnCardProps) {
+export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickDie }: TurnCardProps) {
   const canRoll = idle && !!onRoll;
+  const buzzOn = dice.some((d) => d.value === 6);
+  const faces = dice.map((d) => d.value).join(' and ');
   return (
     <View style={styles.shadow}>
       <View style={styles.card}>
@@ -64,16 +74,43 @@ export function TurnCard({ copy, dice, rollKey, idle, onRoll }: TurnCardProps) {
           </Text>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={canRoll ? 'Roll the dice' : `Dice shows ${dice}`}
+            accessibilityLabel={canRoll ? 'Roll the dice' : `Dice show ${faces}`}
             accessibilityState={{ disabled: !canRoll }}
             disabled={!canRoll}
             onPress={onRoll}
             style={styles.diceRow}
           >
-            <DiceFace value={dice} size={54} rollKey={rollKey} idle={idle} />
+            <View style={styles.pair}>
+              {dice.map((die, i) => {
+                const index = i as DieIndex;
+                const pickable = !idle && !die.used && !!onPickDie;
+                return (
+                  <Pressable
+                    key={i}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Die ${i + 1} shows ${die.value}${die.used ? ', played' : ''}`}
+                    accessibilityState={{ disabled: !pickable, selected: activeDie === index }}
+                    disabled={!pickable}
+                    onPress={() => onPickDie?.(index)}
+                    style={[styles.dieSlot, activeDie === index && styles.dieActive, die.used && styles.dieUsed]}
+                  >
+                    <DiceFace
+                      value={die.value}
+                      size={DIE_SIZE}
+                      rollKey={rollKey}
+                      idle={idle}
+                      spin={i === 0 ? 1 : -1}
+                      buzz={i === 0 && buzzOn}
+                    />
+                  </Pressable>
+                );
+              })}
+            </View>
             {copy.cta ? (
               <View style={styles.pill}>
-                <Text style={styles.pillText}>{copy.cta}</Text>
+                <Text style={styles.pillText} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+                  {copy.cta}
+                </Text>
               </View>
             ) : null}
           </Pressable>
@@ -102,7 +139,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingTop: 20,
-    paddingHorizontal: 14,
+    paddingHorizontal: 10,
     alignItems: 'center',
   },
   kickerRow: {
@@ -147,11 +184,28 @@ const styles = StyleSheet.create({
     marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+  },
+  pair: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  dieSlot: {
+    padding: 2,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  dieActive: {
+    borderColor: color.gold,
+  },
+  dieUsed: {
+    opacity: 0.35,
   },
   pill: {
+    flexShrink: 1,
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderRadius: 20,
     backgroundColor: color.gold,
     shadowColor: color.gold,

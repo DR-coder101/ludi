@@ -392,235 +392,149 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     }
   }
 
+  function emitTokenMoved(
+    roomCode: string,
+    playerId: string | undefined,
+    move: { tokenIndex: number; dieIndex: 0 | 1; steps: number },
+    result: ReturnType<typeof gameRegistry.applyMove>,
+  ): void {
+    if (!playerId) return;
+    const tokenMovedPayload: TokenMovedPayload = {
+      playerId,
+      tokenIndex: move.tokenIndex,
+      dieIndex: move.dieIndex,
+      steps: move.steps,
+      from: result.from!,
+      to: result.to!,
+      captured: result.captured,
+    };
+    io.to(roomCode).emit('game:tokenMoved', tokenMovedPayload);
+  }
+
+  function emitDiceRolled(roomCode: string, playerId: string | undefined, values: [number, number]): void {
+    if (!playerId) return;
+    const dicePayload: DiceRolledPayload = {
+      playerId,
+      values,
+      legalMoves: gameRegistry.getLegalMoves(roomCode),
+    };
+    io.to(roomCode).emit('game:diceRolled', dicePayload);
+  }
+
+  /**
+   * Turn loop after a roll or move has settled: game over, the same player
+   * still holding a playable die, or a fresh throw (bonus roll or next player).
+   */
+  async function advanceTurn(roomCode: string): Promise<void> {
+    const game = gameRegistry.getGame(roomCode);
+    const room = roomRegistry.getRoom(roomCode);
+    if (!game || !room) return;
+    const state = game.state;
+
+    if (state.phase === 'finished') {
+      const placements = state.placements.map((color, idx) => ({
+        playerId: room.players.find(p => p.color === color)?.id || '',
+        color,
+        placement: idx + 1,
+      }));
+      const gameOverPayload: GameOverPayload = {
+        winnerId: room.players.find(p => p.color === state.winner)?.id || '',
+        placements,
+      };
+      io.to(roomCode).emit('game:over', gameOverPayload);
+      await persistMatchHistory(roomCode, state, placements);
+      return;
+    }
+
+    const isAI = gameRegistry.isAISubstitute(roomCode, state.turn);
+
+    if (state.phase === 'awaiting_move') {
+      if (isAI) {
+        setTimeout(() => {
+          handleAIMove(roomCode);
+        }, gameRegistry.getAIThinkDelay());
+      } else {
+        gameRegistry.setMoveTimer(roomCode, () => {
+          handleMoveTimeout(roomCode);
+        });
+      }
+      return;
+    }
+
+    const nextPlayerId = getPlayerIdByColor(roomCode, state.turn);
+    if (nextPlayerId) {
+      const turnPayload: TurnChangedPayload = {
+        playerId: nextPlayerId,
+        deadlineTs: Date.now() + 30000,
+      };
+      io.to(roomCode).emit('game:turnChanged', turnPayload);
+    }
+
+    if (isAI) {
+      setTimeout(() => {
+        handleAITurn(roomCode);
+      }, gameRegistry.getAIThinkDelay());
+    }
+  }
+
   function handleAITurn(roomCode: string): void {
     const game = gameRegistry.getGame(roomCode);
     if (!game) return;
 
     const currentColor = game.state.turn;
     if (!gameRegistry.isAISubstitute(roomCode, currentColor)) return;
+    if (game.state.phase !== 'awaiting_roll') return;
 
-    if (game.state.phase === 'awaiting_roll') {
-      const result = gameRegistry.rollDice(roomCode);
-      if (!result.success) return;
+    const result = gameRegistry.rollDice(roomCode);
+    if (!result.success) return;
 
-      const room = roomRegistry.getRoom(roomCode);
-      if (!room) return;
-
-      const currentPlayerSocket = room.players.find(p => p.color === currentColor)?.id;
-
-      io.to(roomCode).emit('game:state', game.state);
-
-      const moves = gameRegistry.getLegalMoves(roomCode);
-      if (currentPlayerSocket) {
-        const dicePayload: DiceRolledPayload = {
-          playerId: currentPlayerSocket,
-          value: result.value!,
-          legalMoves: moves,
-        };
-        io.to(roomCode).emit('game:diceRolled', dicePayload);
-      }
-
-      if (result.autoPass) {
-        gameRegistry.setAutoPassTimer(roomCode, () => {
-          handleAutoPass(roomCode);
-        });
-      } else {
-        setTimeout(() => {
-          handleAIMove(roomCode);
-        }, gameRegistry.getAIThinkDelay());
-      }
-    }
+    io.to(roomCode).emit('game:state', game.state);
+    emitDiceRolled(roomCode, getPlayerIdByColor(roomCode, currentColor), result.values!);
+    void advanceTurn(roomCode);
   }
 
+  /** AI substitute plays one die; advanceTurn schedules the next die if one is left. */
   async function handleAIMove(roomCode: string): Promise<void> {
     const game = gameRegistry.getGame(roomCode);
     if (!game) return;
 
     const currentColor = game.state.turn;
     if (!gameRegistry.isAISubstitute(roomCode, currentColor)) return;
-
     if (game.state.phase !== 'awaiting_move') return;
 
     const moves = gameRegistry.getLegalMoves(roomCode);
     if (moves.length === 0) return;
 
     const randomMove = moves[Math.floor(Math.random() * moves.length)];
-    
-    const room = roomRegistry.getRoom(roomCode);
-    if (!room) return;
-
-    const currentPlayerSocket = room.players.find(p => p.color === currentColor)?.id;
-
-    const result = gameRegistry.applyMove(roomCode, randomMove.tokenIndex);
-
+    const result = gameRegistry.applyMove(roomCode, randomMove.tokenIndex, randomMove.dieIndex);
     if (!result.success) return;
 
-    if (currentPlayerSocket) {
-      const tokenMovedPayload: TokenMovedPayload = {
-        playerId: currentPlayerSocket,
-        tokenIndex: randomMove.tokenIndex,
-        from: result.from!,
-        to: result.to!,
-        captured: result.captured,
-      };
-      io.to(roomCode).emit('game:tokenMoved', tokenMovedPayload);
-    }
-
-    const updatedGame = gameRegistry.getGame(roomCode);
-    if (!updatedGame) return;
-
-    io.to(roomCode).emit('game:state', updatedGame.state);
-
-    if (updatedGame.state.phase === 'finished') {
-      const placements = updatedGame.state.placements.map((color, idx) => {
-        const player = room.players.find(p => p.color === color);
-        return {
-          playerId: player?.id || '',
-          color,
-          placement: idx + 1,
-        };
-      });
-      
-      const gameOverPayload: GameOverPayload = {
-        winnerId: room.players.find(p => p.color === updatedGame.state.winner)?.id || '',
-        placements,
-      };
-      io.to(roomCode).emit('game:over', gameOverPayload);
-      
-      await persistMatchHistory(roomCode, updatedGame.state, placements);
-    } else if (updatedGame.state.phase === 'awaiting_roll') {
-      const nextPlayerSocket = room.players.find(p => p.color === updatedGame.state.turn)?.id;
-      
-      if (nextPlayerSocket) {
-        const turnPayload: TurnChangedPayload = {
-          playerId: nextPlayerSocket,
-          deadlineTs: Date.now() + 30000,
-        };
-        io.to(roomCode).emit('game:turnChanged', turnPayload);
-      }
-
-      if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
-        setTimeout(() => {
-          handleAITurn(roomCode);
-        }, gameRegistry.getAIThinkDelay());
-      }
-    }
+    emitTokenMoved(roomCode, getPlayerIdByColor(roomCode, currentColor), randomMove, result);
+    io.to(roomCode).emit('game:state', game.state);
+    await advanceTurn(roomCode);
   }
 
-  function handleAutoPass(roomCode: string): void {
-    const game = gameRegistry.getGame(roomCode);
-    if (!game) return;
-    
-    if (game.state.phase === 'awaiting_move') {
-      const currentIndex = game.state.config.playerColors.indexOf(game.state.turn);
-      const nextIndex = (currentIndex + 1) % game.state.config.playerColors.length;
-      
-      let nextColor = game.state.config.playerColors[nextIndex];
-      let attempts = 0;
-      while (game.state.placements.includes(nextColor) && attempts < game.state.config.playerColors.length) {
-        const nextNextIndex = (game.state.config.playerColors.indexOf(nextColor) + 1) % game.state.config.playerColors.length;
-        nextColor = game.state.config.playerColors[nextNextIndex];
-        attempts++;
-      }
-
-      game.state = {
-        ...game.state,
-        turn: nextColor,
-        phase: 'awaiting_roll',
-        dice: null,
-        consecutiveSixes: 0,
-      };
-
-      io.to(roomCode).emit('game:state', game.state);
-
-      const currentPlayerId = getPlayerIdByColor(roomCode, game.state.turn);
-      
-      if (currentPlayerId) {
-        const turnPayload: TurnChangedPayload = {
-          playerId: currentPlayerId,
-          deadlineTs: Date.now() + 30000,
-        };
-        io.to(roomCode).emit('game:turnChanged', turnPayload);
-      }
-
-      if (gameRegistry.isAISubstitute(roomCode, game.state.turn)) {
-        setTimeout(() => {
-          handleAITurn(roomCode);
-        }, gameRegistry.getAIThinkDelay());
-      }
-    }
-  }
-
+  /** Turn timer expired: play a random legal move for every die still playable (GAME_RULES §10.12). */
   async function handleMoveTimeout(roomCode: string): Promise<void> {
     const game = gameRegistry.getGame(roomCode);
-    if (!game) return;
-    
-    if (game.state.phase !== 'awaiting_move') return;
+    if (!game || game.state.phase !== 'awaiting_move') return;
 
-    const moves = gameRegistry.getLegalMoves(roomCode);
-    if (moves.length === 0) return;
+    const color = game.state.turn;
+    const playerId = getPlayerIdByColor(roomCode, color);
 
-    const randomMove = moves[Math.floor(Math.random() * moves.length)];
-    
-    const currentPlayerId = getPlayerIdByColor(roomCode, game.state.turn);
+    while (game.state.phase === 'awaiting_move' && game.state.turn === color) {
+      const moves = gameRegistry.getLegalMoves(roomCode);
+      if (moves.length === 0) return;
 
-    const result = gameRegistry.applyMove(roomCode, randomMove.tokenIndex);
+      const randomMove = moves[Math.floor(Math.random() * moves.length)];
+      const result = gameRegistry.applyMove(roomCode, randomMove.tokenIndex, randomMove.dieIndex);
+      if (!result.success) return;
 
-    if (!result.success) return;
-
-    const room = roomRegistry.getRoom(roomCode);
-    if (!room) return;
-
-    if (currentPlayerId) {
-      const tokenMovedPayload: TokenMovedPayload = {
-        playerId: currentPlayerId,
-        tokenIndex: randomMove.tokenIndex,
-        from: result.from!,
-        to: result.to!,
-        captured: result.captured,
-      };
-      io.to(roomCode).emit('game:tokenMoved', tokenMovedPayload);
+      emitTokenMoved(roomCode, playerId, randomMove, result);
+      io.to(roomCode).emit('game:state', game.state);
     }
 
-    const updatedGame = gameRegistry.getGame(roomCode);
-    if (!updatedGame) return;
-
-    io.to(roomCode).emit('game:state', updatedGame.state);
-
-    if (updatedGame.state.phase === 'finished') {
-      const placements = updatedGame.state.placements.map((color, idx) => {
-        const player = room.players.find(p => p.color === color);
-        return {
-          playerId: player?.id || '',
-          color,
-          placement: idx + 1,
-        };
-      });
-      
-      const gameOverPayload: GameOverPayload = {
-        winnerId: room.players.find(p => p.color === updatedGame.state.winner)?.id || '',
-        placements,
-      };
-      io.to(roomCode).emit('game:over', gameOverPayload);
-      
-      await persistMatchHistory(roomCode, updatedGame.state, placements);
-    } else if (updatedGame.state.phase === 'awaiting_roll') {
-      const nextPlayerId = getPlayerIdByColor(roomCode, updatedGame.state.turn);
-      
-      if (nextPlayerId) {
-        const turnPayload: TurnChangedPayload = {
-          playerId: nextPlayerId,
-          deadlineTs: Date.now() + 30000,
-        };
-        io.to(roomCode).emit('game:turnChanged', turnPayload);
-      }
-
-      if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
-        setTimeout(() => {
-          handleAITurn(roomCode);
-        }, gameRegistry.getAIThinkDelay());
-      }
-    }
+    await advanceTurn(roomCode);
   }
 
   io.on('connection', (socket: TypedSocket) => {
@@ -797,7 +711,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       console.log(`Game started in room ${roomCode}`);
     });
 
-    socket.on('game:roll', (payload, callback) => {
+    socket.on('game:roll', async (payload, callback) => {
       if (!checkRateLimit(socket)) {
         callback({ success: false, error: 'Rate limit exceeded' });
         return;
@@ -836,27 +750,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       callback({ success: true });
 
       io.to(roomCode).emit('game:state', game.state);
-
-      const playerId = socketToPlayer.get(socket.id);
-      const moves = gameRegistry.getLegalMoves(roomCode);
-      if (playerId) {
-        const dicePayload: DiceRolledPayload = {
-          playerId,
-          value: result.value!,
-          legalMoves: moves,
-        };
-        io.to(roomCode).emit('game:diceRolled', dicePayload);
-      }
-
-      if (result.autoPass) {
-        gameRegistry.setAutoPassTimer(roomCode, () => {
-          handleAutoPass(roomCode);
-        });
-      } else {
-        gameRegistry.setMoveTimer(roomCode, () => {
-          handleMoveTimeout(roomCode);
-        });
-      }
+      emitDiceRolled(roomCode, socketToPlayer.get(socket.id), result.values!);
+      await advanceTurn(roomCode);
     });
 
     socket.on('game:move', async (payload, callback) => {
@@ -889,8 +784,9 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         return;
       }
 
-      const { tokenIndex } = validationResult.data;
-      const result = gameRegistry.applyMove(roomCode, tokenIndex);
+      const { tokenIndex, dieIndex } = validationResult.data;
+      const steps = game.state.dice?.[dieIndex]?.value ?? 0;
+      const result = gameRegistry.applyMove(roomCode, tokenIndex, dieIndex);
 
       if (!result.success) {
         callback({ success: false, error: result.error, hint: result.hint });
@@ -899,60 +795,9 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
       callback({ success: true });
 
-      const playerId = socketToPlayer.get(socket.id);
-      if (playerId) {
-        const tokenMovedPayload: TokenMovedPayload = {
-          playerId,
-          tokenIndex,
-          from: result.from!,
-          to: result.to!,
-          captured: result.captured,
-        };
-        io.to(roomCode).emit('game:tokenMoved', tokenMovedPayload);
-      }
-      
-      const updatedGame = gameRegistry.getGame(roomCode);
-      if (!updatedGame) return;
-      
-      io.to(roomCode).emit('game:state', updatedGame.state);
-
-      if (updatedGame.state.phase === 'finished') {
-        const room = roomRegistry.getRoom(roomCode);
-        if (room) {
-          const placements = updatedGame.state.placements.map((color, idx) => {
-            const player = room.players.find(p => p.color === color);
-            return {
-              playerId: player?.id || '',
-              color,
-              placement: idx + 1,
-            };
-          });
-          
-          const gameOverPayload: GameOverPayload = {
-            winnerId: room.players.find(p => p.color === updatedGame.state.winner)?.id || '',
-            placements,
-          };
-          io.to(roomCode).emit('game:over', gameOverPayload);
-          
-          await persistMatchHistory(roomCode, updatedGame.state, placements);
-        }
-      } else if (updatedGame.state.phase === 'awaiting_roll') {
-        const currentPlayerId = getPlayerIdByColor(roomCode, updatedGame.state.turn);
-        
-        if (currentPlayerId) {
-          const turnPayload: TurnChangedPayload = {
-            playerId: currentPlayerId,
-            deadlineTs: Date.now() + 30000,
-          };
-          io.to(roomCode).emit('game:turnChanged', turnPayload);
-        }
-
-        if (gameRegistry.isAISubstitute(roomCode, updatedGame.state.turn)) {
-          setTimeout(() => {
-            handleAITurn(roomCode);
-          }, 1000);
-        }
-      }
+      emitTokenMoved(roomCode, socketToPlayer.get(socket.id), { tokenIndex, dieIndex, steps }, result);
+      io.to(roomCode).emit('game:state', game.state);
+      await advanceTurn(roomCode);
     });
 
     socket.on('disconnect', () => {

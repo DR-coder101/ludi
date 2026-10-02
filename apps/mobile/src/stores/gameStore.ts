@@ -4,28 +4,27 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import type { GameState, LegalMove, TokenPos, Color } from '@ludi/protocol';
+import type { GameState, TokenPos, Color } from '@ludi/protocol';
 
 interface OptimisticMove {
   tokenIndex: number;
+  dieIndex: 0 | 1;
   from: TokenPos;
   to: TokenPos;
 }
 
 interface GameStore {
   gameState: GameState | null;
-  legalMoves: LegalMove[];
   optimisticMove: OptimisticMove | null;
   currentTurnPlayerId: string | null;
   turnDeadline: number | null;
   
   setGameState: (state: GameState) => void;
-  setLegalMoves: (moves: LegalMove[]) => void;
   setCurrentTurnPlayerId: (playerId: string | null) => void;
   setTurnDeadline: (deadlineTs: number | null) => void;
   
   // Optimistic update
-  applyOptimisticMove: (tokenIndex: number, from: TokenPos, to: TokenPos) => void;
+  applyOptimisticMove: (move: OptimisticMove) => void;
   rollbackOptimisticMove: () => void;
   
   getMyColor: (myPlayerId: string) => Color | null;
@@ -36,7 +35,6 @@ interface GameStore {
 export const useGameStore = create<GameStore>()(
   immer((set, get) => ({
     gameState: null,
-    legalMoves: [],
     optimisticMove: null,
     currentTurnPlayerId: null,
     turnDeadline: null,
@@ -46,32 +44,38 @@ export const useGameStore = create<GameStore>()(
       optimisticMove: null, // Clear optimistic state on server update
     }),
 
-    setLegalMoves: (moves) => set({ legalMoves: moves }),
-
     setCurrentTurnPlayerId: (playerId) => set({ currentTurnPlayerId: playerId }),
 
     setTurnDeadline: (deadlineTs) => set({ turnDeadline: deadlineTs }),
 
-    applyOptimisticMove: (tokenIndex, from, to) => set((state) => {
+    applyOptimisticMove: (move) => set((state) => {
       if (!state.gameState) return;
       
       // Store optimistic move for rollback
-      state.optimisticMove = { tokenIndex, from, to };
+      state.optimisticMove = move;
       
-      // Optimistically update token position
-      const token = state.gameState.tokens[tokenIndex];
+      // Optimistically update token position and spend the die
+      const token = state.gameState.tokens[move.tokenIndex];
       if (token) {
-        token.pos = to;
+        token.pos = move.to;
+      }
+      const die = state.gameState.dice?.[move.dieIndex];
+      if (die) {
+        die.used = true;
       }
     }),
 
     rollbackOptimisticMove: () => set((state) => {
       if (!state.gameState || !state.optimisticMove) return;
       
-      const { tokenIndex, from } = state.optimisticMove;
+      const { tokenIndex, dieIndex, from } = state.optimisticMove;
       const token = state.gameState.tokens[tokenIndex];
       if (token) {
         token.pos = from;
+      }
+      const die = state.gameState.dice?.[dieIndex];
+      if (die) {
+        die.used = false;
       }
       
       state.optimisticMove = null;
@@ -93,7 +97,6 @@ export const useGameStore = create<GameStore>()(
 
     clear: () => set({
       gameState: null,
-      legalMoves: [],
       optimisticMove: null,
       currentTurnPlayerId: null,
       turnDeadline: null,

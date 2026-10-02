@@ -13,16 +13,23 @@ export interface TokenRef {
 
 export interface LegalMove {
   tokenIndex: number;
+  /** Which die of the current throw this move spends. */
+  dieIndex: 0 | 1;
+  /** That die's value. */
+  steps: number;
   resulting: TokenPos;
   captures?: TokenRef;
 }
 
 /**
- * Compute all legal moves for the current game state.
+ * Compute all legal moves for the current game state: one entry per
+ * (token, unused die) pair that can be played right now. When both dice show
+ * the same value, each die is listed separately.
  * Returns empty array if no legal moves exist.
- * 
+ *
  * Rules enforced:
- * - §3: Can only leave yard on exactly 6
+ * - §2: Each die is played separately; spent dice offer no moves
+ * - §3: Double-6 required to start (first piece out); then any 6 brings subsequent pieces out
  * - §6: Blockades (2+ same-color tokens) block everyone, cannot pass or land
  * - §7: Safe cells allow multi-color coexistence, no captures
  * - §8: Exact count required for home column/home entry (no overshoot)
@@ -33,56 +40,55 @@ export function legalMoves(state: GameState): LegalMove[] {
     return [];
   }
 
-  const currentPlayerTokens = state.tokens.filter((t) => t.color === state.turn);
   const moves: LegalMove[] = [];
+  state.dice.forEach((die, dieIndex) => {
+    if (die.used) return;
+    for (const move of movesForSteps(state, die.value, dieIndex)) {
+      moves.push({ ...move, dieIndex: dieIndex as 0 | 1, steps: die.value });
+    }
+  });
+  return moves;
+}
 
-  for (let i = 0; i < currentPlayerTokens.length; i++) {
-    const token = currentPlayerTokens[i];
-    const globalTokenIndex = state.tokens.indexOf(token);
-    
-    // Special case: leaving yard requires exactly 6
+function movesForSteps(
+  state: GameState,
+  steps: number,
+  dieIndex: number
+): { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] {
+  const moves: { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] = [];
+
+  // Check if the current player has started (has any pieces out of yard)
+  const hasStarted = state.tokens.some(
+    (t) => t.color === state.turn && t.pos.zone !== "yard"
+  );
+
+  state.tokens.forEach((token, tokenIndex) => {
+    if (token.color !== state.turn || token.pos.zone === "home") return;
+
+    let resulting: TokenPos | null;
     if (token.pos.zone === "yard") {
-      if (state.dice === 6) {
-        const resulting = computePath(token.pos, 1, token.color);
-        if (resulting && !isBlockedByObstacle(resulting, token.color, state)) {
-          const capture = getCaptureAt(resulting, token.color, state);
-          moves.push({
-            tokenIndex: globalTokenIndex,
-            resulting,
-            captures: capture || undefined,
-          });
-        }
+      // §3: Leaving the yard requires a die showing 6
+      if (steps !== 6) return;
+
+      // §3: If player hasn't started yet, need BOTH dice to show 6 (double-6)
+      if (!hasStarted) {
+        // Check if both dice show 6
+        const bothSixes = state.dice![0].value === 6 && state.dice![1].value === 6;
+        if (!bothSixes) return; // Double-6 required for first piece
       }
-      continue;
+
+      resulting = computePath(token.pos, 1, token.color);
+    } else {
+      resulting = computePath(token.pos, steps, token.color);
+      // Overshoot or passing a blockade
+      if (!resulting || wouldPassThroughBlockade(token.pos, steps, token.color, state)) return;
     }
 
-    // Already home: cannot move
-    if (token.pos.zone === "home") {
-      continue;
-    }
+    if (!resulting || isBlockedByObstacle(resulting, token.color, state)) return;
 
-    // Try to move dice steps forward
-    const resulting = computePath(token.pos, state.dice, token.color);
-    
-    // Invalid path (overshoot, etc.)
-    if (!resulting) {
-      continue;
-    }
-
-    // Check if path is blocked by blockade or resulting cell is blocked
-    if (isBlockedByObstacle(resulting, token.color, state) || 
-        wouldPassThroughBlockade(token.pos, state.dice, token.color, state)) {
-      continue;
-    }
-
-    // Valid move
     const capture = getCaptureAt(resulting, token.color, state);
-    moves.push({
-      tokenIndex: globalTokenIndex,
-      resulting,
-      captures: capture || undefined,
-    });
-  }
+    moves.push({ tokenIndex, resulting, captures: capture || undefined });
+  });
 
   return moves;
 }

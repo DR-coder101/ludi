@@ -1,4 +1,4 @@
-import React, { type ReactNode } from 'react';
+import React, { useState, type ReactNode } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Color, GameState } from '@ludi/rules';
@@ -13,6 +13,7 @@ import { TurnCard } from './TurnCard';
 import { PlayerStrip, type TurnTimer } from './PlayerStrip';
 import { Equalizer } from './Equalizer';
 import { turnCopy } from './turnCopy';
+import { activeDie, canPickDie, diceFaces, moveForToken, type DieIndex } from './diceModel';
 
 export interface BoardScreenProps {
   state: GameState;
@@ -23,14 +24,15 @@ export interface BoardScreenProps {
   names: Partial<Record<Color, string>>;
   muted?: Partial<Record<Color, boolean>>;
   roomCode: string | null;
-  /** Last value thrown, kept after the engine clears `dice` on an auto-pass. */
-  lastRoll: number | null;
+  /** Last throw, kept after the engine clears `dice` on an auto-pass. */
+  lastRoll: readonly [number, number] | null;
   rollKey: number;
   timer?: TurnTimer | null;
   hop?: HopAnimation | null;
   onHopDone?: () => void;
   onRoll?: () => void;
-  onTokenPress?: (tokenIndex: number) => void;
+  /** Plays one die of the current throw. */
+  onMove?: (move: MoveLike) => void;
   onMenu?: () => void;
   onProfile?: () => void;
   voice?: { on: boolean; onToggle: () => void } | null;
@@ -45,7 +47,7 @@ const MAX_COLUMN = 520;
 
 export function BoardScreen(props: BoardScreenProps) {
   const { state, moves, me, names, muted, roomCode, lastRoll, rollKey, timer, hop, onHopDone } = props;
-  const { onRoll, onTokenPress, onMenu, onProfile, voice, chat, children } = props;
+  const { onRoll, onMove, onMenu, onProfile, voice, chat, children } = props;
   const fontsReady = useLudiFonts();
   const device = useSafeAreaInsets();
   const insets = props.insets ?? device;
@@ -64,18 +66,30 @@ export function BoardScreen(props: BoardScreenProps) {
   const canRoll = isMine && awaitingRoll && !hop && !!onRoll;
   const activeMoves = isMine && !hop ? moves : [];
   const hidden = hop ? [hop.tokenIndex] : [];
+  const [pick, setPick] = useState<{ rollKey: number; die: DieIndex } | null>(null);
+  const picked = pick?.rollKey === rollKey ? pick.die : null;
+  const active = activeDie(activeMoves, picked);
+  const pickable = canPickDie(activeMoves);
 
-  const model = buildBoardModel(state, activeMoves, { hidden });
+  const model = buildBoardModel(state, activeMoves, { hidden, focusDie: active });
   const seatedOrder = TURN_ORDER.filter((c) => state.config.playerColors.includes(c));
   const copy = turnCopy({
     phase: state.phase,
     dice: state.dice,
+    consecutiveSixes: state.consecutiveSixes,
     turn: state.turn,
     winner: state.winner,
     isMine,
     name: names[state.turn],
     canBringOut: moves.some((m) => state.tokens[m.tokenIndex]?.pos.zone === 'yard'),
+    canPickDie: pickable,
   });
+  const onTokenPress = onMove
+    ? (tokenIndex: number) => {
+        const move = moveForToken(activeMoves, tokenIndex, active);
+        if (move) onMove(move);
+      }
+    : undefined;
 
   const left: RailItem[] = [
     { key: 'players', icon: 'users', label: 'Players', sub: `${seatedOrder.length}/4`, subTone: 'cream' },
@@ -127,10 +141,12 @@ export function BoardScreen(props: BoardScreenProps) {
             <View style={styles.centre}>
               <TurnCard
                 copy={copy}
-                dice={lastRoll ?? state.dice ?? 5}
+                dice={diceFaces(state.dice, lastRoll)}
                 rollKey={rollKey}
                 idle={awaitingRoll}
+                activeDie={activeMoves.length > 0 ? active : null}
                 onRoll={canRoll ? onRoll : undefined}
+                onPickDie={pickable ? (die) => setPick({ rollKey, die }) : undefined}
               />
               <View style={styles.strip}>
                 <PlayerStrip order={seatedOrder} turn={state.turn} names={names} timer={timer} />

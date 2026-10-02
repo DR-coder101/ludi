@@ -46,7 +46,7 @@ describe('buildBoardModel on the mockup fixtures', () => {
     expect(model.yards.green.active).toBe(false);
   });
 
-  it('mid: reproduces board-midgame.png pieces, stack, yard counts and the +6 route', () => {
+  it('mid: reproduces board-midgame.png pieces, stack, yard counts and the +6 route for a 6 + 3', () => {
     const state = boardFixture('mid');
     const model = buildBoardModel(state, legalMoves(state));
 
@@ -77,8 +77,16 @@ describe('buildBoardModel on the mockup fixtures', () => {
     expect(rc(h.to)).toEqual([10, 11]);
     expect(h.steps).toBe(6);
 
-    const legalOnBoard = model.pieces.filter((p) => p.legal).map((p) => [p.row, p.col]);
-    expect(legalOnBoard).toEqual([[16, 10]]);
+    // The 3 also takes the home-column piece in, so both red pieces glow.
+    const legalOnBoard = model.pieces.filter((p) => p.legal).map((p) => [p.row, p.col]).sort();
+    expect(legalOnBoard).toEqual([[13, 9], [16, 10]]);
+  });
+
+  it('mid: previews the focused die', () => {
+    const state = boardFixture('mid');
+    const model = buildBoardModel(state, legalMoves(state), { focusDie: 1 });
+    expect(rc(model.highlight!.from)).toEqual([16, 10]);
+    expect(model.highlight!.steps).toBe(3);
   });
 
   it('nudges different colours that share a cell apart', () => {

@@ -26,6 +26,34 @@ import {
   type TokenPos,
 } from "./index";
 
+/** awaiting_move fields for a throw with only `value` left to play (the other die already spent). */
+function oneDie(value: number): Pick<GameState, "dice" | "extraRollEarned"> {
+  return {
+    dice: [
+      { value, used: false },
+      { value, used: true },
+    ],
+    extraRollEarned: value === 6,
+  };
+}
+
+/** RNG that throws the given faces in order (1–6), then repeats the last. */
+function faces(...values: number[]): () => number {
+  let i = 0;
+  return () => (values[Math.min(i++, values.length - 1)] - 1) / 6;
+}
+
+/** awaiting_move fields for a fresh throw of `a` and `b`. */
+function throwOf(a: number, b: number): Pick<GameState, "dice" | "extraRollEarned"> {
+  return {
+    dice: [
+      { value: a, used: false },
+      { value: b, used: false },
+    ],
+    extraRollEarned: a === 6 || b === 6,
+  };
+}
+
 describe("Game Types and Configuration", () => {
   it("should create a game with valid 4-player config", () => {
     const config: GameConfig = {
@@ -561,13 +589,27 @@ describe("Legal Moves - M1 Step 1.2", () => {
     },
   };
 
-  describe("Edge Case 1: Rolling 6 with all tokens in yard", () => {
-    it("should allow coming out when rolling 6 from yard", () => {
+  describe("Edge Case 1: Rolling to start (double-6 requirement)", () => {
+    it("should NOT allow coming out with single 6 when player hasn't started", () => {
       const game = createGame(baseConfig);
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 6,
+        ...throwOf(6, 3),
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      // No legal moves because double-6 is required to start
+      expect(moves.length).toBe(0);
+    });
+
+    it("should allow coming out with double-6 when player hasn't started", () => {
+      const game = createGame(baseConfig);
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        ...throwOf(6, 6),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -579,11 +621,38 @@ describe("Legal Moves - M1 Step 1.2", () => {
         return token.color === "red";
       });
 
-      expect(redMoves.length).toBe(4);
+      // 4 tokens × 2 dice = 8 moves (both 6s can bring each token out)
+      expect(redMoves.length).toBe(8);
       
       for (const move of redMoves) {
         expect(move.resulting).toEqual({ zone: "track", cell: 0 });
       }
+    });
+
+    it("should allow coming out with single 6 once player has started", () => {
+      const game = createGame(baseConfig);
+      // Put one red token on track to show player has started
+      game.tokens[0].pos = { zone: "track", cell: 5 };
+
+      const stateWithDice = {
+        ...game,
+        phase: "awaiting_move" as const,
+        ...throwOf(6, 3),
+      };
+
+      const moves = legalMoves(stateWithDice);
+
+      // Should have moves: the 6 can bring out any of the 3 remaining yard tokens,
+      // and the 3 can move the token on track
+      expect(moves.length).toBeGreaterThan(0);
+      
+      const comeOutMoves = moves.filter((m: any) => {
+        const token = stateWithDice.tokens[m.tokenIndex];
+        return token.pos.zone === "yard";
+      });
+
+      // 3 tokens in yard can come out with the 6
+      expect(comeOutMoves.length).toBe(3);
     });
 
     it("should not allow coming out on roll other than 6", () => {
@@ -591,7 +660,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -610,7 +679,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -636,7 +705,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 5,
+        ...oneDie(5),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -659,7 +728,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -682,7 +751,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 5,
+        ...oneDie(5),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -705,7 +774,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 1,
+        ...oneDie(1),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -727,7 +796,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -750,7 +819,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -773,7 +842,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -792,7 +861,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 5,
+        ...oneDie(5),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -814,7 +883,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -834,7 +903,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -858,7 +927,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -883,7 +952,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -897,7 +966,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       game.tokens[0].pos = { zone: "track", cell: 5 };
       game.tokens[4].pos = { zone: "track", cell: 8 };
 
-      const moves = legalMoves({ ...game, phase: "awaiting_move" as const, dice: 3 });
+      const moves = legalMoves({ ...game, phase: "awaiting_move" as const, ...oneDie(3) });
 
       expect(moves.find((m) => m.tokenIndex === 0)?.captures).toEqual({ color: "green", index: 0 });
     });
@@ -907,7 +976,7 @@ describe("Legal Moves - M1 Step 1.2", () => {
       const stateAwaitingRoll = {
         ...game,
         phase: "awaiting_roll" as const,
-        dice: 6,
+        ...oneDie(6),
       };
 
       const moves = legalMoves(stateAwaitingRoll);
@@ -952,9 +1021,23 @@ describe("Roll Dice - M1 Step 1.3", () => {
 
     const result = rollDice(game, rng);
 
-    expect(result.value).toBe(4);
-    expect(result.state.dice).toBe(4);
+    expect(result.values).toEqual([4, 4]);
+    expect(result.state.dice).toEqual([
+      { value: 4, used: false },
+      { value: 4, used: false },
+    ]);
     expect(result.state.phase).toBe("awaiting_move");
+    expect(result.state.extraRollEarned).toBe(false);
+  });
+
+  it("should throw two independent dice, one rng call each", () => {
+    const game = createGame(baseConfig);
+    game.tokens[0].pos = { zone: "track", cell: 5 };
+
+    const result = rollDice(game, faces(2, 5));
+
+    expect(result.values).toEqual([2, 5]);
+    expect(result.state.dice!.map((d) => d.value)).toEqual([2, 5]);
   });
 
   it("should roll 6 and allow extra turn potential", () => {
@@ -963,8 +1046,9 @@ describe("Roll Dice - M1 Step 1.3", () => {
 
     const result = rollDice(game, rng);
 
-    expect(result.value).toBe(6);
-    expect(result.state.dice).toBe(6);
+    expect(result.values).toEqual([6, 6]);
+    expect(result.state.extraRollEarned).toBe(true);
+    expect(result.state.consecutiveSixes).toBe(1);
   });
 
   it("should auto-pass when no legal moves exist", () => {
@@ -996,7 +1080,7 @@ describe("Roll Dice - M1 Step 1.3", () => {
 
     const result = rollDice(stateAfterTwoSixes, rng);
 
-    expect(result.value).toBe(6);
+    expect(result.values).toEqual([6, 6]);
     expect(result.state.turn).toBe("green");
     expect(result.state.phase).toBe("awaiting_roll");
     expect(result.state.consecutiveSixes).toBe(0);
@@ -1058,10 +1142,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       expect(result.state.tokens[4].pos).toEqual({ zone: "yard" });
       
@@ -1080,7 +1164,7 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -1102,10 +1186,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 17 });
       expect(result.state.tokens[4].pos).toEqual({ zone: "track", cell: 17 });
@@ -1125,10 +1209,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 6,
+        ...oneDie(6),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 0 });
       expect(result.state.tokens[4].pos).toEqual({ zone: "track", cell: 0 });
@@ -1150,10 +1234,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 7 });
       expect(result.state.tokens[4].pos).toEqual({ zone: "yard" });
@@ -1176,7 +1260,7 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -1198,10 +1282,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 8 });
       expect(result.state.turn).toBe("yellow");
@@ -1218,10 +1302,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       expect(result.state.tokens[0].pos).toEqual({ zone: "track", cell: 8 });
       expect(result.state.turn).toBe("green");
@@ -1238,7 +1322,7 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
       const moves = legalMoves(stateWithDice);
@@ -1246,7 +1330,7 @@ describe("Apply Move - M1 Step 1.3", () => {
       expect(moves.length).toBeGreaterThan(0);
       
       // Server can pick any legal move (simulating random selection)
-      const result = applyMove(stateWithDice, moves[0].tokenIndex);
+      const result = applyMove(stateWithDice, moves[0].tokenIndex, moves[0].dieIndex);
       
       expect(result.state.phase).toBe("awaiting_roll");
     });
@@ -1262,10 +1346,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
-      const result = applyMove(stateWithDice, 1);
+      const result = applyMove(stateWithDice, 1, 0);
 
       const blockadeEvent = result.events.find((e) => e.type === "blockade_formed");
       expect(blockadeEvent).toBeDefined();
@@ -1280,10 +1364,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const blockadeEvent = result.events.find((e) => e.type === "blockade_broken");
       expect(blockadeEvent).toBeDefined();
@@ -1299,10 +1383,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 6,
+        ...oneDie(6),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const extraTurnEvent = result.events.find((e) => e.type === "extra_turn");
       expect(extraTurnEvent).toBeDefined();
@@ -1326,10 +1410,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const extraTurnEvent = result.events.find((e) => e.type === "extra_turn");
       expect(extraTurnEvent).toBeDefined();
@@ -1347,10 +1431,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 2,
+        ...oneDie(2),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const turnPassedEvent = result.events.find((e) => e.type === "turn_passed");
       expect(turnPassedEvent).toBeDefined();
@@ -1372,10 +1456,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 1,
+        ...oneDie(1),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const extraTurnEvent = result.events.find((e) => e.type === "extra_turn");
       expect(extraTurnEvent).toBeDefined();
@@ -1397,10 +1481,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 1,
+        ...oneDie(1),
       };
 
-      const result = applyMove(stateWithDice, 3);
+      const result = applyMove(stateWithDice, 3, 0);
 
       expect(result.state.winner).toBe("red");
       expect(result.state.phase).toBe("finished");
@@ -1428,10 +1512,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 1,
+        ...oneDie(1),
       };
 
-      const result = applyMove(stateWithDice, 3);
+      const result = applyMove(stateWithDice, 3, 0);
 
       expect(result.state.winner).toBeNull();
       expect(result.state.phase).toBe("awaiting_roll");
@@ -1457,10 +1541,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 1,
+        ...oneDie(1),
       };
 
-      const result = applyMove(stateWithDice, 3);
+      const result = applyMove(stateWithDice, 3, 0);
 
       expect(result.state.winner).toBe("red");
       expect(result.state.phase).toBe("finished");
@@ -1475,10 +1559,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 6,
+        ...oneDie(6),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const event = result.events.find((e) => e.type === "came_out");
       expect(event).toBeDefined();
@@ -1492,10 +1576,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 1,
+        ...oneDie(1),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const event = result.events.find((e) => e.type === "entered_home_column");
       expect(event).toBeDefined();
@@ -1509,10 +1593,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 1,
+        ...oneDie(1),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const event = result.events.find((e) => e.type === "got_home");
       expect(event).toBeDefined();
@@ -1526,10 +1610,10 @@ describe("Apply Move - M1 Step 1.3", () => {
       const stateWithDice = {
         ...game,
         phase: "awaiting_move" as const,
-        dice: 3,
+        ...oneDie(3),
       };
 
-      const result = applyMove(stateWithDice, 0);
+      const result = applyMove(stateWithDice, 0, 0);
 
       const event = result.events.find((e) => e.type === "moved");
       expect(event).toBeDefined();
@@ -1568,7 +1652,7 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
         const moves = legalMoves(state);
         if (moves.length > 0) {
           const moveIndex = Math.floor(rng() * moves.length);
-          const result = applyMove(state, moves[moveIndex].tokenIndex);
+          const result = applyMove(state, moves[moveIndex].tokenIndex, moves[moveIndex].dieIndex);
           state = result.state;
         }
       }
@@ -1624,7 +1708,7 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
         const moves = legalMoves(state);
         if (moves.length > 0) {
           const moveIndex = Math.floor(rng() * moves.length);
-          const result = applyMove(state, moves[moveIndex].tokenIndex);
+          const result = applyMove(state, moves[moveIndex].tokenIndex, moves[moveIndex].dieIndex);
           state = result.state;
         }
       }
@@ -1669,7 +1753,7 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
         const moves = legalMoves(state);
         if (moves.length > 0) {
           const moveIndex = Math.floor(rng() * moves.length);
-          const result = applyMove(state, moves[moveIndex].tokenIndex);
+          const result = applyMove(state, moves[moveIndex].tokenIndex, moves[moveIndex].dieIndex);
           state = result.state;
         }
       }
@@ -1679,8 +1763,13 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
       
       if (state.phase === "awaiting_move") {
         expect(state.dice).not.toBeNull();
-        expect(state.dice).toBeGreaterThanOrEqual(1);
-        expect(state.dice).toBeLessThanOrEqual(6);
+        expect(state.dice!.some((d) => !d.used)).toBe(true);
+        for (const die of state.dice!) {
+          expect(die.value).toBeGreaterThanOrEqual(1);
+          expect(die.value).toBeLessThanOrEqual(6);
+        }
+      } else {
+        expect(state.dice).toBeNull();
       }
 
       // All tokens should have valid positions
@@ -1715,7 +1804,8 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
         state = rollDice(state, rng).state;
       } else {
         const moves = legalMoves(state);
-        state = applyMove(state, moves[Math.floor(rng() * moves.length)].tokenIndex).state;
+        const move = moves[Math.floor(rng() * moves.length)];
+        state = applyMove(state, move.tokenIndex, move.dieIndex).state;
       }
 
       for (const token of state.tokens) {
@@ -1736,5 +1826,351 @@ describe("Property-based invariant tests - M1 Step 1.3", () => {
     expect(state.winner).not.toBeNull();
     expect(state.tokens.filter((t) => t.color === state.winner).every((t) => t.pos.zone === "home")).toBe(true);
     expect(Math.max(...reachedHomeStep)).toBe(HOME_COLUMN_LENGTH);
+  });
+});
+
+describe("Two dice (GAME_RULES.md §2-§4, §8)", () => {
+  const rules: GameConfig["houseRules"] = {
+    maxConsecutiveSixes: 2,
+    extraRollOnCapture: false,
+    blockadeCanMoveTogether: false,
+    exactFinishBonus: false,
+    playForPlacements: false,
+  };
+  /** red tokens 0–3, green tokens 4–7 */
+  const twoPlayer = (houseRules: Partial<GameConfig["houseRules"]> = {}) =>
+    createGame({ playerColors: ["red", "green"], houseRules: { ...rules, ...houseRules } });
+  const track = (cell: number): TokenPos => ({ zone: "track", cell });
+  const rolled = (game: GameState, a: number, b: number): GameState => ({
+    ...game,
+    phase: "awaiting_move",
+    ...throwOf(a, b),
+  });
+
+  describe("legalMoves", () => {
+    it("lists one move per token per unused die, tagged with dieIndex and steps", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+
+      const moves = legalMoves(rolled(game, 2, 4));
+
+      expect(moves).toEqual([
+        { tokenIndex: 0, dieIndex: 0, steps: 2, resulting: track(7), captures: undefined },
+        { tokenIndex: 0, dieIndex: 1, steps: 4, resulting: track(9), captures: undefined },
+      ]);
+    });
+
+    it("lists both dice separately when they show the same value", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+
+      const moves = legalMoves(rolled(game, 3, 3));
+
+      expect(moves.map((m) => m.dieIndex)).toEqual([0, 1]);
+      expect(moves.every((m) => m.steps === 3)).toBe(true);
+    });
+
+    it("offers nothing for a spent die", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      const state: GameState = {
+        ...rolled(game, 2, 4),
+        dice: [
+          { value: 2, used: true },
+          { value: 4, used: false },
+        ],
+      };
+
+      expect(legalMoves(state).map((m) => m.dieIndex)).toEqual([1]);
+    });
+
+    it("with no pieces started, need double-6 to come out (6-3 offers no moves)", () => {
+      const moves = legalMoves(rolled(twoPlayer(), 6, 3));
+
+      expect(moves).toHaveLength(0);
+    });
+
+    it("with no pieces started, double-6 allows coming out", () => {
+      const moves = legalMoves(rolled(twoPlayer(), 6, 6));
+
+      // 4 red tokens × 2 dice (both showing 6) = 8 come-out moves
+      expect(moves).toHaveLength(8);
+      expect(moves.every((m) => m.resulting.zone === "track" && m.resulting.cell === 0)).toBe(true);
+    });
+
+    it("once started, any single 6 can bring a token out", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5); // Red has started
+
+      const moves = legalMoves(rolled(game, 3, 6));
+
+      // 3 red tokens in yard can come out with the 6 (die 1)
+      // 1 red token on track can move 3 (die 0) or 6 (die 1)
+      expect(moves.length).toBeGreaterThan(0);
+      const comeOutMoves = moves.filter((m) => {
+        const token = game.tokens[m.tokenIndex];
+        return token.pos.zone === "yard" && m.steps === 6;
+      });
+      expect(comeOutMoves).toHaveLength(3);
+    });
+  });
+
+  describe("playing a throw", () => {
+    it("6 + 6 from the yard (double-6): come out with first 6, then use second 6", () => {
+      const state = rolled(twoPlayer(), 6, 6);
+
+      const first = applyMove(state, 0, 0);
+      expect(first.events.map((e) => e.type)).toEqual(["came_out"]);
+      expect(first.state.phase).toBe("awaiting_move");
+      expect(first.state.turn).toBe("red");
+      expect(first.state.dice).toEqual([
+        { value: 6, used: true },
+        { value: 6, used: false },
+      ]);
+
+      // Now player has started, so the second 6 can move the token or bring another out
+      const movesAfterFirst = legalMoves(first.state);
+      expect(movesAfterFirst.length).toBeGreaterThan(0);
+
+      const second = applyMove(first.state, 0, 1);
+      expect(second.state.tokens[0].pos).toEqual(track(6));
+      // The throw showed a 6: bonus roll for red
+      expect(second.events.map((e) => e.type)).toEqual(["moved", "extra_turn"]);
+      expect(second.state).toMatchObject({ turn: "red", phase: "awaiting_roll", dice: null, extraRollEarned: false });
+    });
+
+    it("6 + 3 from the yard: no legal moves (needs double-6 to start)", () => {
+      const state = rolled(twoPlayer(), 6, 3);
+      const moves = legalMoves(state);
+      expect(moves).toHaveLength(0);
+    });
+
+    it("splits the dice between two tokens", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[1].pos = track(20);
+
+      const first = applyMove(rolled(game, 2, 4), 0, 0);
+      const second = applyMove(first.state, 1, 1);
+
+      expect(second.state.tokens[0].pos).toEqual(track(7));
+      expect(second.state.tokens[1].pos).toEqual(track(24));
+      expect(second.state.turn).toBe("green");
+      expect(second.events.at(-1)).toEqual({ type: "turn_passed", color: "green" });
+    });
+
+    it("moves one token by the total as two landings, in either order", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+
+      const aThenB = applyMove(applyMove(rolled(game, 2, 4), 0, 0).state, 0, 1).state;
+      const bThenA = applyMove(applyMove(rolled(game, 2, 4), 0, 1).state, 0, 0).state;
+
+      expect(aThenB.tokens[0].pos).toEqual(track(11));
+      expect(bThenA.tokens[0].pos).toEqual(track(11));
+    });
+
+    it("the intermediate landing of a total move is real: it captures", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[4].pos = track(7);
+
+      const first = applyMove(rolled(game, 2, 4), 0, 0);
+      expect(first.events.map((e) => e.type)).toEqual(["captured", "moved"]);
+      expect(first.state.tokens[4].pos).toEqual({ zone: "yard" });
+
+      const second = applyMove(first.state, 0, 1);
+      expect(second.state.tokens[0].pos).toEqual(track(11));
+    });
+
+    it("a total move cannot hop a blockade; the unplayable die is forfeited", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[4].pos = track(9);
+      game.tokens[5].pos = track(9);
+      const state = rolled(game, 2, 3);
+
+      // 3 lands on 8, 2 lands on 7; after either, the other die would pass cell 9
+      expect(legalMoves(state).map((m) => m.dieIndex)).toEqual([0, 1]);
+      const result = applyMove(state, 0, 0);
+
+      expect(result.state.tokens[0].pos).toEqual(track(7));
+      expect(result.events.at(-1)).toEqual({ type: "turn_passed", color: "green" });
+      expect(result.state.dice).toBeNull();
+    });
+
+    it("forfeits the second die when only overshoots remain", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = { zone: "homeColumn", step: 6 };
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "home" };
+      const state = rolled(game, 1, 5);
+
+      expect(legalMoves(state).map((m) => m.dieIndex)).toEqual([0]);
+      const result = applyMove(state, 0, 0);
+
+      expect(result.state.tokens[0].pos).toEqual({ zone: "homeColumn", step: 7 });
+      expect(result.state.turn).toBe("green");
+    });
+
+    it("6-6 can bring two tokens out, then earns one bonus roll", () => {
+      const first = applyMove(rolled(twoPlayer(), 6, 6), 0, 0);
+      expect(first.state.phase).toBe("awaiting_move");
+
+      const second = applyMove(first.state, 1, 1);
+
+      expect(second.state.tokens[0].pos).toEqual(track(0));
+      expect(second.state.tokens[1].pos).toEqual(track(0));
+      expect(second.events.map((e) => e.type)).toEqual(["came_out", "blockade_formed", "extra_turn"]);
+      expect(second.state).toMatchObject({ turn: "red", phase: "awaiting_roll" });
+    });
+
+    it("a capture bonus waits until the second die is played", () => {
+      const game = twoPlayer({ extraRollOnCapture: true });
+      game.tokens[0].pos = track(5);
+      game.tokens[1].pos = track(20);
+      game.tokens[4].pos = track(7);
+
+      const first = applyMove(rolled(game, 2, 4), 0, 0);
+      expect(first.state).toMatchObject({ phase: "awaiting_move", extraRollEarned: true });
+
+      const second = applyMove(first.state, 1, 1);
+      expect(second.events.map((e) => e.type)).toEqual(["moved", "extra_turn"]);
+      expect(second.state.turn).toBe("red");
+    });
+
+    it("finishing with a die left ends the game and clears the dice", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = { zone: "homeColumn", step: 7 };
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "home" };
+
+      const result = applyMove(rolled(game, 1, 4), 0, 0);
+
+      expect(result.state).toMatchObject({ phase: "finished", winner: "red", dice: null });
+      expect(result.events.at(-1)).toMatchObject({ type: "game_over", color: "red", placement: 1 });
+    });
+
+    it("finishing mid-throw while playing for placements passes the turn", () => {
+      const game = createGame({
+        playerColors: ["red", "green", "yellow"],
+        houseRules: { ...rules, playForPlacements: true },
+      });
+      game.tokens[0].pos = { zone: "homeColumn", step: 7 };
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "home" };
+      game.tokens[4].pos = track(20);
+
+      const result = applyMove(rolled(game, 1, 6), 0, 0);
+
+      expect(result.state.placements).toEqual(["red"]);
+      expect(result.state).toMatchObject({ turn: "green", phase: "awaiting_roll", dice: null, consecutiveSixes: 0 });
+    });
+
+    it("does not mutate the input state", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      const state = rolled(game, 2, 4);
+      const snapshot = JSON.parse(JSON.stringify(state));
+
+      applyMove(state, 0, 0);
+
+      expect(state).toEqual(snapshot);
+    });
+
+    it("rejects a spent die, a bad die index, and a token the die cannot move", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      const first = applyMove(rolled(game, 2, 4), 0, 0).state;
+
+      expect(() => applyMove(first, 0, 0)).toThrow(/already been played/);
+      expect(() => applyMove(first, 0, 2)).toThrow(/Invalid die index/);
+      expect(() => applyMove(first, 1, 1)).toThrow(/not legal/);
+    });
+  });
+
+  describe("rolling", () => {
+    it("a 6 on either die earns a bonus roll and extends the streak", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+
+      const result = rollDice(game, faces(2, 6));
+
+      expect(result.state).toMatchObject({ extraRollEarned: true, consecutiveSixes: 1 });
+    });
+
+    it("a throw without a 6 resets the streak", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+
+      const result = rollDice({ ...game, consecutiveSixes: 2 }, faces(2, 3));
+
+      expect(result.state).toMatchObject({ extraRollEarned: false, consecutiveSixes: 0, phase: "awaiting_move" });
+    });
+
+    it("a third consecutive throw showing a 6 forfeits even with one six", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+
+      const result = rollDice({ ...game, consecutiveSixes: 2 }, faces(6, 2));
+
+      expect(result.values).toEqual([6, 2]);
+      expect(result.events).toEqual([{ type: "turn_passed", color: "green" }]);
+      expect(result.state).toMatchObject({ turn: "green", phase: "awaiting_roll", dice: null, consecutiveSixes: 0 });
+    });
+
+    it("maxConsecutiveSixes 3 allows the third throw and forfeits the fourth", () => {
+      const game = twoPlayer({ maxConsecutiveSixes: 3 });
+      game.tokens[0].pos = track(5);
+
+      expect(rollDice({ ...game, consecutiveSixes: 2 }, faces(6, 1)).state.phase).toBe("awaiting_move");
+      expect(rollDice({ ...game, consecutiveSixes: 3 }, faces(6, 1)).state.turn).toBe("green");
+    });
+
+    it("the streak carries through bonus rolls within a turn", () => {
+      const game = twoPlayer();
+      const afterFirst = rollDice(game, faces(6, 6)).state;
+      const bonus = applyMove(applyMove(afterFirst, 0, 0).state, 1, 1).state;
+
+      expect(bonus).toMatchObject({ turn: "red", phase: "awaiting_roll", consecutiveSixes: 1 });
+
+      const second = rollDice(bonus, faces(6, 1)).state;
+      expect(second.consecutiveSixes).toBe(2);
+    });
+
+    it("no playable die with a 6 thrown: the bonus roll still stands", () => {
+      const game = twoPlayer();
+      // Own blockade on the start cell blocks coming out; green blockade on 1 blocks the pair
+      game.tokens[0].pos = track(0);
+      game.tokens[1].pos = track(0);
+      game.tokens[4].pos = track(1);
+      game.tokens[5].pos = track(1);
+
+      const result = rollDice(game, faces(6, 1));
+
+      expect(result.events).toEqual([{ type: "extra_turn", color: "red" }]);
+      expect(result.state).toMatchObject({ turn: "red", phase: "awaiting_roll", dice: null, consecutiveSixes: 1 });
+    });
+
+    it("no playable die without a 6: the turn passes at once", () => {
+      const result = rollDice(twoPlayer(), faces(2, 5));
+
+      expect(result.events).toEqual([{ type: "turn_passed", color: "green" }]);
+      expect(result.state).toMatchObject({ turn: "green", phase: "awaiting_roll", dice: null });
+    });
+
+    it("skips finished players when the turn passes", () => {
+      const game = createGame({
+        playerColors: ["red", "green", "yellow"],
+        houseRules: { ...rules, playForPlacements: true },
+      });
+
+      const result = rollDice({ ...game, placements: ["green"] }, faces(1, 2));
+
+      expect(result.state.turn).toBe("yellow");
+    });
   });
 });

@@ -18,7 +18,6 @@ export interface DisconnectGrace {
 
 export interface GameManager {
   state: GameState;
-  autoPassTimer: NodeJS.Timeout | null;
   moveTimer: NodeJS.Timeout | null;
   disconnectGraces: Map<Color, DisconnectGrace>;
   aiSubstitutes: Set<Color>;
@@ -45,20 +44,10 @@ export class GameManagerRegistry {
   createGame(roomCode: string, config: GameConfig): GameState {
     const rulesState = createGame(config);
     
-    const gameState: GameState = {
-      config: rulesState.config,
-      tokens: rulesState.tokens,
-      turn: rulesState.turn,
-      phase: rulesState.phase,
-      dice: rulesState.dice,
-      consecutiveSixes: rulesState.consecutiveSixes,
-      winner: rulesState.winner,
-      placements: rulesState.placements,
-    };
+    const gameState = this.fromRulesState(rulesState);
 
     this.games.set(roomCode, {
       state: gameState,
-      autoPassTimer: null,
       moveTimer: null,
       disconnectGraces: new Map(),
       aiSubstitutes: new Set(),
@@ -80,7 +69,8 @@ export class GameManagerRegistry {
     }
   }
 
-  rollDice(roomCode: string): { success: boolean; value?: number; error?: string; autoPass?: boolean } {
+  /** Throws both dice server-side; the engine ends the throw at once when neither die is playable. */
+  rollDice(roomCode: string): { success: boolean; values?: [number, number]; error?: string } {
     const game = this.games.get(roomCode);
     if (!game) {
       return { success: false, error: 'Game not found' };
@@ -93,23 +83,17 @@ export class GameManagerRegistry {
     this.clearTimers(game);
 
     const rng = () => randomInt(0, 6) / 6;
-    const rulesState = this.toRulesState(game.state);
-    const result = rollDice(rulesState, rng);
-    
+    const result = rollDice(this.toRulesState(game.state), rng);
     game.state = this.fromRulesState(result.state);
 
-    const moves = legalMoves(this.toRulesState(game.state));
-    
-    if (moves.length === 0 && game.state.phase === 'awaiting_move') {
-      return { success: true, value: result.value, autoPass: true };
-    }
-
-    return { success: true, value: result.value };
+    return { success: true, values: result.values };
   }
 
+  /** Plays one die of the current throw. */
   applyMove(
     roomCode: string, 
-    tokenIndex: number
+    tokenIndex: number,
+    dieIndex: 0 | 1
   ): { 
     success: boolean; 
     error?: string; 
@@ -131,7 +115,7 @@ export class GameManagerRegistry {
 
     const rulesState = this.toRulesState(game.state);
     const moves = legalMoves(rulesState);
-    const move = moves.find(m => m.tokenIndex === tokenIndex);
+    const move = moves.find(m => m.tokenIndex === tokenIndex && m.dieIndex === dieIndex);
 
     if (!move) {
       return { 
@@ -139,12 +123,12 @@ export class GameManagerRegistry {
         error: 'Illegal move', 
         hint: moves.length === 0 
           ? 'No legal moves available' 
-          : `Valid token indices: ${moves.map(m => m.tokenIndex).join(', ')}` 
+          : `Valid moves (token/die): ${moves.map(m => `${m.tokenIndex}/${m.dieIndex}`).join(', ')}` 
       };
     }
 
     const from = game.state.tokens[tokenIndex].pos;
-    const result = applyMove(rulesState, tokenIndex);
+    const result = applyMove(rulesState, tokenIndex, dieIndex);
     game.state = this.fromRulesState(result.state);
     
     return {
@@ -163,14 +147,6 @@ export class GameManagerRegistry {
 
     const rulesState = this.toRulesState(game.state);
     return legalMoves(rulesState);
-  }
-
-  setAutoPassTimer(roomCode: string, callback: () => void): void {
-    const game = this.games.get(roomCode);
-    if (!game) return;
-
-    this.clearAutoPassTimer(game);
-    game.autoPassTimer = setTimeout(callback, 3000);
   }
 
   setMoveTimer(roomCode: string, callback: () => void): void {
@@ -239,7 +215,6 @@ export class GameManagerRegistry {
   }
 
   clearTimers(game: GameManager): void {
-    this.clearAutoPassTimer(game);
     this.clearMoveTimer(game);
   }
 
@@ -248,13 +223,6 @@ export class GameManagerRegistry {
       clearTimeout(grace.timer);
     }
     game.disconnectGraces.clear();
-  }
-
-  private clearAutoPassTimer(game: GameManager): void {
-    if (game.autoPassTimer) {
-      clearTimeout(game.autoPassTimer);
-      game.autoPassTimer = null;
-    }
   }
 
   private clearMoveTimer(game: GameManager): void {
