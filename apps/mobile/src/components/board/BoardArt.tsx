@@ -32,6 +32,7 @@ import {
 import type { BoardModel, YardView } from './boardModel';
 import { PieceDefs, PieceGlyph } from './PieceGlyph';
 import { JAMAICA } from './jamaica';
+import { islandTransform, MiniMap } from './MiniMap';
 import { accent, color, font, PLACES, piece as PIECE, TURN_ORDER, type Corner, type PieceColor } from '../../theme/tokens';
 
 export const C = 20;
@@ -76,15 +77,6 @@ function starPoints(x: number, y: number, R: number): string {
     pts.push(`${(x + rr * Math.cos(a)).toFixed(2)},${(y + rr * Math.sin(a)).toFixed(2)}`);
   }
   return pts.join(' ');
-}
-
-/** Island drawn into a box with SVG "meet" fitting, without a nested <Svg>. */
-function islandTransform(x: number, y: number, w: number, h: number, vb: [number, number, number, number]): string {
-  const [vx, vy, vw, vh] = vb;
-  const k = Math.min(w / vw, h / vh);
-  const tx = x + (w - vw * k) / 2 - vx * k;
-  const ty = y + (h - vh * k) / 2 - vy * k;
-  return `translate(${tx} ${ty}) scale(${k})`;
 }
 
 function BoardDefs() {
@@ -256,19 +248,6 @@ function outerCorner(corner: Corner, x: number, y: number): [number, number] {
     BL: [x, y + YARD] as [number, number],
     BR: [x + YARD, y + YARD] as [number, number],
   }[corner];
-}
-
-function MiniMap({ pin, x, y, w, pinColor }: { pin: keyof typeof JAMAICA.pins; x: number; y: number; w: number; pinColor: string }) {
-  const h = (w * JAMAICA.height) / JAMAICA.width;
-  const [px, py] = JAMAICA.pins[pin];
-  const base = '#45464c';
-  return (
-    <G transform={islandTransform(x, y, w, h, [-40, -40, 1080, 474])}>
-      <Path d={JAMAICA.path} fill={base} stroke={base} strokeWidth={6} strokeLinejoin="round" />
-      <Circle cx={px} cy={py} r={120} fill={pinColor} opacity={0.25} />
-      <Circle cx={px} cy={py} r={62} fill={pinColor} stroke={color.yard} strokeWidth={22} />
-    </G>
-  );
 }
 
 function MicGlyph({ x, y, muted }: { x: number; y: number; muted: boolean }) {
