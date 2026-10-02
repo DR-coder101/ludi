@@ -37,6 +37,8 @@ export default function LobbyScreen() {
   const { visible, message, type, duration, showToast, hideToast } = useToastStore();
 
   const [isStarting, setIsStarting] = useState(false);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const socket = socketManager.getSocket();
@@ -52,10 +54,20 @@ export default function LobbyScreen() {
     }
     setConnected(socket.connected);
 
+    // Timeout if room state doesn't arrive within 10 seconds
+    const timeout = setTimeout(() => {
+      if (!roomState) {
+        console.error('[Lobby] Timeout waiting for room state');
+        setLoadingError('Could not load room. The room may not exist or the server is unavailable.');
+      }
+    }, 10000);
+
     // Listen for room state updates
     socket.on('room:state', (state) => {
       console.log('[Lobby] Room state update:', state);
       setRoomState(state);
+      clearTimeout(timeout);
+      setLoadingError(null);
       
       // Update myPlayerId if we don't have it yet and can find ourselves
       const storedPlayerId = socketManager.getPlayerId();
@@ -63,6 +75,10 @@ export default function LobbyScreen() {
         setMyPlayerId(storedPlayerId);
       }
     });
+
+    // Request current room state when mounting (handles race condition where
+    // room:create emits room:state before this listener is set up)
+    socket.emit('room:requestState');
 
     // Listen for game start
     socket.on('game:state', (gameState) => {
@@ -106,12 +122,13 @@ export default function LobbyScreen() {
     });
 
     return () => {
+      clearTimeout(timeout);
       socket.off('room:state');
       socket.off('game:state');
       socket.off('player:connectionChanged');
       socket.off('error');
     };
-  }, [roomCode, router]);
+  }, [roomCode, router, retryCount]);
 
   const handleLeave = async () => {
     const socket = socketManager.getSocket();
@@ -178,7 +195,10 @@ export default function LobbyScreen() {
 
   if (!roomState) {
     return (
-      <LobbyLoading>
+      <LobbyLoading error={loadingError} onRetry={() => {
+        setLoadingError(null);
+        setRetryCount(prev => prev + 1);
+      }} onBack={() => router.replace('/')}>
         {header}
         {toast}
       </LobbyLoading>

@@ -214,6 +214,7 @@ export interface VideoTokenResponse {
 export interface ClientToServerEvents {
   'room:create': (payload: RoomCreatePayload, callback: (response: RoomCreateResponse) => void) => void;
   'room:join': (payload: RoomJoinPayload, callback: (response: RoomJoinResponse) => void) => void;
+  'room:requestState': () => void;
   'room:selectSeat': (payload: SeatSelectPayload, callback: (response: SeatSelectResponse) => void) => void;
   'room:ready': () => void;
   'room:leave': () => void;
