@@ -4,7 +4,7 @@ import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { applyMove, legalMoves, rollDice, type GameState } from '@ludi/rules';
 import { BoardScreen } from '../../src/components/game/BoardScreen';
 import { makeHop, type HopAnimation } from '../../src/components/board/BoardView';
-import { boardFixture, MOCKUP_NAMES, type FixtureName } from '../../src/dev/boardFixtures';
+import { boardFixture, MID_ROLL, MOCKUP_NAMES, type FixtureName } from '../../src/dev/boardFixtures';
 
 /** Ring fill in the mockups: dash 140 (start) and 110 (mid) of a 150.8 circumference. */
 const MOCKUP_TIMER: Record<FixtureName, number> = { start: 140 / 150.8, mid: 110 / 150.8 };
@@ -18,13 +18,13 @@ export default function BoardPreview() {
   const params = useLocalSearchParams<{ state?: string }>();
   const fixture: FixtureName = params.state === 'mid' ? 'mid' : 'start';
   const [state, setState] = useState<GameState>(() => boardFixture(fixture));
-  const [lastRoll, setLastRoll] = useState<number | null>(fixture === 'mid' ? 6 : null);
+  const [lastRoll, setLastRoll] = useState<[number, number] | null>(fixture === 'mid' ? MID_ROLL : null);
   const [rollKey, setRollKey] = useState(0);
   const [hop, setHop] = useState<{ anim: HopAnimation; next: GameState } | null>(null);
 
   useEffect(() => {
     setState(boardFixture(fixture));
-    setLastRoll(fixture === 'mid' ? 6 : null);
+    setLastRoll(fixture === 'mid' ? MID_ROLL : null);
     setHop(null);
   }, [fixture]);
 
@@ -53,15 +53,13 @@ export default function BoardPreview() {
         }}
         onRoll={() => {
           const result = rollDice(state, Math.random);
-          setLastRoll(result.value);
+          setLastRoll(result.values);
           setRollKey((k) => k + 1);
           setState(result.state);
         }}
-        onTokenPress={(tokenIndex) => {
-          const move = moves.find((m) => m.tokenIndex === tokenIndex);
-          if (!move) return;
-          const anim = makeHop(state, tokenIndex, move.resulting);
-          const next = applyMove(state, tokenIndex).state;
+        onMove={(move) => {
+          const anim = makeHop(state, move.tokenIndex, move.resulting);
+          const next = applyMove(state, move.tokenIndex, move.dieIndex).state;
           if (anim) setHop({ anim, next });
           else setState(next);
         }}

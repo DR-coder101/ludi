@@ -26,6 +26,9 @@ const MID_POSITIONS: Record<Color, TokenPos[]> = {
   blue: [track(43), track(43), track(28), yard],
 };
 
+/** The mid fixture's throw: a 6 (bonus roll earned) and a 3, both still to play. */
+export const MID_ROLL: [number, number] = [6, 3];
+
 export function boardFixture(name: FixtureName): GameState {
   const base = createGame({
     playerColors: ['red', 'green', 'yellow', 'blue'],
@@ -42,7 +45,11 @@ export function boardFixture(name: FixtureName): GameState {
     ...base,
     tokens: base.tokens.map((t) => ({ ...t, pos: MID_POSITIONS[t.color][t.index] })),
     phase: 'awaiting_move',
-    dice: 6,
+    dice: [
+      { value: MID_ROLL[0], used: false },
+      { value: MID_ROLL[1], used: false },
+    ],
     consecutiveSixes: 1,
+    extraRollEarned: true,
   };
 }

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { StyleSheet, View, SafeAreaView, Text, ActivityIndicator } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import type { Color } from '@ludi/protocol';
+import { legalMoves as engineMoves } from '@ludi/rules';
 import { socketManager } from '../../src/net/socket';
 import { useRoomStore } from '../../src/stores/roomStore';
 import { useGameStore } from '../../src/stores/gameStore';
@@ -10,6 +11,7 @@ import { useChatStore } from '../../src/stores/chatStore';
 import { useVideoStore } from '../../src/stores/videoStore';
 import { useToastStore } from '../../src/stores/toastStore';
 import { BoardScreen } from '../../src/components/game/BoardScreen';
+import type { MoveLike } from '../../src/components/board/boardModel';
 import { makeHop, type HopAnimation } from '../../src/components/board/BoardView';
 import { useTurnTimer } from '../../src/components/game/useTurnTimer';
 import { WinScreen } from '../../src/components/win/WinScreen';
@@ -35,9 +37,7 @@ export default function OnlineGameScreen() {
   const myPlayer = useRoomStore((state) => state.getMyPlayer());
 
   const gameState = useGameStore((state) => state.gameState);
-  const legalMoves = useGameStore((state) => state.legalMoves);
   const setGameState = useGameStore((state) => state.setGameState);
-  const setLegalMoves = useGameStore((state) => state.setLegalMoves);
   const setCurrentTurnPlayerId = useGameStore((state) => state.setCurrentTurnPlayerId);
   const setTurnDeadline = useGameStore((state) => state.setTurnDeadline);
   const applyOptimisticMove = useGameStore((state) => state.applyOptimisticMove);
@@ -63,7 +63,7 @@ export default function OnlineGameScreen() {
   const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
 
   const [hop, setHop] = useState<HopAnimation | null>(null);
-  const [lastRoll, setLastRoll] = useState<number | null>(null);
+  const [lastRoll, setLastRoll] = useState<[number, number] | null>(null);
   const [rollKey, setRollKey] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
@@ -128,9 +128,8 @@ export default function OnlineGameScreen() {
 
     socket.on('game:diceRolled', (payload) => {
       const roller = colorOf(payload.playerId);
-      if (roller) match.roll(roller, payload.value);
-      setLegalMoves(payload.legalMoves);
-      setLastRoll(payload.value);
+      if (roller) match.roll(roller, payload.values);
+      setLastRoll(payload.values);
       setRollKey((k) => k + 1);
       gameAudio.play('roll');
 
@@ -210,6 +209,11 @@ export default function OnlineGameScreen() {
 
   const myColor = myPlayer?.color ?? null;
   const isMyTurn = !!gameState && !!myColor && gameState.turn === myColor;
+  // Moves come from the synced state, so they stay current after the first die is played.
+  const legalMoves = useMemo(
+    () => (gameState?.phase === 'awaiting_move' ? engineMoves(gameState) : []),
+    [gameState],
+  );
 
   const names = useMemo(() => {
     const out: Partial<Record<Color, string>> = {};
@@ -236,10 +240,10 @@ export default function OnlineGameScreen() {
     });
   }, [isMyTurn, gameState?.phase, isRolling]);
 
-  const handleTokenPress = useCallback((tokenIndex: number) => {
+  const handleMove = useCallback(({ tokenIndex, dieIndex }: MoveLike) => {
     if (!isMyTurn || gameState?.phase !== 'awaiting_move' || isMoving) return;
 
-    const move = legalMoves.find((m) => m.tokenIndex === tokenIndex);
+    const move = legalMoves.find((m) => m.tokenIndex === tokenIndex && m.dieIndex === dieIndex);
     if (!move) return;
 
     const socket = socketManager.getSocket();
@@ -249,9 +253,9 @@ export default function OnlineGameScreen() {
 
     const from = gameState.tokens[tokenIndex].pos;
     setHop(makeHop(gameState, tokenIndex, move.resulting));
-    applyOptimisticMove(tokenIndex, from, move.resulting);
+    applyOptimisticMove({ tokenIndex, dieIndex, from, to: move.resulting });
 
-    socket.emit('game:move', { tokenIndex }, (response) => {
+    socket.emit('game:move', { tokenIndex, dieIndex }, (response) => {
       setIsMoving(false);
 
       if (!response.success) {
@@ -326,7 +330,7 @@ export default function OnlineGameScreen() {
         hop={hop}
         onHopDone={() => setHop(null)}
         onRoll={isRolling ? undefined : handleRoll}
-        onTokenPress={handleTokenPress}
+        onMove={handleMove}
         onMenu={handleLeave}
         onProfile={() => router.push('/profile')}
         voice={{ on: micEnabled, onToggle: toggleMic }}

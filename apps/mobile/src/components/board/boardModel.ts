@@ -4,6 +4,9 @@ import { PLACES, TURN_ORDER, type PieceColor } from '../../theme/tokens';
 
 export interface MoveLike {
   tokenIndex: number;
+  /** Die of the current throw the move spends, and its value. */
+  dieIndex: 0 | 1;
+  steps: number;
   resulting: TokenPos;
 }
 
@@ -105,10 +108,13 @@ function pickHighlight(
   state: GameState,
   moves: MoveLike[],
   focusTokenIndex: number | null,
+  focusDie: 0 | 1 | null,
 ): MoveHighlight | null {
   if (state.phase !== 'awaiting_move' || state.dice == null) return null;
   const onBoard = moves.filter((m) => state.tokens[m.tokenIndex]?.pos.zone !== 'yard');
-  const move = onBoard.find((m) => m.tokenIndex === focusTokenIndex) ?? onBoard[0];
+  const preferred = onBoard.filter((m) => m.dieIndex === focusDie);
+  const pool = preferred.length > 0 ? preferred : onBoard;
+  const move = pool.find((m) => m.tokenIndex === focusTokenIndex) ?? pool[0];
   if (!move) return null;
   const token = state.tokens[move.tokenIndex];
   const from = cellOf(token.pos, token.color);
@@ -122,18 +128,19 @@ function pickHighlight(
     from,
     path: cells.slice(0, -1),
     to,
-    steps: state.dice,
+    steps: move.steps,
   };
 }
 
 /**
  * Everything the board draws for one engine state. `hidden` tokens are left out
- * (they are mid-animation and drawn by the hop layer instead).
+ * (they are mid-animation and drawn by the hop layer instead). Every token with
+ * a move for either die is marked legal; the path preview prefers `focusDie`.
  */
 export function buildBoardModel(
   state: GameState,
   moves: MoveLike[],
-  options: { focusTokenIndex?: number | null; hidden?: number[] } = {},
+  options: { focusTokenIndex?: number | null; focusDie?: 0 | 1 | null; hidden?: number[] } = {},
 ): BoardModel {
   const hidden = new Set(options.hidden ?? []);
   const legal = new Set(moves.map((m) => m.tokenIndex));
@@ -209,6 +216,6 @@ export function buildBoardModel(
       ...HOME_SPOTS[color],
       count,
     })),
-    highlight: pickHighlight(state, moves, options.focusTokenIndex ?? null),
+    highlight: pickHighlight(state, moves, options.focusTokenIndex ?? null, options.focusDie ?? null),
   };
 }
