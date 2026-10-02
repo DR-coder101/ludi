@@ -86,7 +86,6 @@ export function LobbyRoom(props: LobbyRoomProps) {
                   key={seat.color} 
                   seat={seat} 
                   width={seatWidth} 
-                  onInvite={seat.name == null ? onShare : undefined}
                   onSelect={seat.name == null && !seat.you && onSelectSeat ? () => onSelectSeat(seat.color) : undefined}
                 />
               ))}

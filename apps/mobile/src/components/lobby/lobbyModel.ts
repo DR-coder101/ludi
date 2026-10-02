@@ -40,7 +40,7 @@ export interface StartCta {
   enabled: boolean;
 }
 
-export const OPEN_SEAT: Omit<LobbySeat, 'color'> = { name: null, status: 'Invite a friend', ready: false, you: false };
+export const OPEN_SEAT: Omit<LobbySeat, 'color'> = { name: null, status: 'Tap to sit', ready: false, you: false };
 
 function playerStatus(p: Player): { status: string; ready: boolean } {
   if (p.status === 'reconnecting') return { status: 'Reconnecting…', ready: false };

@@ -28,7 +28,6 @@ const GLOW: Record<PieceColor, string> = { gold: PIECE.gold.mid, green: PIECE.gr
 interface SeatCardProps {
   seat: LobbySeat;
   width: number;
-  onInvite?: () => void;
   onSelect?: () => void;
 }
 
@@ -75,7 +74,7 @@ function CornerMark({ corner, tint }: { corner: Corner; tint: string }) {
   );
 }
 
-export function SeatCard({ seat, width, onInvite, onSelect }: SeatCardProps) {
+export function SeatCard({ seat, width, onSelect }: SeatCardProps) {
   const place = PLACES[seat.color];
   const a = accent[place.piece];
   const open = seat.name == null;
@@ -135,18 +134,14 @@ export function SeatCard({ seat, width, onInvite, onSelect }: SeatCardProps) {
   return (
     <View style={[styles.seat, seat.you ? cssShadow(0, 0, 24, glow, 0.35, 0) : null]}>
       {seat.you ? <View pointerEvents="none" style={[styles.ring, { borderColor: `${glow}40` }]} /> : null}
-      {open && (onInvite || onSelect) ? (
+      {open && onSelect ? (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={label}
-          accessibilityHint={onSelect ? `Select ${place.full} seat` : "Share the room invite"}
+          accessibilityHint={`Select ${place.full} seat`}
           onPress={() => {
             triggerHaptic.light();
-            if (onSelect) {
-              onSelect();
-            } else if (onInvite) {
-              onInvite();
-            }
+            onSelect();
           }}
         >
           {card}

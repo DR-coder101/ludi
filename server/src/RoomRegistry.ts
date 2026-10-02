@@ -71,12 +71,15 @@ export class RoomRegistry {
       return { success: false, error: 'Player not in room' };
     }
 
+    if (player.color === requestedColor) {
+      return { success: true };
+    }
+
     const targetSeat = room.players.find(p => p.color === requestedColor);
     if (targetSeat) {
       return { success: false, error: 'Seat already taken' };
     }
 
-    const oldColor = player.color;
     player.color = requestedColor;
 
     const session = Array.from(this.sessionToPlayer.entries()).find(([_, data]) => data.playerId === playerId && data.roomCode === roomCode);

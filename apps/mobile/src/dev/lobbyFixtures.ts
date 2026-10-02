@@ -14,9 +14,9 @@ export const MOCKUP_LOBBY: { code: string; seats: LobbySeat[]; note: RoomNote; s
   start: startCta(3, true),
 };
 
-/** A server-shaped room (6-character code, host on red as RoomRegistry assigns) for the live mapping. */
+/** A server-shaped room (5-character code, host on red as RoomRegistry assigns) for the live mapping. */
 export const ROOM_FIXTURE: RoomState = {
-  roomCode: 'K7Q2MX',
+  roomCode: 'K7Q2M',
   hostId: 'dean',
   status: 'lobby',
   houseRules: {
