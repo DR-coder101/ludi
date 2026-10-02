@@ -164,7 +164,11 @@ const styles = StyleSheet.create({
     // synthesise the same; iOS draws plain Anton).
     fontWeight: '700',
     fontSize: 26,
-    lineHeight: 26,
+    // The mockup's line-height is 1 (26px). Native platforms cut off glyphs above a line box shorter
+    // than Anton's ascent + descent, so the box is a full 40px and the margins give back the extra 14.
+    lineHeight: 40,
+    marginVertical: -7,
+    includeFontPadding: false,
     letterSpacing: 0.8,
     color: color.cream,
   },
