@@ -27,11 +27,11 @@ export interface HomeLandingProps {
 const MAX_COLUMN = 440;
 const SIDE = 16;
 const CARD_GAP = 10;
-/** Mockup gaps: hero 3pt under the status bar, account card ends 20.5pt above the home indicator inset. */
+/** Mockup gaps: hero 3pt under the status bar, account card ends 20pt above the home indicator inset. */
 const HERO_TOP = 3;
-const BOTTOM_GAP = 20.5;
-/** Two cards, their gap, and the account strip (two-line copy) as laid out in the mockup. */
-const LOWER_ESTIMATE = MODE_CARD_HEIGHT * 2 + CARD_GAP * 2 + 123.5;
+const BOTTOM_GAP = 20;
+/** Two cards, their gaps, and the account strip with two-line copy, as laid out in the mockup. */
+const LOWER_ESTIMATE = MODE_CARD_HEIGHT * 2 + CARD_GAP * 2 + 124;
 
 export function HomeLanding(props: HomeLandingProps) {
   const { signedIn, onlineBusy, onOnline, onLocal, onSignIn, onSignUp, onProfile, onHistory, children } = props;
@@ -44,7 +44,8 @@ export function HomeLanding(props: HomeLandingProps) {
   const cardWidth = columnWidth - SIDE * 2;
   const top = insets.top + HERO_TOP;
   const bottom = insets.bottom + BOTTOM_GAP;
-  const [heroRoom, setHeroRoom] = useState(() => height - top - bottom - LOWER_ESTIMATE);
+  const [lowerHeight, setLowerHeight] = useState(LOWER_ESTIMATE);
+  const heroRoom = height - top - bottom - lowerHeight;
   const scale = Math.max(0.5, Math.min(columnWidth / HERO.width, heroRoom / HERO.height));
   const slack = Math.max(0, heroRoom - HERO.height * scale);
 
@@ -54,7 +55,7 @@ export function HomeLanding(props: HomeLandingProps) {
       <ScreenBackdrop />
       {fontsReady ? (
         <View style={[styles.column, { width: columnWidth, paddingTop: top, paddingBottom: bottom }]}>
-          <View style={styles.heroRoom} onLayout={(e) => setHeroRoom(e.nativeEvent.layout.height)}>
+          <View style={styles.heroRoom}>
             <View
               style={{
                 position: 'absolute',
@@ -77,7 +78,7 @@ export function HomeLanding(props: HomeLandingProps) {
               </View>
             </View>
           </View>
-          <View style={styles.lower}>
+          <View style={styles.lower} onLayout={(e) => setLowerHeight(e.nativeEvent.layout.height)}>
             <ModeCard
               tone="gold"
               icon="globe"

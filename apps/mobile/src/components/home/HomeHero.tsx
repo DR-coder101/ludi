@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: font.sticker,
     fontSize: 12,
-    lineHeight: 13,
+    lineHeight: 14,
     letterSpacing: 3.2,
     color: color.cream,
   },

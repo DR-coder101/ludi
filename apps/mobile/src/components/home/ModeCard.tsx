@@ -164,5 +164,7 @@ const styles = StyleSheet.create({
   go: {
     width: 22,
     alignItems: 'center',
+    // The pack's chevron is an inline SVG on a text baseline, 2pt above the card's centre line.
+    marginTop: -4,
   },
 });

@@ -20,6 +20,7 @@ interface AccountStripProps {
 
 const BUTTON_HEIGHT = 46;
 const BUTTON_RADIUS = 14;
+const OUTLINE_BORDER = 1.5;
 
 /** `.acct`: frosted card with a two-button row (outlined cream, solid Jamaica green). */
 export function AccountStrip({ lead, body, outline, solid }: AccountStripProps) {
@@ -29,14 +30,14 @@ export function AccountStrip({ lead, body, outline, solid }: AccountStripProps) 
         <Text style={styles.lead}>{lead}</Text> {body}
       </Text>
       <View style={styles.row}>
-        <PressScale label={outline.a11y} onPress={outline.onPress} containerStyle={styles.cell} style={styles.radius}>
+        <PressScale label={outline.a11y} onPress={outline.onPress} containerStyle={styles.outlineCell} style={styles.radius}>
           {() => (
             <View style={[styles.button, styles.outline]}>
               <Text style={styles.label}>{outline.label}</Text>
             </View>
           )}
         </PressScale>
-        <PressScale label={solid.a11y} onPress={solid.onPress} containerStyle={styles.cell} style={[styles.radius, styles.greenShadow]}>
+        <PressScale label={solid.a11y} onPress={solid.onPress} containerStyle={styles.solidCell} style={[styles.radius, styles.greenShadow]}>
           {() => (
             <View style={[styles.button, styles.solid]}>
               <SolidHighlight />
@@ -89,8 +90,14 @@ const styles = StyleSheet.create({
     gap: 10,
     marginTop: 12,
   },
-  cell: {
-    flex: 1,
+  // CSS counts the outline's border in its flex base size, so it ends up 3pt wider than the solid button.
+  outlineCell: {
+    flexGrow: 1,
+    flexBasis: OUTLINE_BORDER * 2,
+  },
+  solidCell: {
+    flexGrow: 1,
+    flexBasis: 0,
   },
   radius: {
     borderRadius: BUTTON_RADIUS,
@@ -104,7 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   outline: {
-    borderWidth: 1.5,
+    borderWidth: OUTLINE_BORDER,
     borderColor: 'rgba(246,239,217,0.55)',
   },
   solid: {
