@@ -5,6 +5,7 @@ import { socketManager } from '../../src/net/socket';
 import { useRoomStore } from '../../src/stores/roomStore';
 import { useConnectionStore } from '../../src/stores/connectionStore';
 import { useVideoStore } from '../../src/stores/videoStore';
+import { useGameStore } from '../../src/stores/gameStore';
 import { useToastStore } from '../../src/stores/toastStore';
 import { Toast } from '../../src/components/Toast';
 import { LobbyLoading, LobbyRoom } from '../../src/components/lobby/LobbyRoom';
@@ -21,6 +22,7 @@ export default function LobbyScreen() {
   const myPlayerId = useRoomStore((state) => state.myPlayerId);
   const setMyPlayerId = useRoomStore((state) => state.setMyPlayerId);
   const updatePlayerConnection = useRoomStore((state) => state.updatePlayerConnection);
+  const setGameState = useGameStore((state) => state.setGameState);
   const isHost = useRoomStore((state) => state.isHost());
   
   const isConnected = useConnectionStore((state) => state.isConnected);
@@ -65,6 +67,8 @@ export default function LobbyScreen() {
     // Listen for game start
     socket.on('game:state', (gameState) => {
       console.log('[Lobby] Game started, navigating to game screen');
+      // The game screen subscribes after it mounts, so it would miss this first state.
+      setGameState(gameState);
       router.replace(`/game/${roomCode}`);
     });
 
