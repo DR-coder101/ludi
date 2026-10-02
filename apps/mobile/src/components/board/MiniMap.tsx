@@ -20,13 +20,14 @@ interface MiniMapProps {
   pinColor: string;
   /** Ring around the pin, matching the surface the map sits on. */
   pinStroke?: string;
+  /** Island fill. */
+  base?: string;
 }
 
 /** The pack's `jamMap()`: grey island with a town pin and soft halo. */
-export function MiniMap({ pin, x, y, w, pinColor, pinStroke = color.yard }: MiniMapProps) {
+export function MiniMap({ pin, x, y, w, pinColor, pinStroke = color.yard, base = '#45464c' }: MiniMapProps) {
   const h = (w * JAMAICA.height) / JAMAICA.width;
   const [px, py] = JAMAICA.pins[pin];
-  const base = '#45464c';
   return (
     <G transform={islandTransform(x, y, w, h, [-40, -40, 1080, 474])}>
       <Path d={JAMAICA.path} fill={base} stroke={base} strokeWidth={6} strokeLinejoin="round" />

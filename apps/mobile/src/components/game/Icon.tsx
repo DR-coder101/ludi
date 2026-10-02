@@ -19,7 +19,10 @@ export type IconName =
   | 'video'
   | 'check'
   | 'plus'
-  | 'lock';
+  | 'lock'
+  | 'crown'
+  | 'refresh'
+  | 'home';
 
 /** Stroke icons from the design pack (24×24, round caps). */
 function glyph(name: IconName) {
@@ -128,6 +131,12 @@ function glyph(name: IconName) {
           <Path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
         </>
       );
+    case 'crown':
+      return <Path d="M4 17l-1-9 5 4 4-7 4 7 5-4-1 9zM4 20h16" />;
+    case 'refresh':
+      return <Path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.2h-4.2" />;
+    case 'home':
+      return <Path d="M4 11l8-7 8 7M6 9.5V20h12V9.5" />;
   }
 }
 

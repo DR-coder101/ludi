@@ -12,7 +12,9 @@ import { useToastStore } from '../../src/stores/toastStore';
 import { BoardScreen } from '../../src/components/game/BoardScreen';
 import { makeHop, type HopAnimation } from '../../src/components/board/BoardView';
 import { useTurnTimer } from '../../src/components/game/useTurnTimer';
-import { WinBanner } from '../../src/components/WinBanner';
+import { WinScreen } from '../../src/components/win/WinScreen';
+import { winView } from '../../src/components/win/winModel';
+import { useMatchStats } from '../../src/components/win/useMatchStats';
 import { ChatPanel } from '../../src/components/ChatPanel';
 import { Toast } from '../../src/components/Toast';
 import { OnboardingTooltip, useOnboarding } from '../../src/components/OnboardingTooltip';
@@ -65,6 +67,8 @@ export default function OnlineGameScreen() {
   const [rollKey, setRollKey] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
   const [isMoving, setIsMoving] = useState(false);
+  const [isRematching, setIsRematching] = useState(false);
+  const match = useMatchStats(gameState?.phase === 'finished');
 
   const timer = useTurnTimer(gameState?.phase === 'finished' ? null : turnDeadline, TURN_MS);
 
@@ -119,7 +123,12 @@ export default function OnlineGameScreen() {
       setGameState(state);
     });
 
+    const colorOf = (playerId: string) =>
+      useRoomStore.getState().roomState?.players.find((p) => p.id === playerId)?.color;
+
     socket.on('game:diceRolled', (payload) => {
+      const roller = colorOf(payload.playerId);
+      if (roller) match.roll(roller, payload.value);
       setLegalMoves(payload.legalMoves);
       setLastRoll(payload.value);
       setRollKey((k) => k + 1);
@@ -132,6 +141,8 @@ export default function OnlineGameScreen() {
 
     socket.on('game:tokenMoved', (payload) => {
       if (payload.captured) {
+        const mover = colorOf(payload.playerId);
+        if (mover) match.capture(mover);
         gameAudio.play('capture');
         triggerHaptic.heavy();
       }
@@ -264,6 +275,26 @@ export default function OnlineGameScreen() {
     router.replace('/');
   };
 
+  /** No rematch event exists yet, so REMATCH opens a fresh room with the same house rules. */
+  const handleRematch = async () => {
+    const socket = socketManager.getSocket();
+    if (!socket || !roomState || !myPlayer || isRematching) return;
+    setIsRematching(true);
+    socket.emit('room:leave');
+    await socketManager.clearSession();
+    socket.emit('room:create', { displayName: myPlayer.displayName, houseRules: roomState.houseRules }, async (response) => {
+      if (!response.success || !response.roomCode) {
+        setIsRematching(false);
+        showToast(response.error || 'Could not open a rematch room', 'error');
+        return;
+      }
+      if (response.sessionToken) await socketManager.saveSessionToken(response.sessionToken);
+      if (response.playerId) await socketManager.savePlayerId(response.playerId);
+      resetVideo();
+      router.replace(`/lobby/${response.roomCode}`);
+    });
+  };
+
   if (!gameState || !roomState) {
     return (
       <SafeAreaView style={styles.loading}>
@@ -275,6 +306,10 @@ export default function OnlineGameScreen() {
   }
 
   const isFinished = gameState.phase === 'finished';
+  const results = isFinished ? winView({ state: gameState, names, roomCode, stats: match.stats }) : null;
+  const toast = (
+    <Toast visible={visible} message={message} type={type} duration={duration} onDismiss={hideToast} />
+  );
 
   return (
     <>
@@ -302,22 +337,19 @@ export default function OnlineGameScreen() {
             <Text style={styles.reconnectingText}>RECONNECTING…</Text>
           </View>
         ) : null}
-        {isFinished && gameState.winner ? (
-          <WinBanner
-            winner={gameState.winner}
-            placements={gameState.placements}
-            onNewGame={handleLeave}
-          />
-        ) : null}
         <ChatPanel hideToggle roomCode={roomCode} myPlayerId={myPlayerId || ''} roomPlayers={roomState.players} />
-        <Toast
-          visible={visible}
-          message={message}
-          type={type}
-          duration={duration}
-          onDismiss={hideToast}
-        />
+        {results ? null : toast}
         {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
+        {results ? (
+          <WinScreen
+            view={results}
+            onRematch={myPlayer ? handleRematch : undefined}
+            rematchBusy={isRematching}
+            onLobby={handleLeave}
+          >
+            {toast}
+          </WinScreen>
+        ) : null}
       </BoardScreen>
     </>
   );
