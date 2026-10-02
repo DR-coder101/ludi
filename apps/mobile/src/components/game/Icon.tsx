@@ -1,7 +1,25 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-export type IconName = 'menu' | 'users' | 'mic' | 'chat' | 'smile' | 'dice' | 'gear' | 'user' | 'globe' | 'phone' | 'chevron';
+export type IconName =
+  | 'menu'
+  | 'users'
+  | 'mic'
+  | 'chat'
+  | 'smile'
+  | 'dice'
+  | 'gear'
+  | 'user'
+  | 'globe'
+  | 'phone'
+  | 'chevron'
+  | 'back'
+  | 'copy'
+  | 'share'
+  | 'video'
+  | 'check'
+  | 'plus'
+  | 'lock';
 
 /** Stroke icons from the design pack (24×24, round caps). */
 function glyph(name: IconName) {
@@ -76,6 +94,40 @@ function glyph(name: IconName) {
       );
     case 'chevron':
       return <Path d="M9 5l7 7-7 7" />;
+    case 'back':
+      return <Path d="M15 5l-7 7 7 7" />;
+    case 'copy':
+      return (
+        <>
+          <Rect x={8} y={8} width={12} height={12} rx={2.5} />
+          <Path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8" />
+        </>
+      );
+    case 'share':
+      return (
+        <>
+          <Path d="M12 3v12M7.5 7.5L12 3l4.5 4.5" />
+          <Path d="M5 12v7h14v-7" />
+        </>
+      );
+    case 'video':
+      return (
+        <>
+          <Rect x={3} y={6.5} width={12.5} height={11} rx={2.5} />
+          <Path d="M15.5 10.5l5-3v9l-5-3z" />
+        </>
+      );
+    case 'check':
+      return <Path d="M5 12.5l4.5 4.5L19 7.5" />;
+    case 'plus':
+      return <Path d="M12 5v14M5 12h14" />;
+    case 'lock':
+      return (
+        <>
+          <Rect x={5} y={10.5} width={14} height={10} rx={2.5} />
+          <Path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" />
+        </>
+      );
   }
 }
 
