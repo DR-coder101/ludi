@@ -1,11 +1,11 @@
 /**
  * Move application and game event generation for Ludi
- * Source: docs/GAME_RULES.md §4-§6, §9, §11
+ * Source: docs/GAME_RULES.md §2-§6, §8, §9, §11
  */
 
-import type { GameState, TokenPos, Color } from "./types";
+import type { GameState, TokenPos, Color, Dice } from "./types";
 import { legalMoves } from "./legalMoves";
-import { computePath, isStartCell, isSafeCell } from "./topology";
+import { endThrow, passTurn } from "./turn";
 
 export type GameEventType =
   | "moved"
@@ -34,23 +34,30 @@ export interface ApplyMoveResult {
 }
 
 /**
- * Apply a move for the specified token.
- * The tokenIndex must be a legal move from legalMoves(state).
- * 
+ * Play one die: move `tokenIndex` by the value of die `dieIndex`.
+ * The (tokenIndex, dieIndex) pair must appear in legalMoves(state).
+ *
  * This function:
- * - Moves the token to its destination
- * - Handles captures (§5) including start-cell-safe exception (§10 case 8)
+ * - Moves the token and marks the die used (§2)
+ * - Handles captures (§5); start cells are safe so coming out never captures
  * - Emits blockade form/break events (§6)
  * - Handles win detection & placements (§9)
- * - Manages consecutive-six logic and turn passing (§4)
- * - Respects house rules toggles
+ * - Keeps the phase at awaiting_move while the other die can still be played;
+ *   otherwise ends the throw with a bonus roll (§4) or passes the turn (§8)
  */
-export function applyMove(state: GameState, tokenIndex: number): ApplyMoveResult {
+export function applyMove(state: GameState, tokenIndex: number, dieIndex: number): ApplyMoveResult {
   const events: GameEvent[] = [];
-  
-  // Validate that we're in the right phase
+
   if (state.phase !== "awaiting_move" || state.dice === null) {
     throw new Error("Cannot apply move: not in awaiting_move phase or dice is null");
+  }
+
+  const die = state.dice[dieIndex];
+  if (!die) {
+    throw new Error(`Invalid die index: ${dieIndex}`);
+  }
+  if (die.used) {
+    throw new Error(`Die ${dieIndex} has already been played this throw`);
   }
 
   const token = state.tokens[tokenIndex];
@@ -62,134 +69,84 @@ export function applyMove(state: GameState, tokenIndex: number): ApplyMoveResult
     throw new Error(`Cannot move token: it's ${state.turn}'s turn, but token is ${token.color}`);
   }
 
-  // Find the move in legal moves
-  const legal = legalMoves(state);
-  const move = legal.find((m) => m.tokenIndex === tokenIndex);
-  
+  const move = legalMoves(state).find((m) => m.tokenIndex === tokenIndex && m.dieIndex === dieIndex);
   if (!move) {
-    throw new Error(`Move is not legal for token ${tokenIndex}`);
+    throw new Error(`Move is not legal for token ${tokenIndex} with die ${dieIndex}`);
   }
 
-  // Clone state for immutability
-  let newState: GameState = {
+  const dice = state.dice.map((d, i) => (i === dieIndex ? { ...d, used: true } : d)) as Dice;
+  const newState: GameState = {
     ...state,
-    tokens: state.tokens.map((t, i) => (i === tokenIndex ? { ...t } : t)),
+    tokens: [...state.tokens],
+    dice,
   };
 
   const oldPos = token.pos;
   const newPos = move.resulting;
 
-  // Check for blockade break before moving
-  const wasInBlockade = oldPos.zone !== "yard" && oldPos.zone !== "home" && 
-    getTokensAt(oldPos, newState).filter(t => t.color === token.color).length >= 2;
+  const wasInBlockade = oldPos.zone !== "yard" && oldPos.zone !== "home" &&
+    countOwnAt(oldPos, token.color, newState) >= 2;
 
-  // Handle capture BEFORE moving token
   if (move.captures) {
-    const capturedTokenGlobalIndex = newState.tokens.findIndex(
+    const captured = newState.tokens.findIndex(
       (t) => t.color === move.captures!.color && t.index === move.captures!.index
     );
-
-    if (capturedTokenGlobalIndex !== -1) {
-      // Exception: coming out onto opponent on your start cell → NO capture (§10 case 8)
-      const isComingOut = oldPos.zone === "yard";
-      const isLandingOnOwnStart = newPos.zone === "track" && isStartCell(newPos.cell, token.color);
-      
-      if (!(isComingOut && isLandingOnOwnStart)) {
-        // Apply capture: send opponent token to yard
-        newState.tokens[capturedTokenGlobalIndex] = {
-          ...newState.tokens[capturedTokenGlobalIndex],
-          pos: { zone: "yard" },
-        };
-
-        events.push({
-          type: "captured",
-          color: token.color,
-          tokenIndex: token.index,
-          capturedColor: move.captures.color,
-          capturedTokenIndex: move.captures.index,
-        });
-      }
+    newState.tokens[captured] = { ...newState.tokens[captured], pos: { zone: "yard" } };
+    events.push({
+      type: "captured",
+      color: token.color,
+      tokenIndex: token.index,
+      capturedColor: move.captures.color,
+      capturedTokenIndex: move.captures.index,
+    });
+    if (newState.config.houseRules.extraRollOnCapture) {
+      newState.extraRollEarned = true;
     }
   }
 
-  // Move the token
-  newState.tokens[tokenIndex] = {
-    ...newState.tokens[tokenIndex],
-    pos: newPos,
-  };
+  newState.tokens[tokenIndex] = { ...token, pos: newPos };
 
-  // Emit appropriate movement event
-  if (oldPos.zone === "yard" && newPos.zone === "track") {
-    events.push({
-      type: "came_out",
-      color: token.color,
-      tokenIndex: token.index,
-    });
+  if (oldPos.zone === "yard") {
+    events.push({ type: "came_out", color: token.color, tokenIndex: token.index });
   } else if (newPos.zone === "homeColumn" && oldPos.zone === "track") {
-    events.push({
-      type: "entered_home_column",
-      color: token.color,
-      tokenIndex: token.index,
-    });
+    events.push({ type: "entered_home_column", color: token.color, tokenIndex: token.index });
   } else if (newPos.zone === "home") {
-    events.push({
-      type: "got_home",
-      color: token.color,
-      tokenIndex: token.index,
-    });
+    events.push({ type: "got_home", color: token.color, tokenIndex: token.index });
+    if (newState.config.houseRules.exactFinishBonus) {
+      newState.extraRollEarned = true;
+    }
   } else {
-    events.push({
-      type: "moved",
-      color: token.color,
-      tokenIndex: token.index,
-    });
+    events.push({ type: "moved", color: token.color, tokenIndex: token.index });
   }
 
-  // Check for blockade break (after move)
-  if (wasInBlockade) {
-    const stillInBlockade = getTokensAt(oldPos, newState).filter(t => t.color === token.color).length >= 2;
-    if (!stillInBlockade) {
-      events.push({
-        type: "blockade_broken",
-        color: token.color,
-      });
-    }
+  if (wasInBlockade && countOwnAt(oldPos, token.color, newState) < 2) {
+    events.push({ type: "blockade_broken", color: token.color });
   }
 
-  // Check for blockade formation (at new position)
-  if (newPos.zone !== "yard" && newPos.zone !== "home") {
-    const tokensAtNewPos = getTokensAt(newPos, newState).filter(t => t.color === token.color);
-    if (tokensAtNewPos.length >= 2) {
-      // Check if this is a NEW blockade (wasn't one before the move)
-      const wasBlockadeBefore = tokensAtNewPos.length - 1 >= 2; // Subtract the token we just moved
-      if (!wasBlockadeBefore) {
-        events.push({
-          type: "blockade_formed",
-          color: token.color,
-        });
-      }
-    }
+  // A new blockade forms when the moved token makes exactly two
+  if (newPos.zone !== "yard" && newPos.zone !== "home" && countOwnAt(newPos, token.color, newState) === 2) {
+    events.push({ type: "blockade_formed", color: token.color });
   }
 
-  // Check for win condition
-  const colorTokens = newState.tokens.filter((t) => t.color === token.color);
-  const allHome = colorTokens.every((t) => t.pos.zone === "home");
+  const finishedNow = newState.tokens
+    .filter((t) => t.color === token.color)
+    .every((t) => t.pos.zone === "home");
 
-  if (allHome && !newState.placements.includes(token.color)) {
+  if (finishedNow && !newState.placements.includes(token.color)) {
     newState.placements = [...newState.placements, token.color];
 
-    // Check if game should end
-    const shouldContinue = newState.config.houseRules.playForPlacements;
+    const playForPlacements = newState.config.houseRules.playForPlacements;
     const playersRemaining = newState.config.playerColors.filter(
       (c) => !newState.placements.includes(c)
     ).length;
 
-    if (!shouldContinue || playersRemaining <= 1) {
+    if (!playForPlacements || playersRemaining <= 1) {
       newState.winner = newState.placements[0];
       newState.phase = "finished";
-      
-      // Add remaining players to placements if playing for placements
-      if (shouldContinue) {
+      newState.dice = null;
+      newState.extraRollEarned = false;
+
+      if (playForPlacements) {
         for (const color of newState.config.playerColors) {
           if (!newState.placements.includes(color)) {
             newState.placements = [...newState.placements, color];
@@ -205,86 +162,25 @@ export function applyMove(state: GameState, tokenIndex: number): ApplyMoveResult
 
       return { state: newState, events };
     }
+
+    // Finished with placements still to play for: the rest of this throw is void
+    const passed = passTurn(newState);
+    events.push({ type: "turn_passed", color: passed.turn });
+    return { state: passed, events };
   }
 
-  // Determine if extra turn is granted
-  let grantsExtraRoll = false;
-
-  // 1. Rolling a 6 grants extra roll (unless forfeited)
-  if (state.dice === 6) {
-    grantsExtraRoll = true;
+  // The other die is still playable: same player picks again
+  if (legalMoves(newState).length > 0) {
+    return { state: newState, events };
   }
 
-  // 2. Capture grants extra roll if house rule enabled
-  if (move.captures && newState.config.houseRules.extraRollOnCapture) {
-    const isComingOut = oldPos.zone === "yard";
-    const isLandingOnOwnStart = newPos.zone === "track" && isStartCell(newPos.cell, token.color);
-    
-    // Only if capture actually happened
-    if (!(isComingOut && isLandingOnOwnStart)) {
-      grantsExtraRoll = true;
-    }
-  }
-
-  // 3. Getting a token home with exactFinishBonus house rule
-  if (newPos.zone === "home" && newState.config.houseRules.exactFinishBonus) {
-    grantsExtraRoll = true;
-  }
-
-  if (grantsExtraRoll) {
-    // Grant extra turn
-    events.push({
-      type: "extra_turn",
-      color: token.color,
-    });
-
-    newState.phase = "awaiting_roll";
-    newState.dice = null;
-    
-    // Update consecutive sixes counter
-    if (state.dice === 6) {
-      newState.consecutiveSixes = state.consecutiveSixes + 1;
-    } else {
-      newState.consecutiveSixes = 0;
-    }
-  } else {
-    // Pass turn to next player
-    const currentIndex = newState.config.playerColors.indexOf(newState.turn);
-    const nextIndex = (currentIndex + 1) % newState.config.playerColors.length;
-    
-    // Skip players who have finished (if playing for placements)
-    let nextColor = newState.config.playerColors[nextIndex];
-    let attempts = 0;
-    while (newState.placements.includes(nextColor) && attempts < newState.config.playerColors.length) {
-      const nextNextIndex = (newState.config.playerColors.indexOf(nextColor) + 1) % newState.config.playerColors.length;
-      nextColor = newState.config.playerColors[nextNextIndex];
-      attempts++;
-    }
-
-    newState.turn = nextColor;
-    newState.phase = "awaiting_roll";
-    newState.dice = null;
-    newState.consecutiveSixes = 0;
-
-    events.push({
-      type: "turn_passed",
-      color: nextColor,
-    });
-  }
-
-  return { state: newState, events };
+  return { state: endThrow(newState, events), events };
 }
 
-/**
- * Get all tokens at a specific position.
- */
-function getTokensAt(pos: TokenPos, state: GameState) {
-  return state.tokens.filter((t) => positionsEqual(t.pos, pos));
+function countOwnAt(pos: TokenPos, color: Color, state: GameState): number {
+  return state.tokens.filter((t) => t.color === color && positionsEqual(t.pos, pos)).length;
 }
 
-/**
- * Check if two positions are equal.
- */
 function positionsEqual(a: TokenPos, b: TokenPos): boolean {
   if (a.zone !== b.zone) return false;
 

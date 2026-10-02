@@ -41,7 +41,7 @@ class SeededRandom {
  */
 function renderBoard(state: GameState): void {
   console.log("\n" + "=".repeat(60));
-  console.log(`Turn: ${state.turn.toUpperCase()} | Phase: ${state.phase} | Dice: ${state.dice ?? "-"}`);
+  console.log(`Turn: ${state.turn.toUpperCase()} | Phase: ${state.phase} | Dice: ${state.dice ? state.dice.map((d) => (d.used ? `(${d.value})` : d.value)).join(" ") : "-"}`);
   console.log(`Consecutive 6s: ${state.consecutiveSixes}`);
   
   if (state.winner) {
@@ -196,14 +196,16 @@ function playGame(): void {
 
     if (state.phase === "awaiting_roll") {
       // Roll the dice
+      const roller = state.turn;
       const rollResult = rollDice(state, () => rng.next());
       state = rollResult.state;
       
-      console.log(`🎲 ${state.turn.toUpperCase()} rolled a ${rollResult.value}`);
+      console.log(`🎲 ${roller.toUpperCase()} rolled ${rollResult.values.join(" + ")}`);
       
-      // Check if we auto-passed (no legal moves)
+      // The throw ended at once: forfeit, or no playable die
       if (state.phase === "awaiting_roll") {
-        console.log(`  ⚠️  No legal moves available, turn passed`);
+        console.log(`  ⚠️  No legal moves available`);
+        printEvents(rollResult.events);
         renderBoard(state);
         continue;
       }
@@ -223,14 +225,14 @@ function playGame(): void {
       const chosenMove = moves[randomIndex];
       
       const token = state.tokens[chosenMove.tokenIndex];
-      console.log(`  ✓ ${state.turn.toUpperCase()} moves token [${chosenMove.tokenIndex}] from ${formatPos(token.pos)} to ${formatPos(chosenMove.resulting)}`);
+      console.log(`  ✓ ${state.turn.toUpperCase()} moves token [${chosenMove.tokenIndex}] ${chosenMove.steps} from ${formatPos(token.pos)} to ${formatPos(chosenMove.resulting)}`);
       
       if (chosenMove.captures) {
         console.log(`    → Will capture ${chosenMove.captures.color.toUpperCase()}[${chosenMove.captures.index}]`);
       }
 
       // Apply the move
-      const moveResult = applyMove(state, chosenMove.tokenIndex);
+      const moveResult = applyMove(state, chosenMove.tokenIndex, chosenMove.dieIndex);
       state = moveResult.state;
       
       printEvents(moveResult.events);

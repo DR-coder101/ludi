@@ -48,6 +48,7 @@ export function createGame(config: GameConfig): GameState {
     turn: config.playerColors[0],
     phase: "awaiting_roll",
     dice: null,
+    extraRollEarned: false,
     consecutiveSixes: 0,
     winner: null,
     placements: [],
