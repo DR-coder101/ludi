@@ -6,6 +6,7 @@ outline. Shaping goes through HarfBuzz so kerning matches the browser render of 
     pip install fonttools uharfbuzz
     python3 scripts/wordmark-path.py > src/components/home/wordmarkPath.ts
 """
+import math
 import sys
 from pathlib import Path
 
@@ -26,7 +27,8 @@ upm = font["head"].unitsPerEm
 scale = SIZE / upm
 os2 = font["OS/2"]
 ascent, descent = round(os2.sTypoAscender * scale), round(-os2.sTypoDescender * scale)
-baseline = TOP + (SIZE - (ascent + descent)) / 2 + ascent
+# Chrome floors the (negative) half-leading of a line-height:1 line box.
+baseline = TOP + math.floor((SIZE - (ascent + descent)) / 2) + ascent
 
 blob = hb.Blob(font_path.read_bytes())
 hb_font = hb.Font(hb.Face(blob))

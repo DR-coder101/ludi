@@ -151,6 +151,9 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: font.display,
+    // The mockup's <h3> asks Anton (single weight) for bold, so the browser emboldens it. Web and Android
+    // synthesise the same; iOS draws plain Anton.
+    fontWeight: '700',
     fontSize: 25,
     lineHeight: 25,
     letterSpacing: 0.6,

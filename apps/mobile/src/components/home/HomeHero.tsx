@@ -108,12 +108,12 @@ function SpeakerCone() {
 
 /**
  * `.word`: gold fill with a 2px black stroke over hard offsets (black 5/5, green 9/9)
- * and a soft 10/12 drop shadow blurred 24px.
+ * and a soft 10/12 drop shadow blurred 24px. CSS text-shadow copies the glyph fill, not the stroke.
  */
 function Wordmark() {
   const glyph = (dx: number, dy: number, fill: string) => (
     <G transform={`translate(${dx} ${dy})`}>
-      <Path d={WORDMARK_PATH} fill={fill} stroke={fill} strokeWidth={2} strokeLinejoin="round" />
+      <Path d={WORDMARK_PATH} fill={fill} />
     </G>
   );
   return (
