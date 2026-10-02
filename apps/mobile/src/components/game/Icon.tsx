@@ -1,7 +1,7 @@
 import React from 'react';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-export type IconName = 'menu' | 'users' | 'mic' | 'chat' | 'smile' | 'dice' | 'gear' | 'user';
+export type IconName = 'menu' | 'users' | 'mic' | 'chat' | 'smile' | 'dice' | 'gear' | 'user' | 'globe' | 'phone' | 'chevron';
 
 /** Stroke icons from the design pack (24×24, round caps). */
 function glyph(name: IconName) {
@@ -60,6 +60,22 @@ function glyph(name: IconName) {
           <Path d="M4.5 20c.8-4 3.8-6 7.5-6s6.7 2 7.5 6" />
         </>
       );
+    case 'globe':
+      return (
+        <>
+          <Circle cx={12} cy={12} r={8.5} />
+          <Path d="M3.5 12h17M12 3.5c2.6 2.4 3.8 5.2 3.8 8.5s-1.2 6.1-3.8 8.5c-2.6-2.4-3.8-5.2-3.8-8.5s1.2-6.1 3.8-8.5z" />
+        </>
+      );
+    case 'phone':
+      return (
+        <>
+          <Rect x={7} y={2.8} width={10} height={18.4} rx={2.4} />
+          <Path d="M11 18h2" />
+        </>
+      );
+    case 'chevron':
+      return <Path d="M9 5l7 7-7 7" />;
   }
 }
 
