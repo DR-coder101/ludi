@@ -2174,3 +2174,182 @@ describe("Two dice (GAME_RULES.md §2-§4, §8)", () => {
     });
   });
 });
+
+/**
+ * Smallest deep legalMoves matrix: gaps not already covered above.
+ * Driven by GAME_RULES.md §3–§10. Not in scope: blockadeCanMoveTogether.
+ */
+describe("Deep legalMoves coverage (GAME_RULES.md §3-§10)", () => {
+  const rules: GameConfig["houseRules"] = {
+    maxConsecutiveSixes: 2,
+    extraRollOnCapture: false,
+    blockadeCanMoveTogether: false,
+    exactFinishBonus: false,
+    playForPlacements: false,
+  };
+  const twoPlayer = () =>
+    createGame({ playerColors: ["red", "green"], houseRules: rules });
+  const fourPlayer = () =>
+    createGame({
+      playerColors: ["red", "green", "yellow", "blue"],
+      houseRules: rules,
+    });
+  const track = (cell: number): TokenPos => ({ zone: "track", cell });
+  const homeCol = (step: number): TokenPos => ({ zone: "homeColumn", step });
+  const awaiting = (game: GameState, a: number, b?: number): GameState => ({
+    ...game,
+    phase: "awaiting_move",
+    ...(b === undefined ? oneDie(a) : throwOf(a, b)),
+  });
+
+  describe("§3 come-out + start-cell safety", () => {
+    it("blocks coming out when own blockade occupies the start cell", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(0);
+      game.tokens[1].pos = track(0);
+      game.tokens[2].pos = track(5);
+
+      const moves = legalMoves(awaiting(game, 6));
+
+      expect(
+        moves.filter((m) => game.tokens[m.tokenIndex].pos.zone === "yard")
+      ).toHaveLength(0);
+      expect(moves.find((m) => m.tokenIndex === 2)?.resulting).toEqual(track(11));
+    });
+
+    it("annotates no capture when coming out onto an opponent on the start cell", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[4].pos = track(0);
+
+      const comeOut = legalMoves(awaiting(game, 6)).find(
+        (m) => game.tokens[m.tokenIndex].pos.zone === "yard"
+      );
+
+      expect(comeOut?.resulting).toEqual(track(0));
+      expect(comeOut?.captures).toBeUndefined();
+    });
+  });
+
+  describe("§5 / §6 capture vs blockade", () => {
+    it("does not offer a move that would land on an opponent blockade", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[4].pos = track(10);
+      game.tokens[5].pos = track(10);
+
+      expect(legalMoves(awaiting(game, 5)).find((m) => m.tokenIndex === 0)).toBeUndefined();
+    });
+
+    it("treats three stacked tokens as a blockade", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[4].pos = track(8);
+      game.tokens[5].pos = track(8);
+      game.tokens[6].pos = track(8);
+
+      expect(legalMoves(awaiting(game, 3)).find((m) => m.tokenIndex === 0)).toBeUndefined();
+    });
+
+    it("blocks landing on own blockade", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[1].pos = track(8);
+      game.tokens[2].pos = track(8);
+
+      expect(legalMoves(awaiting(game, 3)).find((m) => m.tokenIndex === 0)).toBeUndefined();
+    });
+  });
+
+  describe("§6 / §7 blockade on safe cell", () => {
+    it("blocks landing on a blockade even on a safe start cell", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(14);
+      game.tokens[4].pos = track(17);
+      game.tokens[5].pos = track(17);
+
+      expect(legalMoves(awaiting(game, 3)).find((m) => m.tokenIndex === 0)).toBeUndefined();
+    });
+
+    it("blocks passing through a blockade on a safe start cell", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(15);
+      game.tokens[4].pos = track(17);
+      game.tokens[5].pos = track(17);
+
+      expect(legalMoves(awaiting(game, 4)).find((m) => m.tokenIndex === 0)).toBeUndefined();
+    });
+  });
+
+  describe("§7 multi-colour safe coexistence", () => {
+    it("allows a third colour onto a safe cell already shared by two", () => {
+      const game = fourPlayer();
+      // indices: 0–3 red, 4–7 green, 8–11 yellow
+      game.tokens[0].pos = track(31);
+      game.tokens[4].pos = track(34);
+      game.tokens[8].pos = track(34);
+
+      expect(legalMoves(awaiting(game, 3)).find((m) => m.tokenIndex === 0)?.resulting).toEqual(
+        track(34)
+      );
+    });
+  });
+
+  describe("§8 exact home entry from track", () => {
+    it("enters homeColumn from the home-entry cell with die 1", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(66);
+
+      expect(legalMoves(awaiting(game, 1)).find((m) => m.tokenIndex === 0)?.resulting).toEqual(
+        homeCol(1)
+      );
+    });
+
+    it("crosses the entry into homeColumn in one multi-step move", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(62);
+
+      expect(legalMoves(awaiting(game, 5)).find((m) => m.tokenIndex === 0)?.resulting).toEqual(
+        homeCol(1)
+      );
+    });
+
+    it("rejects homeColumn overshoot while another token can still move", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = homeCol(6);
+      game.tokens[1].pos = track(10);
+
+      const moves = legalMoves(awaiting(game, 5));
+
+      expect(moves.find((m) => m.tokenIndex === 0)).toBeUndefined();
+      expect(moves.find((m) => m.tokenIndex === 1)?.resulting).toEqual(track(15));
+    });
+  });
+
+  describe("§10 die-forfeit and dual-die matrix", () => {
+    it("offers only the die that does not overshoot home (edge 14)", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = homeCol(6);
+      game.tokens[1].pos = { zone: "home" };
+      game.tokens[2].pos = { zone: "home" };
+      game.tokens[3].pos = { zone: "home" };
+
+      const moves = legalMoves(awaiting(game, 1, 5));
+
+      expect(moves.map((m) => m.dieIndex)).toEqual([0]);
+      expect(moves[0]?.steps).toBe(1);
+    });
+
+    it("with a blockade ahead, both dice that stop short remain legal", () => {
+      const game = twoPlayer();
+      game.tokens[0].pos = track(5);
+      game.tokens[4].pos = track(9);
+      game.tokens[5].pos = track(9);
+
+      const moves = legalMoves(awaiting(game, 2, 3));
+
+      expect(moves.find((m) => m.tokenIndex === 0 && m.steps === 2)?.resulting).toEqual(track(7));
+      expect(moves.find((m) => m.tokenIndex === 0 && m.steps === 3)?.resulting).toEqual(track(8));
+    });
+  });
+});
