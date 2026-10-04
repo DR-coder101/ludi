@@ -519,7 +519,6 @@ describe('M3.5 Reconnect & Dropout', () => {
     const turnClient = currentGameState!.turn === 'red' ? client1 : client2;
     const otherClient = turnClient === client1 ? client2 : client1;
     const savedSessionToken = turnClient.sessionToken!;
-    const savedPlayerId = turnClient.playerId!;
 
     turnClient.disconnect();
     await new Promise((resolve) => setTimeout(resolve, 50));
@@ -552,10 +551,8 @@ describe('M3.5 Reconnect & Dropout', () => {
     });
 
     expect(rollResponse).toEqual({ success: true });
-    expect(rollResponse.error).toBeUndefined();
 
     reconnected.disconnect();
     otherClient.disconnect();
-    expect(savedPlayerId).toBeTruthy();
   }, 10000);
 });
