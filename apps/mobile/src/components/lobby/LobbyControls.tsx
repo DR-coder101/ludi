@@ -46,7 +46,7 @@ export function RoomModeTabs({ host }: { host: boolean }) {
   );
 }
 
-function Switch({ on }: { on: boolean }) {
+export function ToggleSwitch({ on }: { on: boolean }) {
   const p = useSharedValue(on ? 1 : 0);
   useEffect(() => {
     p.value = withTiming(on ? 1 : 0, { duration: motion.pressMs * 2 });
@@ -86,7 +86,7 @@ export function OptionToggle({ icon, label, on, onToggle, hint }: OptionTogglePr
     >
       <Icon name={icon} size={16} color={color.cream} />
       <Text style={styles.optText}>{label}</Text>
-      <Switch on={on} />
+      <ToggleSwitch on={on} />
     </Pressable>
   );
 }

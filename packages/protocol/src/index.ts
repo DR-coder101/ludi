@@ -84,6 +84,14 @@ export interface SeatSelectResponse {
   error?: string;
 }
 
+export const HouseRulesUpdatePayloadSchema = HouseRulesSchema;
+export type HouseRulesUpdatePayload = HouseRules;
+
+export interface HouseRulesUpdateResponse {
+  success: boolean;
+  error?: string;
+}
+
 /**
  * Board bounds for TokenPos. Must equal @ludi/rules TRACK_SIZE / HOME_COLUMN_LENGTH
  * (asserted in server/src/boardGeometry.test.ts); see docs/board/track-68.svg.
@@ -216,6 +224,7 @@ export interface ClientToServerEvents {
   'room:join': (payload: RoomJoinPayload, callback: (response: RoomJoinResponse) => void) => void;
   'room:requestState': () => void;
   'room:selectSeat': (payload: SeatSelectPayload, callback: (response: SeatSelectResponse) => void) => void;
+  'room:updateHouseRules': (payload: HouseRulesUpdatePayload, callback: (response: HouseRulesUpdateResponse) => void) => void;
   'room:ready': () => void;
   'room:leave': () => void;
   'game:roll': (payload: GameRollPayload, callback: (response: GameRollResponse) => void) => void;

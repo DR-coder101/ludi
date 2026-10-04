@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { io as ioClient, Socket } from 'socket.io-client';
-import type { ClientToServerEvents, ServerToClientEvents, RoomState } from '@ludi/protocol';
+import type { ClientToServerEvents, GameState, HouseRules, ServerToClientEvents, RoomState } from '@ludi/protocol';
 import { createLudiServer } from './server.js';
 
 const SERVER_URL = 'http://localhost:3001';
@@ -537,6 +537,156 @@ describe('Room Lifecycle', () => {
 
       host.disconnect();
       guest.disconnect();
+    });
+  });
+
+  describe('room:updateHouseRules', () => {
+    const baseRules: HouseRules = {
+      maxConsecutiveSixes: 2,
+      extraRollOnCapture: false,
+      blockadeCanMoveTogether: false,
+      exactFinishBonus: false,
+      playForPlacements: false,
+    };
+
+    async function openRoom() {
+      const host = createTestClient();
+      await waitForConnection(host);
+
+      const created = await new Promise<{ success: boolean; roomCode?: string; error?: string }>((resolve) => {
+        host.emit('room:create', { displayName: 'Host', houseRules: baseRules }, resolve);
+      });
+      if (!created.success || !created.roomCode) {
+        host.disconnect();
+        throw new Error(created.error ?? 'room:create failed');
+      }
+
+      const guest = createTestClient();
+      await waitForConnection(guest);
+      const joined = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+        guest.emit('room:join', { roomCode: created.roomCode!, displayName: 'Guest' }, resolve);
+      });
+      if (!joined.success) {
+        host.disconnect();
+        guest.disconnect();
+        throw new Error(joined.error ?? 'room:join failed');
+      }
+
+      return { host, guest };
+    }
+
+    it('stores the host update, forces blockade off, and copies the rules into the game', async () => {
+      const { host, guest } = await openRoom();
+      try {
+        const sent: HouseRules = {
+          maxConsecutiveSixes: 3,
+          extraRollOnCapture: true,
+          blockadeCanMoveTogether: true,
+          exactFinishBonus: true,
+          playForPlacements: true,
+        };
+        const stored: HouseRules = {
+          maxConsecutiveSixes: 3,
+          extraRollOnCapture: true,
+          blockadeCanMoveTogether: false,
+          exactFinishBonus: true,
+          playForPlacements: true,
+        };
+
+        const statePromise = new Promise<RoomState>((resolve) => {
+          guest.once('room:state', resolve);
+        });
+        const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+          host.emit('room:updateHouseRules', sent, resolve);
+        });
+
+        expect(response).toEqual({ success: true });
+        const state = await statePromise;
+        expect(state.status).toBe('lobby');
+        expect(state.houseRules).toEqual(stored);
+
+        const gamePromise = new Promise<GameState>((resolve) => {
+          host.once('game:state', resolve);
+        });
+        host.emit('room:ready');
+        const game = await gamePromise;
+        expect(game.config.houseRules).toEqual(stored);
+      } finally {
+        host.disconnect();
+        guest.disconnect();
+      }
+    });
+
+    it('rejects a guest and leaves the stored rules unchanged', async () => {
+      const { host, guest } = await openRoom();
+      try {
+        const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+          guest.emit('room:updateHouseRules', {
+            ...baseRules,
+            extraRollOnCapture: true,
+          }, resolve);
+        });
+
+        expect(response).toEqual({ success: false, error: 'Only the host can change house rules' });
+
+        const state = await new Promise<RoomState>((resolve) => {
+          host.once('room:state', resolve);
+          host.emit('room:requestState');
+        });
+        expect(state.houseRules).toEqual(baseRules);
+      } finally {
+        host.disconnect();
+        guest.disconnect();
+      }
+    });
+
+    it('rejects an update after the game has started', async () => {
+      const { host, guest } = await openRoom();
+      try {
+        const gamePromise = new Promise<GameState>((resolve) => {
+          host.once('game:state', resolve);
+        });
+        host.emit('room:ready');
+        const game = await gamePromise;
+        expect(game.config.houseRules).toEqual(baseRules);
+
+        const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+          host.emit('room:updateHouseRules', {
+            ...baseRules,
+            maxConsecutiveSixes: 'unlimited',
+          }, resolve);
+        });
+        expect(response).toEqual({
+          success: false,
+          error: 'Cannot change house rules after the game starts',
+        });
+
+        const state = await new Promise<RoomState>((resolve) => {
+          host.once('room:state', resolve);
+          host.emit('room:requestState');
+        });
+        expect(state.status).toBe('in_progress');
+        expect(state.houseRules).toEqual(baseRules);
+      } finally {
+        host.disconnect();
+        guest.disconnect();
+      }
+    });
+
+    it('rejects an invalid payload', async () => {
+      const client = createTestClient();
+      await waitForConnection(client);
+      try {
+        const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+          client.emit('room:updateHouseRules', {
+            maxConsecutiveSixes: 4,
+            extraRollOnCapture: true,
+          } as HouseRules, resolve);
+        });
+        expect(response).toEqual({ success: false, error: 'Invalid payload' });
+      } finally {
+        client.disconnect();
+      }
     });
   });
 });

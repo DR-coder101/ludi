@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Player, RoomState } from '@ludi/protocol';
-import { lobbySeats, roomNote, SEAT_ORDER, startCta } from './lobbyModel';
+import { lobbySeats, maxSixesLabel, nextMaxConsecutiveSixes, roomNote, SEAT_ORDER, startCta } from './lobbyModel';
 
 const player = (over: Partial<Player> & Pick<Player, 'id' | 'color'>): Player => ({
   displayName: over.id,
@@ -79,5 +79,19 @@ describe('startCta', () => {
 
   it('never lets a guest start', () => {
     expect(startCta(4, false)).toMatchObject({ role: 'guest', title: 'WAITING FOR HOST', enabled: false });
+  });
+});
+
+describe('max consecutive sixes', () => {
+  it('cycles 2, then 3, then unlimited, then back to 2', () => {
+    expect(nextMaxConsecutiveSixes(2)).toBe(3);
+    expect(nextMaxConsecutiveSixes(3)).toBe('unlimited');
+    expect(nextMaxConsecutiveSixes('unlimited')).toBe(2);
+  });
+
+  it('prints the value the lobby shows', () => {
+    expect(maxSixesLabel(2)).toBe('2');
+    expect(maxSixesLabel(3)).toBe('3');
+    expect(maxSixesLabel('unlimited')).toBe('Unlimited');
   });
 });

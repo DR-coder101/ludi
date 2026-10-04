@@ -90,6 +90,33 @@ export class RoomRegistry {
     return { success: true };
   }
 
+  updateHouseRules(
+    roomCode: string,
+    playerId: string,
+    houseRules: HouseRules,
+  ): { success: boolean; error?: string } {
+    const room = this.rooms.get(roomCode);
+
+    if (!room) {
+      return { success: false, error: 'Room not found' };
+    }
+
+    if (room.status !== 'lobby') {
+      return { success: false, error: 'Cannot change house rules after the game starts' };
+    }
+
+    if (room.hostId !== playerId) {
+      return { success: false, error: 'Only the host can change house rules' };
+    }
+
+    room.houseRules = {
+      ...houseRules,
+      blockadeCanMoveTogether: false,
+    };
+
+    return { success: true };
+  }
+
   getRoom(roomCode: string): RoomState | undefined {
     return this.rooms.get(roomCode);
   }
