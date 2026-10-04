@@ -1,17 +1,13 @@
-/**
- * Socket.IO singleton for Ludi client
- * Manages connection to the authoritative game server
- */
-
 import { io, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@ludi/protocol';
 import { storage } from '../utils/storage';
+import { resolveSocketServerUrl } from './socketUrl';
 
 export type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const SESSION_TOKEN_KEY = 'ludi_session_token';
 const PLAYER_ID_KEY = 'ludi_player_id';
-const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+const SERVER_URL = resolveSocketServerUrl();
 
 class SocketManager {
   private socket: TypedSocket | null = null;
@@ -22,7 +18,6 @@ class SocketManager {
   private connectListeners: Array<() => void> = [];
 
   async initialize(): Promise<void> {
-    // Load persisted session token and player ID
     try {
       this.sessionToken = await storage.getItem(SESSION_TOKEN_KEY);
       this.playerId = await storage.getItem(PLAYER_ID_KEY);
