@@ -38,5 +38,5 @@ Each feature file: H1, one paragraph, then exactly `Sub-features`, `How to get t
 
 - [Solo vs bots](./solo-vs-bots.md) covers alone-in-lobby start, bot seat fill, and a human turn.
 - [Guest room create](./guest-room.md) covers host room creation and the join code.
-- [Lobby ready (multiplayer)](./lobby-ready.md) covers two humans starting without bot fill.
+- [Lobby ready (multiplayer)](./lobby-ready.md) covers two humans (two run dirs) starting without bot fill.
 - [HTTP health](./http-health.md) covers `/health` and server identity probes.
