@@ -44,7 +44,10 @@ class SocketManager {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: Infinity,
-      auth: this.sessionToken ? { token: this.sessionToken } : undefined,
+      // Read token at handshake time so mid-match reconnects send the seat session.
+      auth: (cb: (data: { token?: string }) => void) => {
+        cb(this.sessionToken ? { token: this.sessionToken } : {});
+      },
     }) as TypedSocket;
 
     this.socket.on('connect', () => {

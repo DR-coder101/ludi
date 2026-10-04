@@ -533,8 +533,70 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     await advanceTurn(roomCode);
   }
 
+  function reattachSocketToSession(
+    socket: TypedSocket,
+    sessionToken: string,
+    expectedRoomCode?: string,
+  ): { success: boolean; roomCode?: string; playerId?: string; color?: Color; error?: string } {
+    const reconnectResult = roomRegistry.reconnectPlayer(sessionToken);
+    if (!reconnectResult.success) {
+      return reconnectResult;
+    }
+    if (expectedRoomCode && reconnectResult.roomCode !== expectedRoomCode) {
+      return { success: false, error: 'Session does not match room' };
+    }
+
+    const roomCode = reconnectResult.roomCode!;
+    const playerId = reconnectResult.playerId!;
+    const color = reconnectResult.color!;
+
+    socket.join(roomCode);
+    socketToRoom.set(socket.id, roomCode);
+    socketToPlayer.set(socket.id, playerId);
+    socketToColor.set(socket.id, color);
+
+    const game = gameRegistry.getGame(roomCode);
+    const room = roomRegistry.getRoom(roomCode);
+
+    if (room) {
+      const cancelResult = gameRegistry.cancelDisconnectGrace(roomCode, color);
+
+      roomRegistry.updatePlayerStatus(roomCode, playerId, 'connected');
+
+      io.to(roomCode).emit('room:state', room);
+
+      if (game) {
+        socket.emit('game:state', game.state);
+
+        if (cancelResult.wasPaused && game.state.turn === color && game.state.phase === 'awaiting_move') {
+          gameRegistry.setMoveTimer(roomCode, () => {
+            handleMoveTimeout(roomCode);
+          });
+        }
+      }
+
+      const statusPayload: PlayerStatusChangedPayload = {
+        playerId,
+        status: 'connected',
+      };
+      io.to(roomCode).emit('player:statusChanged', statusPayload);
+    }
+
+    return { success: true, roomCode, playerId, color };
+  }
+
   io.on('connection', (socket: TypedSocket) => {
     console.log(`Client connected: ${socket.id}`);
+
+    const authToken = socket.handshake.auth?.token;
+    if (typeof authToken === 'string' && authToken.length > 0) {
+      const attached = reattachSocketToSession(socket, authToken);
+      if (attached.success) {
+        console.log(
+          `Player ${attached.playerId} auto-reattached to room ${attached.roomCode} (socket ${socket.id})`,
+        );
+      }
+    }
 
     socket.on('room:create', (payload, callback) => {
       if (!checkRateLimit(socket)) {
@@ -581,45 +643,17 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       const { roomCode, displayName, sessionToken } = validationResult.data;
 
       if (sessionToken) {
-        const reconnectResult = roomRegistry.reconnectPlayer(sessionToken);
-        
-        if (reconnectResult.success && reconnectResult.roomCode === roomCode) {
-          const playerId = reconnectResult.playerId!;
-          
-          socket.join(roomCode);
-          socketToRoom.set(socket.id, roomCode);
-          socketToPlayer.set(socket.id, playerId);
-          socketToColor.set(socket.id, reconnectResult.color!);
-
-          const game = gameRegistry.getGame(roomCode);
-          const room = roomRegistry.getRoom(roomCode);
-          
-          if (room) {
-            const cancelResult = gameRegistry.cancelDisconnectGrace(roomCode, reconnectResult.color!);
-            
-            roomRegistry.updatePlayerStatus(roomCode, playerId, 'connected');
-            
-            io.to(roomCode).emit('room:state', room);
-            
-            if (game) {
-              socket.emit('game:state', game.state);
-
-              if (cancelResult.wasPaused && game.state.turn === reconnectResult.color && game.state.phase === 'awaiting_move') {
-                gameRegistry.setMoveTimer(roomCode, () => {
-                  handleMoveTimeout(roomCode);
-                });
-              }
-            }
-
-            const statusPayload: PlayerStatusChangedPayload = {
-              playerId,
-              status: 'connected',
-            };
-            io.to(roomCode).emit('player:statusChanged', statusPayload);
-          }
-
-          callback({ success: true, sessionToken, isReconnect: true, playerId });
-          console.log(`Player ${playerId} reconnected to room ${roomCode} (socket ${socket.id})`);
+        const reconnectResult = reattachSocketToSession(socket, sessionToken, roomCode);
+        if (reconnectResult.success) {
+          callback({
+            success: true,
+            sessionToken,
+            isReconnect: true,
+            playerId: reconnectResult.playerId,
+          });
+          console.log(
+            `Player ${reconnectResult.playerId} reconnected to room ${roomCode} (socket ${socket.id})`,
+          );
           return;
         }
       }
