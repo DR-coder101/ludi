@@ -28,4 +28,4 @@ Preconditions:
 ## Gotchas
 
 - Room commands require a live session bridge. If you see `PRECONDITION_FAILED`, run the hint: `ludi session open --run-dir …`.
-- Disconnecting the bridge mid-lobby marks the host offline but does not delete the room until leave/empty cleanup paths run.
+- Disconnecting the bridge mid-lobby marks the host `disconnected` (`connected: false`) but does not delete the room until leave/empty cleanup paths run.
