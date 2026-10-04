@@ -1,9 +1,10 @@
 import React, { type ReactNode } from 'react';
-import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { HouseRules } from '@ludi/protocol';
 import { color, font } from '../../theme/tokens';
+import { antonBold } from '../../theme/antonBold';
 import { useLudiFonts } from '../../theme/fonts';
 import { ScreenBackdrop } from '../game/ScreenBackdrop';
 import { CodeCard } from './CodeCard';
@@ -203,8 +204,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: font.display,
-    // Faux bold, as the mockup's <h2> gets in the browser. Web only, like the header title.
-    ...Platform.select({ web: { fontWeight: '700' as const } }),
+    // Mockup <h2> asks Anton for bold; antonBold synthesises on web/Android and keeps Anton on iOS.
+    ...antonBold,
     fontSize: 20,
     lineHeight: 31,
     letterSpacing: 0.8,
