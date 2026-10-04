@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "command": "ludi.play.solo-vs-bots",
+  "data": {
+    "room_code": "D55A3",
+    "player_id": "0760faa8e4833fa3f7754b03a5228d5c",
+    "color": "red",
+    "bots": [
+      {
+        "id": "754c7b3ba99d90ac8353fca9eeaa6fe6",
+        "color": "green",
+        "name": "Bot"
+      },
+      {
+        "id": "fce10ef5dfde14f895b8344ba631b780",
+        "color": "yellow",
+        "name": "Bot (yellow)"
+      },
+      {
+        "id": "1f6bc3e23606e7b9d81aa50ea4464903",
+        "color": "blue",
+        "name": "Bot (blue)"
+      }
+    ],
+    "game_phase": "awaiting_roll",
+    "turn": "red",
+    "turns_played": 1,
+    "evidence": "/tmp/ludi-skill-prove3/evidence/solo-vs-bots.json",
+    "server_url": "http://127.0.0.1:3125",
+    "run_dir": "/tmp/ludi-skill-prove3"
+  },
+  "meta": {
+    "duration_ms": 1017,
+    "version": "0.1.0"
+  }
+}

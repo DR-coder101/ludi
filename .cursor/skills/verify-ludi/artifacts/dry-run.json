@@ -1,0 +1,51 @@
+{
+  "ok": true,
+  "command": "ludi.play.solo-vs-bots",
+  "dry_run": true,
+  "planned_actions": [
+    {
+      "action": "server.start",
+      "port": 3100,
+      "grace_ms": 500,
+      "ai_delay_ms": 50,
+      "run_dir": "/tmp/ludi-dry-z"
+    },
+    {
+      "action": "session.open",
+      "url": "http://127.0.0.1:3100"
+    },
+    {
+      "action": "room.create",
+      "displayName": "Verifier",
+      "houseRules": {
+        "maxConsecutiveSixes": 2,
+        "extraRollOnCapture": false,
+        "blockadeCanMoveTogether": false,
+        "exactFinishBonus": false,
+        "playForPlacements": true
+      }
+    },
+    {
+      "action": "room.ready",
+      "expect": "fill 3 bot seats + start match"
+    },
+    {
+      "action": "match.playTurn",
+      "times": 1
+    },
+    {
+      "action": "evidence.write",
+      "path": "/tmp/ludi-dry-z/evidence/solo-vs-bots.json"
+    },
+    {
+      "action": "session.close"
+    },
+    {
+      "action": "server.stop"
+    }
+  ],
+  "meta": {
+    "duration_ms": 0,
+    "version": "0.1.0"
+  }
+}
