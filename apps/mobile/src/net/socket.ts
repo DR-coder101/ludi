@@ -1,8 +1,3 @@
-/**
- * Socket.IO singleton for Ludi client
- * Manages connection to the authoritative game server
- */
-
 import { io, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@ludi/protocol';
 import { storage } from '../utils/storage';
@@ -23,7 +18,6 @@ class SocketManager {
   private connectListeners: Array<() => void> = [];
 
   async initialize(): Promise<void> {
-    // Load persisted session token and player ID
     try {
       this.sessionToken = await storage.getItem(SESSION_TOKEN_KEY);
       this.playerId = await storage.getItem(PLAYER_ID_KEY);
