@@ -86,3 +86,5 @@ CREATE POLICY "Users can view match players"
 CREATE INDEX IF NOT EXISTS idx_matches_winner ON matches(winner_id);
 CREATE INDEX IF NOT EXISTS idx_match_players_user ON match_players(user_id);
 CREATE INDEX IF NOT EXISTS idx_rooms_code ON rooms(code);
+-- getUserMatches: order by matches.started_at desc after match_players.user_id filter
+CREATE INDEX IF NOT EXISTS idx_matches_started_at ON matches(started_at);
