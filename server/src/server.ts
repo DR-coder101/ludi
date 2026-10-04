@@ -6,7 +6,7 @@ import type {
   ClientToServerEvents, 
   ServerToClientEvents, 
   Color,
-  GameState,
+  HouseRules,
   TokenMovedPayload,
   DiceRolledPayload,
   TurnChangedPayload,
@@ -37,7 +37,8 @@ import { GameManagerRegistry, type GameTimingConfig } from './GameManager.js';
 import { getSupabaseClient } from './db/supabase.js';
 import { createAuthService } from './services/auth.js';
 import { createProfileService } from './services/profile.js';
-import { createMatchHistoryService } from './services/matchHistory.js';
+import { createMatchHistoryService, type MatchData } from './services/matchHistory.js';
+import { runInBackground } from './runInBackground.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './db/types.js';
 
@@ -350,48 +351,38 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     return true;
   }
 
-  async function persistMatchHistory(
-    roomCode: string, 
-    gameState: GameState, 
-    placements: Array<{ playerId: string; color: Color; placement: number }>
-  ): Promise<void> {
+  function buildFinishedMatch(
+    roomCode: string,
+    houseRules: HouseRules,
+    placements: GameOverPayload['placements'],
+    now: Date,
+  ): MatchData | null {
+    const winnerId = placements.find(p => p.placement === 1)?.playerId;
+    if (!winnerId) {
+      return null;
+    }
+
+    return {
+      roomCode,
+      startedAt: new Date(now.getTime() - 600000),
+      endedAt: now,
+      winnerId,
+      houseRules: { ...houseRules },
+      players: placements.map(p => ({
+        userId: p.playerId,
+        color: p.color,
+        finalPosition: p.placement,
+      })),
+    };
+  }
+
+  async function persistMatchHistory(match: MatchData): Promise<void> {
     if (!matchHistoryService) {
       return;
     }
 
-    const room = roomRegistry.getRoom(roomCode);
-    if (!room) {
-      return;
-    }
-
-    try {
-      const game = gameRegistry.getGame(roomCode);
-      if (!game) {
-        return;
-      }
-
-      const winnerId = placements.find(p => p.placement === 1)?.playerId;
-      if (!winnerId) {
-        return;
-      }
-
-      await matchHistoryService.saveMatch({
-        roomCode,
-        startedAt: new Date(Date.now() - 600000),
-        endedAt: new Date(),
-        winnerId,
-        houseRules: gameState.config.houseRules,
-        players: placements.map(p => ({
-          userId: p.playerId,
-          color: p.color,
-          finalPosition: p.placement,
-        })),
-      });
-
-      console.log(`Match history saved for room ${roomCode}`);
-    } catch (err) {
-      console.error(`Failed to save match history for room ${roomCode}:`, err);
-    }
+    await matchHistoryService.saveMatch(match);
+    console.log(`Match history saved for room ${match.roomCode}`);
   }
 
   function emitTokenMoved(
@@ -444,7 +435,10 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         placements,
       };
       io.to(roomCode).emit('game:over', gameOverPayload);
-      await persistMatchHistory(roomCode, state, placements);
+      const match = buildFinishedMatch(roomCode, state.config.houseRules, placements, new Date());
+      if (match !== null && matchHistoryService) {
+        runInBackground(`match-history:${match.roomCode}`, () => persistMatchHistory(match));
+      }
       return;
     }
 
