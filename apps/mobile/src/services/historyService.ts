@@ -4,8 +4,7 @@
  */
 
 import type { MatchHistoryResponse, MatchHistory } from '@ludi/protocol';
-
-const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+import { SERVER_URL } from '../net/serverUrl';
 
 export interface HistoryService {
   getUserMatches(userId: string, limit?: number): Promise<MatchHistory[]>;

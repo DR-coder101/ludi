@@ -242,7 +242,7 @@ In the Railway project dashboard:
 2. Wait for the build to complete (~2-3 minutes)
 3. Once deployed, Railway provides a public HTTPS URL like:
    ```
-   https://ludi-production.up.railway.app
+   https://server-production-3749.up.railway.app
    ```
 
 #### 4. Smoke Test the Deployed Server
@@ -250,7 +250,7 @@ In the Railway project dashboard:
 ##### Test Health Endpoint
 
 ```bash
-curl https://ludi-production.up.railway.app/health
+curl https://server-production-3749.up.railway.app/health
 ```
 
 Expected response:
@@ -264,7 +264,7 @@ Expected response:
 ##### Test Guest Authentication
 
 ```bash
-curl -X POST https://ludi-production.up.railway.app/auth/guest \
+curl -X POST https://server-production-3749.up.railway.app/auth/guest \
   -H "Content-Type: application/json" \
   -d '{"displayName":"HostedSmoke"}'
 ```
@@ -283,7 +283,7 @@ Expected response:
 If you forgot to set `SUPABASE_URL` or `SUPABASE_SERVICE_ROLE_KEY`, the server should return a clear error (not hang):
 
 ```bash
-curl -X POST https://ludi-production.up.railway.app/auth/guest \
+curl -X POST https://server-production-3749.up.railway.app/auth/guest \
   -H "Content-Type: application/json" \
   -d '{"displayName":"Test"}'
 ```
@@ -302,7 +302,7 @@ Update the mobile app's environment variables:
 
 **In `apps/mobile/.env`:**
 ```bash
-EXPO_PUBLIC_SOCKET_URL=https://ludi-production.up.railway.app
+EXPO_PUBLIC_SOCKET_URL=https://server-production-3749.up.railway.app
 ```
 
 Restart the Expo dev server:

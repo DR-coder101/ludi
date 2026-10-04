@@ -5,10 +5,11 @@
 Create a `.env` file in the `apps/mobile` directory with the following variables:
 
 ```bash
-# Server URL (default: http://localhost:3000)
-EXPO_PUBLIC_SOCKET_URL=http://localhost:3000
+# Live Railway server (also the code default when this var is unset)
+EXPO_PUBLIC_SOCKET_URL=https://server-production-3749.up.railway.app
 
-# For development with a physical device on the same network:
+# Local server / device on the same LAN:
+# EXPO_PUBLIC_SOCKET_URL=http://localhost:3000
 # EXPO_PUBLIC_SOCKET_URL=http://192.168.1.x:3000
 ```
 
@@ -39,5 +40,5 @@ pnpm ios
    - Example: `http://192.168.1.10:3000`
 
 3. **Deployed server:**
-   - Use the deployed server URL
-   - Example: `https://ludi-server.railway.app`
+   - Use the live Railway Socket.IO host
+   - Example: `https://server-production-3749.up.railway.app`

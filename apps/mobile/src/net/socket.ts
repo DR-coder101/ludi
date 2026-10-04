@@ -6,12 +6,12 @@
 import { io, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@ludi/protocol';
 import { storage } from '../utils/storage';
+import { SERVER_URL } from './serverUrl';
 
 export type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 const SESSION_TOKEN_KEY = 'ludi_session_token';
 const PLAYER_ID_KEY = 'ludi_player_id';
-const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
 class SocketManager {
   private socket: TypedSocket | null = null;
