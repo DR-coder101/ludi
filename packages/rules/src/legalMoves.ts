@@ -29,7 +29,7 @@ export interface LegalMove {
  *
  * Rules enforced:
  * - §2: Each die is played separately; spent dice offer no moves
- * - §3: Double-6 required to start (first piece out); then any 6 brings subsequent pieces out
+ * - §3: A die showing 6 brings one token out of the yard
  * - §6: Blockades (2+ same-color tokens) block everyone, cannot pass or land
  * - §7: Safe cells allow multi-color coexistence, no captures
  * - §8: Exact count required for home column/home entry (no overshoot)
@@ -57,10 +57,6 @@ function movesForDieValue(
 ): { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] {
   const moves: { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] = [];
 
-  const hasStarted = state.tokens.some(
-    (t) => t.color === state.turn && t.pos.zone !== "yard"
-  );
-
   state.tokens.forEach((token, tokenIndex) => {
     if (token.color !== state.turn || token.pos.zone === "home") return;
 
@@ -68,12 +64,6 @@ function movesForDieValue(
     if (token.pos.zone === "yard") {
       // §3: Leaving the yard requires a die showing 6
       if (steps !== 6) return;
-
-      // §3: First piece out requires BOTH dice to show 6
-      if (!hasStarted) {
-        const bothSixes = state.dice![0].value === 6 && state.dice![1].value === 6;
-        if (!bothSixes) return;
-      }
 
       resulting = computePath(token.pos, 1, token.color);
     } else {

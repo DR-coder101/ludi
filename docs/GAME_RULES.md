@@ -35,9 +35,9 @@
 
 ## 3. Leaving the Yard ("Coming Out")
 
-- **With two dice, a player needs double 6 to start.** A token may leave the yard **only when both dice show 6** (a double-6 throw). One die is spent bringing the token out onto its colour's start cell; the other 6 die may then move that token (or bring out a second token).
-- Once a player has at least one token in play (on track, in home column, or home), subsequent tokens may come out with **any die showing 6** (the original "die showing exactly 6" rule applies).
-- A double-6 throw may bring two tokens out (they form a blockade on the start cell, §6), or bring one out and move it 6.
+- A token may leave the yard on a die showing **6**. That die is spent bringing the token out onto its colour's start cell.
+- Each 6 may bring one token out, until no tokens remain in the yard. The other die is a normal move (§2).
+- Two tokens that come out onto the same start cell form a blockade (§6).
 - The start cell is a **safe cell** while occupied by its own colour's newly-entered token(s).
 - **[HOUSE]** Some play that you cannot come out if your own start cell is occupied by an opponent blockade — standard: blockades block everyone (see §6).
 
@@ -84,7 +84,7 @@
 
 ## 10. Edge Cases the Engine MUST Handle (test list)
 
-1. Throwing a double-6 with all tokens in yard → must come out with one 6 (no other move exists); the other 6 may then move that token or bring out a second. Throwing any other combination (including 6-x where x≠6) with all tokens in yard and no pieces in play → no legal moves, turn passes (bonus roll if 6 was thrown).
+1. A 6 with tokens in the yard brings one token out onto its start cell. Each further 6 does the same. A throw with no 6 and all tokens in the yard has no legal moves, and the turn passes.
 2. Third consecutive throw showing a 6 → forfeit, even if moves were available.
 3. Landing on opponent single token → capture; on opponent blockade → illegal move.
 4. Moving onto own single token → forms blockade.
