@@ -72,9 +72,9 @@ describe('roomNote', () => {
 });
 
 describe('startCta', () => {
-  it('lets the host start with two or more players', () => {
+  it('lets the host start solo vs bots or with two or more players', () => {
+    expect(startCta(1, true)).toEqual({ role: 'host', title: 'START GAME', detail: '· vs bots', enabled: true });
     expect(startCta(3, true)).toEqual({ role: 'host', title: 'START GAME', detail: '· 3 players', enabled: true });
-    expect(startCta(1, true)).toMatchObject({ enabled: false, detail: '· need 2 players' });
   });
 
   it('never lets a guest start', () => {

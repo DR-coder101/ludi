@@ -145,7 +145,7 @@ export default function LobbyScreen() {
     if (!socket || !isHost) return;
 
     if (!roomState || roomState.players.length < MIN_PLAYERS) {
-      showToast(`Need at least ${MIN_PLAYERS} players to start`, 'error');
+      showToast('Need at least one player to start', 'error');
       return;
     }
 

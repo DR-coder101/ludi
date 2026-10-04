@@ -9,8 +9,8 @@ import { PLACES, type Corner } from '../../theme/tokens';
 
 /** RoomRegistry.joinRoom rejects a fifth player; the protocol has no maxPlayers field. */
 export const MAX_PLAYERS = 4;
-/** The server's `room:ready` handler needs at least two players. */
-export const MIN_PLAYERS = 2;
+/** Host may start solo (vs bots) or with 2+ humans. */
+export const MIN_PLAYERS = 1;
 
 const CORNERS: Corner[] = ['TL', 'TR', 'BL', 'BR'];
 const ENGINE_COLORS = Object.keys(PLACES) as EngineColor[];
@@ -70,7 +70,8 @@ const players = (n: number) => `· ${n} player${n === 1 ? '' : 's'}`;
 
 export function startCta(count: number, host: boolean): StartCta {
   if (!host) return { role: 'guest', title: 'WAITING FOR HOST', detail: players(count), enabled: false };
-  if (count < MIN_PLAYERS) return { role: 'host', title: 'START GAME', detail: `· need ${MIN_PLAYERS} players`, enabled: false };
+  if (count < MIN_PLAYERS) return { role: 'host', title: 'START GAME', detail: `· need ${MIN_PLAYERS} player`, enabled: false };
+  if (count === 1) return { role: 'host', title: 'START GAME', detail: '· vs bots', enabled: true };
   return { role: 'host', title: 'START GAME', detail: players(count), enabled: true };
 }
 

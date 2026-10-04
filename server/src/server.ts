@@ -778,28 +778,56 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       if (!roomCode) return;
 
       const room = roomRegistry.getRoom(roomCode);
-      if (!room || room.players.length < 2) {
+      if (!room) return;
+
+      const isSolo = room.players.length === 1;
+      let botColors: Color[] = [];
+
+      if (isSolo) {
+        botColors = roomRegistry.fillEmptySeatsWithBots(roomCode);
+        const filledRoom = roomRegistry.getRoom(roomCode);
+        if (filledRoom) {
+          io.to(roomCode).emit('room:state', filledRoom);
+        }
+      } else if (room.players.length < 2) {
         return;
       }
 
-      room.status = 'in_progress';
+      const currentRoom = roomRegistry.getRoom(roomCode);
+      if (!currentRoom || currentRoom.players.length < 2) return;
 
-      const playerColors = room.players.map(p => p.color);
+      currentRoom.status = 'in_progress';
+
+      const seated = new Set(currentRoom.players.map((p) => p.color));
+      const playerColors = isSolo
+        ? (['red', 'green', 'yellow', 'blue'] as Color[]).filter((c) => seated.has(c))
+        : currentRoom.players.map((p) => p.color);
+
       const gameState = gameRegistry.createGame(roomCode, {
         playerColors,
-        houseRules: room.houseRules,
+        houseRules: currentRoom.houseRules,
       });
 
+      for (const color of botColors) {
+        gameRegistry.markAsAISubstitute(roomCode, color);
+      }
+
       io.to(roomCode).emit('game:state', gameState);
-      
+
       const currentPlayerId = getPlayerIdByColor(roomCode, gameState.turn);
-      
+
       if (currentPlayerId) {
         const turnPayload: TurnChangedPayload = {
           playerId: currentPlayerId,
           deadlineTs: Date.now() + 30000,
         };
         io.to(roomCode).emit('game:turnChanged', turnPayload);
+      }
+
+      if (gameRegistry.isAISubstitute(roomCode, gameState.turn)) {
+        setTimeout(() => {
+          handleAITurn(roomCode);
+        }, gameRegistry.getAIThinkDelay());
       }
 
       console.log(`Game started in room ${roomCode}`);
