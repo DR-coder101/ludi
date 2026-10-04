@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { Image, Platform, StyleSheet, Text, View, type TextStyle } from 'react-native';
+import { Image, StyleSheet, Text, View, type TextStyle } from 'react-native';
 import Svg, { Circle, ClipPath, Defs, Ellipse, G, LinearGradient, Mask, Pattern, Polygon, RadialGradient, Rect, Stop, Text as SvgText } from 'react-native-svg';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withSpring, withTiming } from 'react-native-reanimated';
 import { accent, color, font, PLACES, type PieceColor } from '../../theme/tokens';
+import { antonBold } from '../../theme/antonBold';
 import { MiniMap } from '../board/MiniMap';
 import { Icon } from '../game/Icon';
 import { cssShadow } from '../home/cssShadow';
@@ -451,9 +452,8 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontFamily: font.display,
-    // The mockup's <b> makes the browser embolden single-weight Anton. Web only: iOS has no
-    // bold Anton and would swap in the system font.
-    ...Platform.select({ web: { fontWeight: '700' as const } }),
+    // Mockup <b> asks Anton for bold; antonBold synthesises on web/Android and keeps Anton on iOS.
+    ...antonBold,
     fontSize: 22,
     // Chrome's 33 is a hair under Anton's 33.1 ascent + descent; 35 with -1 margins keeps the baseline.
     lineHeight: 35,

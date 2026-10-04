@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Mask, Path, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import Animated, { useAnimatedStyle } from 'react-native-reanimated';
 import { color, font } from '../../theme/tokens';
+import { antonBold } from '../../theme/antonBold';
 import { Icon, type IconName } from '../game/Icon';
 import { PressScale } from './PressScale';
 import { cssShadow, topHighlightPath } from './cssShadow';
@@ -151,9 +152,8 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: font.display,
-    // The mockup's <h3> asks Anton (single weight) for bold, so the browser emboldens it. Web and Android
-    // synthesise the same; iOS draws plain Anton.
-    fontWeight: '700',
+    // Mockup <h3> asks Anton for bold; antonBold synthesises on web/Android and keeps Anton on iOS.
+    ...antonBold,
     fontSize: 25,
     lineHeight: 25,
     letterSpacing: 0.6,
