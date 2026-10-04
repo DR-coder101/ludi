@@ -167,6 +167,9 @@ const styles = StyleSheet.create({
     color: color.redText,
   },
   title: {
+    // Stretch so adjustsFontSizeToFit can shrink long titles inside the centred column.
+    alignSelf: 'stretch',
+    textAlign: 'center',
     marginTop: 4,
     fontFamily: font.display,
     fontSize: 29,

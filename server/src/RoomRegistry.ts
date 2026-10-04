@@ -4,6 +4,14 @@ import { randomBytes } from 'crypto';
 
 const COLORS: Color[] = ['red', 'green', 'yellow', 'blue'];
 
+/** Engine colour → board piece colour (GAME_RULES §1): blue is black, yellow is gold. */
+const PIECE_NAME: Record<Color, string> = {
+  red: 'red',
+  green: 'green',
+  yellow: 'gold',
+  blue: 'black',
+};
+
 export class RoomRegistry {
   private rooms = new Map<string, RoomState>();
   private sessionToPlayer = new Map<string, { roomCode: string; playerId: string; color: Color }>();
@@ -133,7 +141,7 @@ export class RoomRegistry {
 
       const player: Player = {
         id: this.generatePlayerId(),
-        displayName: botColors.length === 0 ? 'Bot' : `Bot (${color})`,
+        displayName: `${PIECE_NAME[color]} bot`,
         color,
         connected: false,
         isHost: false,
