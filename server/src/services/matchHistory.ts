@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../db/types.js';
 import type { Color, HouseRules, MatchHistory } from '@ludi/protocol';
+import { createTtlCache, type TtlCache } from '../cache/ttlCache.js';
 
 export interface MatchData {
   roomCode: string;
@@ -20,7 +21,36 @@ export interface MatchHistoryService {
   getUserMatches(userId: string, limit?: number): Promise<MatchHistory[]>;
 }
 
-export function createMatchHistoryService(supabase: SupabaseClient<Database>): MatchHistoryService {
+export const MATCH_HISTORY_CACHE_TTL_MS = 30_000;
+
+export type MatchHistoryServiceOptions = {
+  cache?: TtlCache<MatchHistory[]>;
+  ttlMs?: number;
+};
+
+function historyCacheKey(userId: string, limit: number): string {
+  return `match-history:${userId}:${limit}`;
+}
+
+function historyCachePrefix(userId: string): string {
+  return `match-history:${userId}:`;
+}
+
+export function createMatchHistoryService(
+  supabase: SupabaseClient<Database>,
+  options: MatchHistoryServiceOptions = {}
+): MatchHistoryService {
+  const cache =
+    options.cache ??
+    createTtlCache<MatchHistory[]>({
+      ttlMs: options.ttlMs ?? MATCH_HISTORY_CACHE_TTL_MS,
+    });
+
+  function invalidateUserHistory(userId: string): void {
+    const prefix = historyCachePrefix(userId);
+    cache.deleteWhere((key) => key.startsWith(prefix));
+  }
+
   return {
     async saveMatch(match: MatchData) {
       let roomId: string | null = null;
@@ -87,10 +117,20 @@ export function createMatchHistoryService(supabase: SupabaseClient<Database>): M
         throw new Error('Failed to save match players');
       }
 
+      for (const player of match.players) {
+        invalidateUserHistory(player.userId);
+      }
+
       return matchRecord.id;
     },
 
     async getUserMatches(userId: string, limit = 50) {
+      const key = historyCacheKey(userId, limit);
+      const cached = cache.get(key);
+      if (cached) {
+        return cached;
+      }
+
       const { data, error } = await supabase
         .from('matches')
         .select('*, match_players!inner(*)')
@@ -132,6 +172,7 @@ export function createMatchHistoryService(supabase: SupabaseClient<Database>): M
         })
       );
 
+      cache.set(key, matchesWithPlayers);
       return matchesWithPlayers;
     },
   };

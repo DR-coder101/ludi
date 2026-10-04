@@ -2,7 +2,16 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { createMatchHistoryService } from './services/matchHistory.js';
 import { createAuthService } from './services/auth.js';
 import { createMockSupabaseClient, createMockStorage } from './db/mock.js';
-import type { Color } from '@ludi/protocol';
+import { createTtlCache } from './cache/ttlCache.js';
+import type { Color, MatchHistory } from '@ludi/protocol';
+
+const defaultHouseRules = {
+  maxConsecutiveSixes: 2,
+  extraRollOnCapture: false,
+  blockadeCanMoveTogether: false,
+  exactFinishBonus: false,
+  playForPlacements: true,
+};
 
 describe('Match History Service', () => {
   let matchHistoryService: ReturnType<typeof createMatchHistoryService>;
@@ -120,6 +129,115 @@ describe('Match History Service', () => {
       const matches = await matchHistoryService.getUserMatches(player1.userId, 3);
 
       expect(matches).toHaveLength(3);
+    });
+  });
+
+  describe('getUserMatches cache', () => {
+    it('serves a repeat read from cache without re-querying storage', async () => {
+      const cache = createTtlCache<MatchHistory[]>({ ttlMs: 30_000 });
+      const mockSupabase = createMockSupabaseClient(storage);
+      const cachedService = createMatchHistoryService(mockSupabase, { cache });
+      const localAuth = createAuthService(mockSupabase);
+
+      const player1 = await localAuth.createGuest('Player1');
+      const player2 = await localAuth.createGuest('Player2');
+
+      await cachedService.saveMatch({
+        roomCode: 'CACHE1',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: player1.userId,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: player1.userId, color: 'red' as Color, finalPosition: 1 },
+          { userId: player2.userId, color: 'green' as Color, finalPosition: 2 },
+        ],
+      });
+
+      const first = await cachedService.getUserMatches(player1.userId);
+      expect(first).toHaveLength(1);
+
+      storage.matches.clear();
+      storage.match_players.length = 0;
+
+      const second = await cachedService.getUserMatches(player1.userId);
+      expect(second).toHaveLength(1);
+      expect(second[0].id).toBe(first[0].id);
+      expect(cache.get(`match-history:${player1.userId}:50`)).toEqual(first);
+    });
+
+    it('does not serve stale data after saveMatch invalidation', async () => {
+      const cache = createTtlCache<MatchHistory[]>({ ttlMs: 30_000 });
+      const mockSupabase = createMockSupabaseClient(storage);
+      const cachedService = createMatchHistoryService(mockSupabase, { cache });
+      const localAuth = createAuthService(mockSupabase);
+
+      const player1 = await localAuth.createGuest('Player1');
+      const player2 = await localAuth.createGuest('Player2');
+
+      await cachedService.saveMatch({
+        roomCode: 'STALE1',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: player1.userId,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: player1.userId, color: 'red' as Color, finalPosition: 1 },
+          { userId: player2.userId, color: 'green' as Color, finalPosition: 2 },
+        ],
+      });
+
+      const first = await cachedService.getUserMatches(player1.userId);
+      expect(first).toHaveLength(1);
+
+      await cachedService.saveMatch({
+        roomCode: 'STALE2',
+        startedAt: new Date('2024-01-02T10:00:00Z'),
+        endedAt: new Date('2024-01-02T10:30:00Z'),
+        winnerId: player2.userId,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: player1.userId, color: 'red' as Color, finalPosition: 2 },
+          { userId: player2.userId, color: 'green' as Color, finalPosition: 1 },
+        ],
+      });
+
+      expect(cache.get(`match-history:${player1.userId}:50`)).toBeUndefined();
+
+      const afterSave = await cachedService.getUserMatches(player1.userId);
+      expect(afterSave).toHaveLength(2);
+      expect(afterSave.map((m) => m.id).sort()).not.toEqual([first[0].id]);
+    });
+
+    it('keeps history caches isolated per userId', async () => {
+      const cache = createTtlCache<MatchHistory[]>({ ttlMs: 30_000 });
+      const mockSupabase = createMockSupabaseClient(storage);
+      const cachedService = createMatchHistoryService(mockSupabase, { cache });
+      const localAuth = createAuthService(mockSupabase);
+
+      const player1 = await localAuth.createGuest('Player1');
+      const player2 = await localAuth.createGuest('Player2');
+      const player3 = await localAuth.createGuest('Spectator');
+
+      await cachedService.saveMatch({
+        roomCode: 'ISO1',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: player1.userId,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: player1.userId, color: 'red' as Color, finalPosition: 1 },
+          { userId: player2.userId, color: 'green' as Color, finalPosition: 2 },
+        ],
+      });
+
+      const player1Matches = await cachedService.getUserMatches(player1.userId);
+      const player3Matches = await cachedService.getUserMatches(player3.userId);
+
+      expect(player1Matches).toHaveLength(1);
+      expect(player3Matches).toHaveLength(0);
+      expect(cache.get(`match-history:${player1.userId}:50`)).toEqual(player1Matches);
+      expect(cache.get(`match-history:${player3.userId}:50`)).toEqual(player3Matches);
     });
   });
 });
