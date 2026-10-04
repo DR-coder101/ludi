@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Share } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import type { HouseRules } from '@ludi/protocol';
 import { socketManager } from '../../src/net/socket';
 import { useRoomStore } from '../../src/stores/roomStore';
 import { useConnectionStore } from '../../src/stores/connectionStore';
@@ -179,6 +180,17 @@ export default function LobbyScreen() {
     }
   };
 
+  const handleHouseRules = (houseRules: HouseRules) => {
+    const socket = socketManager.getSocket();
+    if (!socket || !isHost) return;
+
+    socket.emit('room:updateHouseRules', houseRules, (response) => {
+      if (!response.success) {
+        showToast(response.error || 'Failed to update house rules', 'error');
+      }
+    });
+  };
+
   const handleSelectSeat = (color: string) => {
     const socket = socketManager.getSocket();
     if (!socket) return;
@@ -217,6 +229,8 @@ export default function LobbyScreen() {
       starting={isStarting}
       voice={{ on: micEnabled, onToggle: toggleMic }}
       video={{ on: cameraEnabled, onToggle: toggleCamera }}
+      houseRules={roomState.houseRules}
+      onHouseRulesChange={isHost ? handleHouseRules : undefined}
       onBack={handleLeave}
       onCopy={handleCopyCode}
       onShare={handleShareCode}

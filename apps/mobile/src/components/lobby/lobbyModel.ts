@@ -3,7 +3,7 @@
  * room-code note and the START GAME button. No React Native imports, so vitest
  * can run it directly.
  */
-import type { Player, RoomState } from '@ludi/protocol';
+import type { HouseRules, Player, RoomState } from '@ludi/protocol';
 import type { Color as EngineColor } from '@ludi/rules';
 import { PLACES, type Corner } from '../../theme/tokens';
 
@@ -72,4 +72,18 @@ export function startCta(count: number, host: boolean): StartCta {
   if (!host) return { role: 'guest', title: 'WAITING FOR HOST', detail: players(count), enabled: false };
   if (count < MIN_PLAYERS) return { role: 'host', title: 'START GAME', detail: `· need ${MIN_PLAYERS} players`, enabled: false };
   return { role: 'host', title: 'START GAME', detail: players(count), enabled: true };
+}
+
+const MAX_CONSECUTIVE_SIXES: HouseRules['maxConsecutiveSixes'][] = [2, 3, 'unlimited'];
+
+export function nextMaxConsecutiveSixes(
+  current: HouseRules['maxConsecutiveSixes'],
+): HouseRules['maxConsecutiveSixes'] {
+  const index = MAX_CONSECUTIVE_SIXES.indexOf(current);
+  return MAX_CONSECUTIVE_SIXES[(index + 1) % MAX_CONSECUTIVE_SIXES.length];
+}
+
+export function maxSixesLabel(value: HouseRules['maxConsecutiveSixes']): string {
+  if (value === 'unlimited') return 'Unlimited';
+  return String(value);
 }

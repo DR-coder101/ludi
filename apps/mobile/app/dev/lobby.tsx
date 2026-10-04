@@ -18,6 +18,7 @@ export default function LobbyPreview() {
   const params = useLocalSearchParams<{ state?: string }>();
   const [voice, setVoice] = useState(true);
   const [video, setVideo] = useState(true);
+  const [houseRules, setHouseRules] = useState(ROOM_FIXTURE.houseRules);
 
   if (!ENABLED) return <Redirect href="/" />;
 
@@ -39,6 +40,8 @@ export default function LobbyPreview() {
       host={host}
       voice={{ on: voice, onToggle: () => setVoice((v) => !v) }}
       video={{ on: video, onToggle: () => setVideo((v) => !v) }}
+      houseRules={houseRules}
+      onHouseRulesChange={host ? setHouseRules : undefined}
       onBack={() => router.push('/')}
       onCopy={() => {}}
       onShare={() => {}}

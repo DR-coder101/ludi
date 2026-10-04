@@ -2,10 +2,12 @@ import React, { type ReactNode } from 'react';
 import { ActivityIndicator, Platform, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import type { HouseRules } from '@ludi/protocol';
 import { color, font } from '../../theme/tokens';
 import { useLudiFonts } from '../../theme/fonts';
 import { ScreenBackdrop } from '../game/ScreenBackdrop';
 import { CodeCard } from './CodeCard';
+import { HouseRulesPicker } from './HouseRulesPicker';
 import { SeatCard } from './SeatCard';
 import { LobbyHeader, OptionToggle, RoomModeTabs, StartButton } from './LobbyControls';
 import type { LobbySeat, RoomNote, StartCta } from './lobbyModel';
@@ -26,6 +28,8 @@ export interface LobbyRoomProps {
   starting?: boolean;
   voice: Toggle;
   video: Toggle;
+  houseRules: HouseRules;
+  onHouseRulesChange?: (houseRules: HouseRules) => void;
   onBack: () => void;
   onCopy: () => void;
   onShare: () => void;
@@ -44,7 +48,7 @@ const TOP_GAP = 7;
 const BOTTOM_GAP = 12;
 
 export function LobbyRoom(props: LobbyRoomProps) {
-  const { code, host, seats, note, start, starting, voice, video, onBack, onCopy, onShare, onStart, onSelectSeat, children } = props;
+  const { code, host, seats, note, start, starting, voice, video, houseRules, onHouseRulesChange, onBack, onCopy, onShare, onStart, onSelectSeat, children } = props;
   const fontsReady = useLudiFonts();
   const device = useSafeAreaInsets();
   const insets = props.insets ?? device;
@@ -90,6 +94,12 @@ export function LobbyRoom(props: LobbyRoomProps) {
                 />
               ))}
             </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle} accessibilityRole="header">
+                HOUSE RULES
+              </Text>
+            </View>
+            <HouseRulesPicker houseRules={houseRules} onChange={onHouseRulesChange} />
             <View style={styles.spring} />
             <View style={styles.options}>
               <OptionToggle icon="mic" label="Voice" on={voice.on} onToggle={voice.onToggle} />
