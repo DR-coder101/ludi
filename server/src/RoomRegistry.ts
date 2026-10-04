@@ -121,6 +121,31 @@ export class RoomRegistry {
     return this.rooms.get(roomCode);
   }
 
+  fillEmptySeatsWithBots(roomCode: string): Color[] {
+    const room = this.rooms.get(roomCode);
+    if (!room || room.status !== 'lobby') return [];
+
+    const usedColors = new Set(room.players.map((p) => p.color));
+    const botColors: Color[] = [];
+
+    for (const color of COLORS) {
+      if (usedColors.has(color)) continue;
+
+      const player: Player = {
+        id: this.generatePlayerId(),
+        displayName: botColors.length === 0 ? 'Bot' : `Bot (${color})`,
+        color,
+        connected: false,
+        isHost: false,
+        status: 'ai-substitute',
+      };
+      room.players.push(player);
+      botColors.push(color);
+    }
+
+    return botColors;
+  }
+
   joinRoom(roomCode: string, displayName: string, sessionToken: string): { success: boolean; error?: string; color?: Color; playerId?: string } {
     const room = this.rooms.get(roomCode);
     
