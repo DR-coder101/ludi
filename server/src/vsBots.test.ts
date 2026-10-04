@@ -95,6 +95,7 @@ describe('1-player vs bots', () => {
     expect(bots).toHaveLength(3);
     expect(bots.every((p) => p.connected === false)).toBe(true);
     expect(bots.map((p) => p.color).sort()).toEqual(['blue', 'red', 'yellow']);
+    expect(bots.find((p) => p.color === 'blue')?.displayName).toBe('black bot');
     expect(filled.players.find((p) => p.id === client.playerId)?.color).toBe('green');
 
     const game = await gameStarted;

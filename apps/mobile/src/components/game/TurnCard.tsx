@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     color: color.redText,
   },
   title: {
-    // Parent centres children; stretch so adjustsFontSizeToFit has a real width (else "IT'S YOUR TURN" clips).
+    // Stretch so adjustsFontSizeToFit can shrink long titles inside the centred column.
     alignSelf: 'stretch',
     textAlign: 'center',
     marginTop: 4,
