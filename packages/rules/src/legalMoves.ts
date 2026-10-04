@@ -43,21 +43,20 @@ export function legalMoves(state: GameState): LegalMove[] {
   const moves: LegalMove[] = [];
   state.dice.forEach((die, dieIndex) => {
     if (die.used) return;
-    for (const move of movesForSteps(state, die.value, dieIndex)) {
+    for (const move of movesForDieValue(state, die.value)) {
       moves.push({ ...move, dieIndex: dieIndex as 0 | 1, steps: die.value });
     }
   });
   return moves;
 }
 
-function movesForSteps(
+/** All (token → resulting) pairs that can spend a die showing `steps`. */
+function movesForDieValue(
   state: GameState,
-  steps: number,
-  dieIndex: number
+  steps: number
 ): { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] {
   const moves: { tokenIndex: number; resulting: TokenPos; captures?: TokenRef }[] = [];
 
-  // Check if the current player has started (has any pieces out of yard)
   const hasStarted = state.tokens.some(
     (t) => t.color === state.turn && t.pos.zone !== "yard"
   );
@@ -70,17 +69,15 @@ function movesForSteps(
       // §3: Leaving the yard requires a die showing 6
       if (steps !== 6) return;
 
-      // §3: If player hasn't started yet, need BOTH dice to show 6 (double-6)
+      // §3: First piece out requires BOTH dice to show 6
       if (!hasStarted) {
-        // Check if both dice show 6
         const bothSixes = state.dice![0].value === 6 && state.dice![1].value === 6;
-        if (!bothSixes) return; // Double-6 required for first piece
+        if (!bothSixes) return;
       }
 
       resulting = computePath(token.pos, 1, token.color);
     } else {
       resulting = computePath(token.pos, steps, token.color);
-      // Overshoot or passing a blockade
       if (!resulting || wouldPassThroughBlockade(token.pos, steps, token.color, state)) return;
     }
 
@@ -114,14 +111,9 @@ function isBlockedByObstacle(
     return false;
   }
 
-  // Check for blockade (2+ tokens of same color)
-  const colorGroups = groupByColor(tokensAtPos);
-  
-  for (const [color, tokens] of Object.entries(colorGroups)) {
-    if (tokens.length >= 2) {
-      // Blockade exists - blocks everyone including the owner (§6)
-      return true;
-    }
+  // Blockade (2+ same colour) blocks everyone including the owner (§6)
+  for (const tokens of Object.values(groupByColor(tokensAtPos))) {
+    if (tokens.length >= 2) return true;
   }
 
   // Check if we can share the cell
