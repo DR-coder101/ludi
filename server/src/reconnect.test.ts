@@ -447,4 +447,115 @@ describe('M3.5 Reconnect & Dropout', () => {
     client1.disconnect();
     client2.disconnect();
   }, 10000);
+
+  it('auto-reattaches on connect with session auth so the same seat can roll without room:join', async () => {
+    const client1 = ioClient(SERVER_URL, { autoConnect: false }) as TestSocket;
+    const client2 = ioClient(SERVER_URL, { autoConnect: false }) as TestSocket;
+
+    await new Promise<void>((resolve) => {
+      let connected = 0;
+      const checkBothConnected = () => {
+        connected++;
+        if (connected === 2) resolve();
+      };
+      client1.on('connect', checkBothConnected);
+      client2.on('connect', checkBothConnected);
+      client1.connect();
+      client2.connect();
+    });
+
+    let roomCode: string;
+    let currentGameState: GameState | null = null;
+
+    client1.on('game:state', (state: GameState) => {
+      currentGameState = state;
+    });
+    client2.on('game:state', (state: GameState) => {
+      currentGameState = state;
+    });
+
+    await new Promise<void>((resolve) => {
+      client1.emit('room:create', {
+        displayName: 'Player 1',
+        houseRules: {
+          maxConsecutiveSixes: 2,
+          extraRollOnCapture: false,
+          blockadeCanMoveTogether: false,
+          exactFinishBonus: false,
+          playForPlacements: true,
+        },
+      }, (response) => {
+        roomCode = response.roomCode!;
+        client1.sessionToken = response.sessionToken;
+        client1.playerId = response.playerId;
+        resolve();
+      });
+    });
+
+    await new Promise<void>((resolve) => {
+      client2.emit('room:join', {
+        roomCode,
+        displayName: 'Player 2',
+      }, (response) => {
+        client2.sessionToken = response.sessionToken;
+        client2.playerId = response.playerId;
+        resolve();
+      });
+    });
+
+    client1.emit('room:ready');
+
+    await new Promise<void>((resolve) => {
+      const checkState = () => {
+        if (currentGameState && currentGameState.phase === 'awaiting_roll') {
+          resolve();
+        } else {
+          setTimeout(checkState, 20);
+        }
+      };
+      setTimeout(checkState, 10);
+    });
+
+    const turnClient = currentGameState!.turn === 'red' ? client1 : client2;
+    const otherClient = turnClient === client1 ? client2 : client1;
+    const savedSessionToken = turnClient.sessionToken!;
+    const savedPlayerId = turnClient.playerId!;
+
+    turnClient.disconnect();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    const reconnected = ioClient(SERVER_URL, {
+      autoConnect: false,
+      auth: { token: savedSessionToken },
+    }) as TestSocket;
+
+    let resyncedGameState: GameState | null = null;
+    reconnected.on('game:state', (state: GameState) => {
+      resyncedGameState = state;
+    });
+
+    await new Promise<void>((resolve) => {
+      reconnected.on('connect', resolve);
+      reconnected.connect();
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(resyncedGameState).toBeTruthy();
+    expect(resyncedGameState!.phase).toBe('awaiting_roll');
+    expect(resyncedGameState!.turn).toBe(currentGameState!.turn);
+
+    const rollResponse = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+      reconnected.emit('game:roll', {}, (response) => {
+        resolve(response);
+      });
+    });
+
+    expect(rollResponse).toEqual({ success: true });
+    expect(rollResponse.error).toBeUndefined();
+
+    reconnected.disconnect();
+    otherClient.disconnect();
+    expect(savedPlayerId).toBeTruthy();
+  }, 10000);
 });
