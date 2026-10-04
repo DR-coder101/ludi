@@ -1,0 +1,384 @@
+{
+  "feature": "solo-vs-bots",
+  "captured_at": "2026-10-04T18:12:13.224Z",
+  "result": {
+    "room_code": "D55A3",
+    "player_id": "0760faa8e4833fa3f7754b03a5228d5c",
+    "color": "red",
+    "bots": [
+      {
+        "id": "754c7b3ba99d90ac8353fca9eeaa6fe6",
+        "color": "green",
+        "name": "Bot"
+      },
+      {
+        "id": "fce10ef5dfde14f895b8344ba631b780",
+        "color": "yellow",
+        "name": "Bot (yellow)"
+      },
+      {
+        "id": "1f6bc3e23606e7b9d81aa50ea4464903",
+        "color": "blue",
+        "name": "Bot (blue)"
+      }
+    ],
+    "game_phase": "awaiting_roll",
+    "turn": "red",
+    "turns_played": 1,
+    "evidence": "/tmp/ludi-skill-prove3/evidence/solo-vs-bots.json",
+    "server_url": "http://127.0.0.1:3125",
+    "run_dir": "/tmp/ludi-skill-prove3"
+  },
+  "ready": {
+    "room": {
+      "roomCode": "D55A3",
+      "players": [
+        {
+          "id": "0760faa8e4833fa3f7754b03a5228d5c",
+          "displayName": "Verifier",
+          "color": "red",
+          "connected": true,
+          "isHost": true,
+          "status": "connected",
+          "sessionToken": "d7fdb8a5a1698629782af75773fe4f0235f38be86bc6f903da16aae06733c30b"
+        },
+        {
+          "id": "754c7b3ba99d90ac8353fca9eeaa6fe6",
+          "displayName": "Bot",
+          "color": "green",
+          "connected": false,
+          "isHost": false,
+          "status": "ai-substitute"
+        },
+        {
+          "id": "fce10ef5dfde14f895b8344ba631b780",
+          "displayName": "Bot (yellow)",
+          "color": "yellow",
+          "connected": false,
+          "isHost": false,
+          "status": "ai-substitute"
+        },
+        {
+          "id": "1f6bc3e23606e7b9d81aa50ea4464903",
+          "displayName": "Bot (blue)",
+          "color": "blue",
+          "connected": false,
+          "isHost": false,
+          "status": "ai-substitute"
+        }
+      ],
+      "houseRules": {
+        "maxConsecutiveSixes": 2,
+        "extraRollOnCapture": false,
+        "blockadeCanMoveTogether": false,
+        "exactFinishBonus": false,
+        "playForPlacements": true
+      },
+      "status": "lobby",
+      "hostId": "0760faa8e4833fa3f7754b03a5228d5c"
+    },
+    "game": {
+      "config": {
+        "playerColors": [
+          "red",
+          "green",
+          "yellow",
+          "blue"
+        ],
+        "houseRules": {
+          "maxConsecutiveSixes": 2,
+          "extraRollOnCapture": false,
+          "blockadeCanMoveTogether": false,
+          "exactFinishBonus": false,
+          "playForPlacements": true
+        }
+      },
+      "tokens": [
+        {
+          "color": "red",
+          "index": 0,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "red",
+          "index": 1,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "red",
+          "index": 2,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "red",
+          "index": 3,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "green",
+          "index": 0,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "green",
+          "index": 1,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "green",
+          "index": 2,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "green",
+          "index": 3,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "yellow",
+          "index": 0,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "yellow",
+          "index": 1,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "yellow",
+          "index": 2,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "yellow",
+          "index": 3,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "blue",
+          "index": 0,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "blue",
+          "index": 1,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "blue",
+          "index": 2,
+          "pos": {
+            "zone": "yard"
+          }
+        },
+        {
+          "color": "blue",
+          "index": 3,
+          "pos": {
+            "zone": "yard"
+          }
+        }
+      ],
+      "turn": "red",
+      "phase": "awaiting_roll",
+      "dice": null,
+      "extraRollEarned": false,
+      "consecutiveSixes": 0,
+      "winner": null,
+      "placements": []
+    },
+    "bots": [
+      {
+        "id": "754c7b3ba99d90ac8353fca9eeaa6fe6",
+        "color": "green",
+        "name": "Bot"
+      },
+      {
+        "id": "fce10ef5dfde14f895b8344ba631b780",
+        "color": "yellow",
+        "name": "Bot (yellow)"
+      },
+      {
+        "id": "1f6bc3e23606e7b9d81aa50ea4464903",
+        "color": "blue",
+        "name": "Bot (blue)"
+      }
+    ]
+  },
+  "turns": [
+    {
+      "game": {
+        "config": {
+          "playerColors": [
+            "red",
+            "green",
+            "yellow",
+            "blue"
+          ],
+          "houseRules": {
+            "maxConsecutiveSixes": 2,
+            "extraRollOnCapture": false,
+            "blockadeCanMoveTogether": false,
+            "exactFinishBonus": false,
+            "playForPlacements": true
+          }
+        },
+        "tokens": [
+          {
+            "color": "red",
+            "index": 0,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "red",
+            "index": 1,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "red",
+            "index": 2,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "red",
+            "index": 3,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "green",
+            "index": 0,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "green",
+            "index": 1,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "green",
+            "index": 2,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "green",
+            "index": 3,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "yellow",
+            "index": 0,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "yellow",
+            "index": 1,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "yellow",
+            "index": 2,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "yellow",
+            "index": 3,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "blue",
+            "index": 0,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "blue",
+            "index": 1,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "blue",
+            "index": 2,
+            "pos": {
+              "zone": "yard"
+            }
+          },
+          {
+            "color": "blue",
+            "index": 3,
+            "pos": {
+              "zone": "yard"
+            }
+          }
+        ],
+        "turn": "green",
+        "phase": "awaiting_roll",
+        "dice": null,
+        "extraRollEarned": false,
+        "consecutiveSixes": 0,
+        "winner": null,
+        "placements": []
+      },
+      "moves": [
+        {
+          "action": "roll",
+          "dice": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "ok": false,
+  "command": "ludi",
+  "error": {
+    "code": "INVALID_ARGS",
+    "message": "Missing required option --color",
+    "hint": "ludi room seat --help"
+  },
+  "meta": {
+    "duration_ms": 0,
+    "version": "0.1.0"
+  }
+}

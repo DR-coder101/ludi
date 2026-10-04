@@ -1,0 +1,27 @@
+Drive the Ludi server (HTTP + Socket.IO) for verification
+
+USAGE:
+  ludi <subcommand> [options]
+
+SUBCOMMANDS:
+  doctor           Read-only check: is this instance worth driving?
+  server           Lifecycle for a verification-owned Ludi server
+  session          Long-lived Socket.IO bridge for room/match commands
+  room             Lobby operations (requires session open)
+  match            In-match operations (requires session + started game)
+  play             Deep end-to-end flows (preferred for agents)
+  http             Plain HTTP probes (no Socket.IO)
+  introspect       Emit the full command tree as JSON
+
+GLOBAL:
+  --output json|text   Output format (default json)
+  --run-dir <path>     Isolated run directory
+  --url <url>          Server URL override
+
+EXAMPLES:
+  ludi --help
+  ludi play --help
+  ludi doctor --output json
+  ludi introspect
+
+SEE ALSO: ludi introspect, tools/ludi/.cli/README.md
