@@ -235,6 +235,70 @@ function roomLeaf(
   };
 }
 
+function houseRulesPatch(
+  a: Readonly<Record<string, unknown>>,
+): Record<string, unknown> | null {
+  const patch: Record<string, unknown> = {};
+  if (a['max-consecutive-sixes'] !== undefined) {
+    const raw = str(a, 'max-consecutive-sixes');
+    patch.maxConsecutiveSixes = raw === 'unlimited' ? 'unlimited' : Number(raw);
+  }
+  if (a['extra-roll-on-capture'] !== undefined) {
+    patch.extraRollOnCapture = Boolean(a['extra-roll-on-capture']);
+  }
+  if (a['exact-finish-bonus'] !== undefined) {
+    patch.exactFinishBonus = Boolean(a['exact-finish-bonus']);
+  }
+  if (a['play-for-placements'] !== undefined) {
+    patch.playForPlacements = Boolean(a['play-for-placements']);
+  }
+  return Object.keys(patch).length > 0 ? patch : null;
+}
+
+const roomHouseRules: Command = {
+  name: 'house-rules',
+  summary: 'Host sets lobby house-rule toggles before the match',
+  args: [
+    {
+      name: 'max-consecutive-sixes',
+      type: 'enum',
+      summary: 'Max consecutive throws showing a 6',
+      values: ['2', '3', 'unlimited'],
+    },
+    { name: 'extra-roll-on-capture', type: 'bool', summary: 'Bonus throw on capture' },
+    { name: 'exact-finish-bonus', type: 'bool', summary: 'Bonus throw when a token reaches home' },
+    { name: 'play-for-placements', type: 'bool', summary: 'Continue after a winner for 2nd/3rd' },
+  ],
+  mutates: true,
+  dryRun(a) {
+    const patch = houseRulesPatch(a);
+    if (!patch) {
+      return err(
+        'INVALID_ARGS',
+        'Pass at least one house-rule flag (not blockadeCanMoveTogether)',
+        'ludi room house-rules --help',
+      );
+    }
+    return planned([
+      {
+        action: 'room.updateHouseRules',
+        args: { ...patch, blockadeCanMoveTogether: false },
+      },
+    ]);
+  },
+  async run(a, ctx) {
+    const patch = houseRulesPatch(a);
+    if (!patch) {
+      return err(
+        'INVALID_ARGS',
+        'Pass at least one house-rule flag (not blockadeCanMoveTogether)',
+        'ludi room house-rules --help',
+      );
+    }
+    return rpc(ctx, 'room.updateHouseRules', patch);
+  },
+};
+
 const room: Command = {
   name: 'room',
   summary: 'Lobby operations (requires session open)',
@@ -247,7 +311,15 @@ const room: Command = {
     roomLeaf('join', 'Join a room by 5-character code', 'room.join', [
       { name: 'code', type: 'string', summary: '5-character room code', required: true },
       { name: 'name', type: 'string', summary: 'Display name', default: 'Guest' },
-    ], (a) => ({ roomCode: str(a, 'code'), displayName: str(a, 'name') })),
+      { name: 'session-token', type: 'string', summary: 'Saved seat token for mid-match rejoin' },
+    ], (a) => {
+      const payload: Record<string, unknown> = {
+        roomCode: str(a, 'code'),
+        displayName: str(a, 'name'),
+      };
+      if (a['session-token']) payload.sessionToken = str(a, 'session-token');
+      return payload;
+    }),
     roomLeaf('seat', 'Select seat color', 'room.seat', [
       {
         name: 'color',
@@ -258,6 +330,7 @@ const room: Command = {
       },
     ], (a) => ({ color: str(a, 'color') })),
     roomLeaf('ready', 'Host starts the match (solo fills bots)', 'room.ready', [], () => ({})),
+    roomHouseRules,
     roomLeaf('state', 'Request current room state', 'room.state', [], () => ({}), false),
     roomLeaf('leave', 'Leave the current room', 'room.leave', [], () => ({})),
   ],
@@ -391,12 +464,39 @@ const httpInfo: Command = {
   },
 };
 
+const httpMatches: Command = {
+  name: 'matches',
+  summary: 'GET /matches/:userId',
+  args: [
+    { name: 'user-id', type: 'string', summary: 'Player user id', required: true },
+    { name: 'limit', type: 'int', summary: 'Max matches to return', default: 50 },
+  ],
+  mutates: false,
+  async run(args, ctx) {
+    const url = resolveServerUrl(resolveRunDir(ctx.runDir), ctx.url);
+    const userId = encodeURIComponent(str(args, 'user-id'));
+    const limit = num(args, 'limit');
+    const target = `${url}/matches/${userId}?limit=${limit}`;
+    try {
+      const res = await fetch(target);
+      const body = await res.json();
+      return ok({ status: res.status, body, url: target });
+    } catch (e) {
+      return err(
+        'UPSTREAM_ERROR',
+        (e as Error).message,
+        `ludi doctor --run-dir ${ctx.runDir} --output json`,
+      );
+    }
+  },
+};
+
 const http: Command = {
   name: 'http',
   summary: 'Plain HTTP probes (no Socket.IO)',
   args: [],
   mutates: false,
-  children: [httpHealth, httpInfo],
+  children: [httpHealth, httpInfo, httpMatches],
 };
 
 /** Root registry. Subcommands disclose the rest. */

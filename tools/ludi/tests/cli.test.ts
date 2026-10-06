@@ -56,4 +56,66 @@ describe('ludi CLI', () => {
     expect(body.ok).toBe(false);
     expect(body.error.hint).toMatch(/^ludi /);
   });
+
+  it('introspect lists house-rules and matches leaves', () => {
+    const tree = buildIntrospectFromRegistry(registry) as {
+      commands: Array<{ name: string; subcommands?: Array<{ name: string }> }>;
+    };
+    const room = tree.commands.find((c) => c.name === 'room');
+    const http = tree.commands.find((c) => c.name === 'http');
+    expect(room?.subcommands?.some((c) => c.name === 'house-rules')).toBe(true);
+    expect(http?.subcommands?.some((c) => c.name === 'matches')).toBe(true);
+  });
+
+  it('house-rules dry-run exits 9 and plans updateHouseRules', () => {
+    const res = run([
+      'room',
+      'house-rules',
+      '--extra-roll-on-capture',
+      'true',
+      '--dry-run',
+      '--output',
+      'json',
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    expect(body.command).toBe('ludi.room.house-rules');
+    expect(body.planned_actions).toEqual([
+      {
+        action: 'room.updateHouseRules',
+        args: { extraRollOnCapture: true, blockadeCanMoveTogether: false },
+      },
+    ]);
+  });
+
+  it('rejects blockadeCanMoveTogether as an unknown house-rules flag', () => {
+    const res = run([
+      'room',
+      'house-rules',
+      '--blockade-can-move-together',
+      'true',
+      '--output',
+      'json',
+    ]);
+    expect(res.status).toBe(ExitCode.INVALID_ARGS);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(false);
+    expect(body.error.message).toContain('Unknown option --blockade-can-move-together');
+  });
+
+  it('http matches requires --user-id', () => {
+    const res = run(['http', 'matches', '--output', 'json']);
+    expect(res.status).toBe(ExitCode.INVALID_ARGS);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(false);
+    expect(body.error.message).toBe('Missing required option --user-id');
+    expect(body.error.hint).toMatch(/^ludi /);
+  });
+
+  it('room join help names --session-token', () => {
+    const res = run(['room', 'join', '--help']);
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('session-token');
+  });
 });
