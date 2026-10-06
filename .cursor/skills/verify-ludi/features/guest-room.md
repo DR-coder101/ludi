@@ -23,7 +23,7 @@ Preconditions:
 
 - **Create.** Run `pnpm -s ludi -- room create --name Dean --run-dir "$RUN_DIR" --output json`. Exit `0`. `data.room_code` is five characters.
 - **State.** Run `pnpm -s ludi -- room state --run-dir "$RUN_DIR" --output json`. Lobby status is `lobby` and the host is present.
-- **Cleanup.** `ludi session close` then `ludi server stop` for this run dir. Keep any evidence copies you wrote.
+- **Cleanup.** Run `pnpm -s ludi -- session close --run-dir "$RUN_DIR" --output json`, then `pnpm -s ludi -- server stop --run-dir "$RUN_DIR" --output json`. Keep any evidence copies you wrote.
 
 ## Gotchas
 

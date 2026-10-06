@@ -11,7 +11,7 @@ import type {
 } from '@ludi/protocol';
 import { legalMoves, type GameState as RulesGameState } from '@ludi/rules';
 import { DEFAULT_HOUSE_RULES, withTimeout } from '../defaults.js';
-import { writeSession, type RunDir } from '../runDir.js';
+import { readSession, writeSession, type RunDir } from '../runDir.js';
 
 export type BridgeSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -39,6 +39,13 @@ export function createBridgeState(url: string): BridgeState {
     displayName: null,
     lastError: null,
   };
+}
+
+function hydrateFromSessionFile(state: BridgeState, run: RunDir): void {
+  const session = readSession(run);
+  if (session.session_token) state.sessionToken = session.session_token;
+  if (session.player_id) state.playerId = session.player_id;
+  if (session.display_name) state.displayName = session.display_name;
 }
 
 function requireSocket(state: BridgeState): BridgeSocket {
@@ -248,6 +255,48 @@ export async function handleRpc(state: BridgeState, run: RunDir, method: string,
         };
       }
 
+      case 'room.updateHouseRules': {
+        const socket = requireSocket(state);
+        const current = state.room?.houseRules ?? DEFAULT_HOUSE_RULES;
+        const houseRules: HouseRules = {
+          ...current,
+          blockadeCanMoveTogether: false,
+        };
+        if (args.maxConsecutiveSixes !== undefined) {
+          const raw = args.maxConsecutiveSixes;
+          houseRules.maxConsecutiveSixes =
+            raw === 3 || raw === '3' ? 3 : raw === 'unlimited' ? 'unlimited' : 2;
+        }
+        if (args.extraRollOnCapture !== undefined) {
+          houseRules.extraRollOnCapture = Boolean(args.extraRollOnCapture);
+        }
+        if (args.exactFinishBonus !== undefined) {
+          houseRules.exactFinishBonus = Boolean(args.exactFinishBonus);
+        }
+        if (args.playForPlacements !== undefined) {
+          houseRules.playForPlacements = Boolean(args.playForPlacements);
+        }
+        const response = await emitAck<{ success: boolean; error?: string }>(
+          socket,
+          'room:updateHouseRules',
+          houseRules,
+        );
+        if (!response.success) {
+          return { ok: false, error: response.error ?? 'house-rules update failed', code: 'UPSTREAM_ERROR' };
+        }
+        await waitFor(
+          () =>
+            !!state.room &&
+            state.room.houseRules.extraRollOnCapture === houseRules.extraRollOnCapture &&
+            state.room.houseRules.exactFinishBonus === houseRules.exactFinishBonus &&
+            state.room.houseRules.playForPlacements === houseRules.playForPlacements &&
+            state.room.houseRules.maxConsecutiveSixes === houseRules.maxConsecutiveSixes &&
+            state.room.houseRules.blockadeCanMoveTogether === false,
+          2000,
+        );
+        return { ok: true, data: { house_rules: state.room?.houseRules, room: state.room } };
+      }
+
       case 'room.leave': {
         const socket = requireSocket(state);
         socket.emit('room:leave');
@@ -414,6 +463,7 @@ async function waitFor(pred: () => boolean, ms: number): Promise<void> {
 export async function startBridgeHttp(run: RunDir, url: string): Promise<{ port: number; close: () => Promise<void> }> {
   const state = createBridgeState(url);
   await connectSocket(state);
+  hydrateFromSessionFile(state, run);
 
   const server = createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/health') {

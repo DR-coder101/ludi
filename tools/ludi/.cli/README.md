@@ -6,7 +6,7 @@ Agent-friendly control surface for the **Ludi server** (HTTP + Socket.IO).
 
 | Driven | Not driven |
 |--------|------------|
-| Server HTTP (`/`, `/health`, auth routes when configured) | Expo mobile UI |
+| Server HTTP (`/`, `/health`, `/matches/:userId` when history is configured) | Expo mobile UI |
 | Socket.IO lobby (`room:*`) and match (`game:*`) | Device simulators |
 | Solo host → vs bots (`room:ready` alone fills AI seats) | LiveKit video |
 
