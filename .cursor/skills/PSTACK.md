@@ -1,30 +1,28 @@
 # Pstack Agent Workflow Pack
 
-**Version:** 0.15.5  
-**Source:** https://github.com/cursor/plugins/tree/main/pstack  
-**Author:** Lauren Tan  
+**Version:** 0.15.13
+**Pin:** `2cbf58508f40de470d7490b55c51d71241928fa2`
+**Source:** https://github.com/cursor/plugins/tree/main/pstack
+**Author:** Lauren Tan
 **License:** MIT (see PSTACK_LICENSE)
 
 ## About
 
-The pstack agent workflow pack provides skills and agents for effective AI-assisted software development. This pack was vendored into the repository to make these workflows available to all Cursor cloud agents working in this codebase.
+The pstack agent workflow pack provides skills and agents for effective AI-assisted software development. This pack was vendored into the repository to make these workflows available to all Cursor cloud agents working in this codebase. Skills are flattened from upstream `pstack/skills/<name>` into `.cursor/skills/<name>`.
 
 ## Included Skills
 
-This repository includes 44 skills from pstack covering:
-- **Agents**: architect, arena, blast-radius, bro, figure-it-out, how, interrogate, no-comments, poteto-mode, recall, reflect, show-me-your-work, swarm, tdd, teach, technical-writing, typescript-best-practices, unslop, why
-- **Verification**: create-verification-skill, maintain-verification-skill
-- **Principles**: 25+ principle skills covering boundary discipline, domain modeling, testing, type discipline, and architectural patterns
+This repository includes 51 skills from pstack 0.15.13:
 
-## Skipped Skills
+- **Workflows:** architect, arena, automate-me, benchmark-checklist, blast-radius, bro, correct, figure-it-out, how, interrogate, make-bot-ui, no-comments, poteto-help, poteto-mode, recall, reflect, setup-pstack, show-me-your-work, swarm, tdd, teach, technical-writing, typescript-best-practices, unslop, why
+- **Verification:** create-verification-skill, maintain-verification-skill
+- **Principles:** 24 principle skills, including explain-the-number, covering boundary discipline, domain modeling, testing, type discipline, and architectural patterns
 
-The following skills were excluded because they only make sense on the author's machine or for Grok Bot:
-- `setup-pstack` — Installation/setup specific to the author's environment
-- `make-bot-ui` — Grok Bot UI generation
-- `automate-me` — Personal automation configuration
+`setup-pstack` is vendored so the pack is complete. Dean runs `/setup-pstack` himself. Do not run it as part of a skill refresh.
 
 ## Agents
 
-Two agent definitions were also included:
-- `comment-sicko.md` — Agent specializing in code comment management
-- `poteto-agent.md` — Routing target for /poteto-mode style work
+Two agent definitions live in `.cursor/agents` and are not refreshed by a skills-only vendor pass.
+
+- `comment-sicko.md`. Specializes in code comment management.
+- `poteto-agent.md`. Routing target for /poteto-mode style work.
