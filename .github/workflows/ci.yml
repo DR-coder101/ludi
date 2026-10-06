@@ -66,4 +66,4 @@ jobs:
       - name: Install with lockfile
         run: pnpm install --frozen-lockfile
       - name: Typecheck packages/**
-        run: pnpm --filter "./packages/**" lint
+        run: pnpm --filter "./packages/**" --fail-if-no-match lint
