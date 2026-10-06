@@ -14,7 +14,7 @@ export function buildIntrospectFromRegistry(root: Command): {
     version: CLI_VERSION,
     acli_version: ACLI_VERSION,
     surface:
-      'Ludi server over HTTP + Socket.IO (guest room, lobby, match, solo vs bots). Not the Expo mobile UI.',
+      'Ludi server over HTTP + Socket.IO, plus Expo web screen checks at /dev/* fixture routes.',
     commands: (root.children ?? []).map(serialize),
   };
 }
@@ -81,11 +81,16 @@ export function renderHelp(cmd: Command, path: string[]): string {
   if (cmd.name === 'ludi') {
     lines.push('  ludi --help');
     lines.push('  ludi play --help');
+    lines.push('  ludi screens --help');
     lines.push('  ludi doctor --output json');
     lines.push('  ludi introspect');
   } else if (path[0] === 'play' || cmd.name === 'solo-vs-bots') {
     lines.push('  ludi play solo-vs-bots --run-dir /tmp/ludi-v1 --turns 1');
     lines.push('  ludi play solo-vs-bots --dry-run --output json');
+  } else if (path[0] === 'screens' || cmd.name === 'check') {
+    lines.push('  ludi screens doctor --output json');
+    lines.push('  ludi screens check --run-dir /tmp/ludi-v1');
+    lines.push('  ludi screens check --dry-run --output json');
   } else {
     lines.push(`  ${full} --help`);
     lines.push(`  ${full}${cmd.mutates ? ' --dry-run' : ''} --output json`);

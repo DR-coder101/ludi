@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Agent-friendly CLI that drives the Ludi server (HTTP + Socket.IO) for verification",
+  "description": "Agent-friendly CLI that drives the Ludi server (HTTP + Socket.IO) and Expo web screen checks",
   "bin": {
     "ludi": "./bin/ludi"
   },
@@ -19,7 +19,10 @@
   "dependencies": {
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "pixelmatch": "5.3.0",
+    "pngjs": "7.0.0",
+    "playwright": "1.55.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

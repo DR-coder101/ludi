@@ -9,6 +9,7 @@ import {
 } from './command.js';
 import { runDoctor } from './doctor.js';
 import { planSoloVsBots, playSoloVsBots } from './play/soloVsBots.js';
+import { planScreensCheck, runScreensCheck, runScreensDoctor } from './screens/run.js';
 import {
   bridgeRpc,
   isPidAlive,
@@ -499,11 +500,62 @@ const http: Command = {
   children: [httpHealth, httpInfo, httpMatches],
 };
 
-/** Root registry. Subcommands disclose the rest. */
-export const registry: Command = {
-  name: 'ludi',
-  summary: 'Drive the Ludi server (HTTP + Socket.IO) for verification',
+const screensDoctor: Command = {
+  name: 'doctor',
+  summary: 'Read-only check: can this machine capture Expo web screens?',
   args: [],
   mutates: false,
-  children: [doctor, server, session, room, match, play, http, introspect],
+  async run(_args, ctx) {
+    return runScreensDoctor(ctx);
+  },
+};
+
+const screensCheck: Command = {
+  name: 'check',
+  summary: 'Export Expo web, screenshot /dev fixtures, compare to web baselines',
+  args: [
+    {
+      name: 'screen',
+      type: 'enum',
+      summary: 'One fixture, or all four',
+      values: ['all', 'home', 'lobby', 'board-start', 'win'],
+      default: 'all',
+    },
+    {
+      name: 'update-baselines',
+      type: 'bool',
+      summary: 'Overwrite baselines/web from this capture',
+      default: false,
+    },
+    { name: 'port', type: 'int', summary: 'Static server port for the web export', default: 4173 },
+  ],
+  mutates: true,
+  dryRun(args, ctx) {
+    return planScreensCheck({
+      screen: str(args, 'screen'),
+      update: Boolean(args['update-baselines']),
+      port: num(args, 'port'),
+      url: ctx.url,
+      runDir: ctx.runDir,
+    });
+  },
+  async run(args, ctx) {
+    return runScreensCheck(args, ctx);
+  },
+};
+
+const screens: Command = {
+  name: 'screens',
+  summary: 'Expo web screenshots of /dev home, lobby, board-start, and win',
+  args: [],
+  mutates: false,
+  children: [screensDoctor, screensCheck],
+};
+
+export const registry: Command = {
+  name: 'ludi',
+  summary: 'Drive the Ludi server (HTTP + Socket.IO) and Expo web screens for verification',
+  args: [],
+  mutates: false,
+  children: [doctor, server, session, room, match, play, http, screens, introspect],
 };
