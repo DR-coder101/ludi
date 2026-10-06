@@ -44,7 +44,7 @@ Follow these without being asked. `docs/GAME_RULES.md` is the rules-engine sourc
 | 3. Safe cells | This list. Engine `SAFE_CELLS`. `docs/GAME_RULES.md` §7. |
 | 4. 2-player full board | This list. `BoardArt` draws all four yards. |
 | 5. Approved mockup | This list only. Ask Dean. Do not invent a mockup. |
-| 6. `blockadeCanMoveTogether` | This list. Lobby `HouseRulesPicker` omits the toggle. Protocol and `docs/GAME_RULES.md` still declare the flag. |
+| 6. `blockadeCanMoveTogether` | This list. Lobby `HouseRulesPicker` omits the toggle. |
 | 7. Two dice and coming out | This list. `docs/GAME_RULES.md` §3. Engine `legalMoves` spends a 6 to leave the yard. |
 
 ## Pstack Agent Workflow Pack (MIT)
