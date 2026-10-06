@@ -552,7 +552,6 @@ const screens: Command = {
   children: [screensDoctor, screensCheck],
 };
 
-/** Root registry. Subcommands disclose the rest. */
 export const registry: Command = {
   name: 'ludi',
   summary: 'Drive the Ludi server (HTTP + Socket.IO) and Expo web screens for verification',

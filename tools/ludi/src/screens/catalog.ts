@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/** iPhone 14 CSS size. Dev routes pad 47/34 so the layout matches the 390×844 mockups. */
 export const PHONE = {
   width: 390,
   height: 844,
@@ -26,7 +25,6 @@ export type ScreenSpec = {
   file: string;
 };
 
-/** /dev fixtures. Web baselines are Chromium captures, not the emulator PNGs. */
 export const SCREENS: readonly ScreenSpec[] = [
   {
     id: 'home',
