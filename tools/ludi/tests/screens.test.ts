@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { mkdtempSync, writeFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, writeFileSync, existsSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PNG } from 'pngjs';
@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { ExitCode } from '../src/exit.js';
-import { SCREENS, screensToRun, PHONE } from '../src/screens/catalog.js';
+import { SCREENS, screensToRun, PHONE, findRepoRoot } from '../src/screens/catalog.js';
 import { comparePng } from '../src/screens/compare.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -37,6 +37,15 @@ describe('screen catalog', () => {
     expect(screensToRun('all')).toHaveLength(4);
     expect(screensToRun('board-start')[0]?.path).toBe('/dev/board?state=start');
     expect(PHONE).toEqual({ width: 390, height: 844, deviceScaleFactor: 2 });
+  });
+
+  it('keeps iPhone 14 web insets on every /dev fixture the 390×844 capture assumes', () => {
+    const dir = join(findRepoRoot(), 'apps', 'mobile', 'app', 'dev');
+    for (const file of ['home.tsx', 'lobby.tsx', 'board.tsx', 'win.tsx'] as const) {
+      const src = readFileSync(join(dir, file), 'utf8');
+      expect(src).toContain('const PHONE_INSETS = { top: 47, bottom: 34 };');
+      expect(src).toContain("insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}");
+    }
   });
 });
 
