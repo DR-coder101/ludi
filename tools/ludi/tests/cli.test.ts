@@ -57,17 +57,25 @@ describe('ludi CLI', () => {
     expect(body.error.hint).toMatch(/^ludi /);
   });
 
-  it('introspect lists house-rules and matches leaves', () => {
-    const tree = buildIntrospectFromRegistry(registry) as {
-      commands: Array<{ name: string; subcommands?: Array<{ name: string }> }>;
-    };
-    const room = tree.commands.find((c) => c.name === 'room');
-    const http = tree.commands.find((c) => c.name === 'http');
-    expect(room?.subcommands?.some((c) => c.name === 'house-rules')).toBe(true);
-    expect(http?.subcommands?.some((c) => c.name === 'matches')).toBe(true);
+  it('introspect JSON includes house-rules and matches', () => {
+    const res = run(['introspect', '--output', 'json']);
+    expect(res.status).toBe(0);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    expect(body.command).toBe('ludi.introspect');
+    const room = body.data.commands.find((c: { name: string }) => c.name === 'room');
+    const http = body.data.commands.find((c: { name: string }) => c.name === 'http');
+    const roomNames = room.subcommands.map((c: { name: string }) => c.name);
+    const httpNames = http.subcommands.map((c: { name: string }) => c.name);
+    expect(roomNames).toContain('house-rules');
+    expect(httpNames).toContain('matches');
+    expect(res.stdout).toContain('"name": "house-rules"');
+    expect(res.stdout).toContain('"name": "matches"');
   });
 
   it('house-rules dry-run exits 9 and plans updateHouseRules', () => {
+    const runDir = join(root, '.tmp-house-rules-dry');
+    rmSync(runDir, { recursive: true, force: true });
     const res = run([
       'room',
       'house-rules',
@@ -76,10 +84,13 @@ describe('ludi CLI', () => {
       '--dry-run',
       '--output',
       'json',
+      '--run-dir',
+      runDir,
     ]);
     expect(res.status).toBe(ExitCode.DRY_RUN);
     const body = JSON.parse(res.stdout);
     expect(body.ok).toBe(true);
+    expect(body.dry_run).toBe(true);
     expect(body.command).toBe('ludi.room.house-rules');
     expect(body.planned_actions).toEqual([
       {
@@ -87,6 +98,16 @@ describe('ludi CLI', () => {
         args: { extraRollOnCapture: true, blockadeCanMoveTogether: false },
       },
     ]);
+    expect(existsSync(runDir)).toBe(false);
+  });
+
+  it('house-rules with no toggle flags is INVALID_ARGS', () => {
+    const res = run(['room', 'house-rules', '--output', 'json']);
+    expect(res.status).toBe(ExitCode.INVALID_ARGS);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('INVALID_ARGS');
+    expect(body.error.hint).toMatch(/^ludi /);
   });
 
   it('rejects blockadeCanMoveTogether as an unknown house-rules flag', () => {
@@ -101,7 +122,9 @@ describe('ludi CLI', () => {
     expect(res.status).toBe(ExitCode.INVALID_ARGS);
     const body = JSON.parse(res.stdout);
     expect(body.ok).toBe(false);
-    expect(body.error.message).toContain('Unknown option --blockade-can-move-together');
+    expect(body.error.code).toBe('INVALID_ARGS');
+    expect(body.error.message).toBe('Unknown option --blockade-can-move-together');
+    expect(body.error.hint).toMatch(/^ludi /);
   });
 
   it('http matches requires --user-id', () => {
