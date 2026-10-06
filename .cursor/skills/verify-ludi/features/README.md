@@ -40,3 +40,7 @@ Each feature file: H1, one paragraph, then exactly `Sub-features`, `How to get t
 - [Guest room create](./guest-room.md) covers host room creation and the join code.
 - [Lobby ready (multiplayer)](./lobby-ready.md) covers two humans (two run dirs) starting without bot fill.
 - [HTTP health](./http-health.md) covers `/health` and server identity probes.
+- [House-rules lobby toggles](./house-rules.md) covers host toggles before start, including that `blockadeCanMoveTogether` stays false.
+- [Reconnect rejoin](./reconnect-rejoin.md) covers dropping a seat and `room join` with the saved session on an in-progress match.
+- [Single-6 come-out](./come-out.md) covers one yard piece per 6, two on 6-6 (GAME_RULES.md §3).
+- [Match history](./match-history.md) covers `GET /matches/:userId` for a finished match, and the Supabase prerequisite.
