@@ -26,7 +26,7 @@ Preconditions:
 - **Toggle.** Run `pnpm -s ludi -- room house-rules --extra-roll-on-capture true --max-consecutive-sixes 3 --run-dir "$RUN_DIR" --output json`. Exit `0`.
 - **Lobby.** Run `pnpm -s ludi -- room state --run-dir "$RUN_DIR" --output json`. `data.room.houseRules.extraRollOnCapture` is `true`. `data.room.houseRules.maxConsecutiveSixes` is `3`. `data.room.houseRules.blockadeCanMoveTogether` is `false`.
 - **Play.** Run `pnpm -s ludi -- room ready --run-dir "$RUN_DIR" --output json`, then `pnpm -s ludi -- match state --run-dir "$RUN_DIR" --output json`. `data.game.config.houseRules` matches those lobby values, including `blockadeCanMoveTogether: false`.
-- **Cleanup.** `ludi session close` then `ludi server stop` for this run dir.
+- **Cleanup.** Run `pnpm -s ludi -- session close --run-dir "$RUN_DIR" --output json`, then `pnpm -s ludi -- server stop --run-dir "$RUN_DIR" --output json`.
 
 ## Gotchas
 

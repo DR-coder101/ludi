@@ -24,7 +24,7 @@ Preconditions:
 - **One 6.** Run `pnpm -s ludi -- match roll --run-dir "$RUN_DIR" --output json`. If exactly one die has `value` 6, run `pnpm -s ludi -- match move --token 0 --die <that dieIndex> --run-dir "$RUN_DIR" --output json`. Expected: three red tokens remain `yard`. Token 0 is `{ zone: "track", cell: 0 }`.
 - **6-6.** If both dice are 6 on a throw that started with four in the yard, run `match move --token 0 --die 0` then `match move --token 1 --die 1`. Expected: two red tokens remain `yard`. Tokens 0 and 1 are on start cell `0`. If the first throw is not 6-6, `room leave`, create a new room, and roll again (about 1 in 36 opening throws). Do not use `match play-turn` for 6-6. It picks `legalMoves[0]`, which after the first come-out is the token already on the track.
 - **Record.** Save the roll JSON and the following `match state` under `"$RUN_DIR/evidence/come-out.json"`.
-- **Cleanup.** `session close` then `server stop`. Keep evidence.
+- **Cleanup.** Run `pnpm -s ludi -- session close --run-dir "$RUN_DIR" --output json`, then `pnpm -s ludi -- server stop --run-dir "$RUN_DIR" --output json`. Keep evidence.
 
 ## Gotchas
 
