@@ -1,0 +1,66 @@
+name: Screens
+
+on:
+  pull_request:
+    paths:
+      - "apps/mobile/**"
+      - "tools/ludi/src/screens/**"
+      - "tools/ludi/src/registry.ts"
+      - "tools/ludi/src/introspect.ts"
+      - "tools/ludi/package.json"
+      - ".cursor/skills/verify-ludi/**"
+      - ".github/workflows/screens.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/mobile/**"
+      - "tools/ludi/src/screens/**"
+      - "tools/ludi/src/registry.ts"
+      - "tools/ludi/src/introspect.ts"
+      - "tools/ludi/package.json"
+      - ".cursor/skills/verify-ludi/**"
+      - ".github/workflows/screens.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: screens-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  screens:
+    name: screens
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+      - name: Install with lockfile
+        run: pnpm install --frozen-lockfile
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('tools/ludi/package.json') }}
+      - name: Install Chromium
+        working-directory: tools/ludi
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Compare Expo web screens to baselines
+        run: pnpm -s ludi -- screens check --output json --run-dir "$RUNNER_TEMP/ludi-screens"
+      - name: Upload diffs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-diffs
+          path: |
+            ${{ runner.temp }}/ludi-screens/evidence/screens/
+            ${{ runner.temp }}/ludi-screens/expo-export.log
+          if-no-files-found: ignore

@@ -33,6 +33,7 @@ describe('ludi CLI', () => {
     const tree = buildIntrospectFromRegistry(registry);
     expect(tree.name).toBe('ludi');
     expect(tree.commands.some((c) => (c as { name: string }).name === 'play')).toBe(true);
+    expect(tree.commands.some((c) => (c as { name: string }).name === 'screens')).toBe(true);
   });
 
   it('mutating dry-run exits 9 and changes nothing', () => {
