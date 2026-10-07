@@ -31,6 +31,7 @@ export interface Database {
           is_guest?: boolean
           created_at?: string
         }
+        Relationships: []
       }
       rooms: {
         Row: {
@@ -54,6 +55,7 @@ export interface Database {
           status?: string
           created_at?: string
         }
+        Relationships: []
       }
       matches: {
         Row: {
@@ -83,6 +85,22 @@ export interface Database {
           placements?: Json
           house_rules?: Json
         }
+        Relationships: [
+          {
+            foreignKeyName: 'match_players_match_id_fkey'
+            columns: ['id']
+            isOneToOne: false
+            referencedRelation: 'match_players'
+            referencedColumns: ['match_id']
+          },
+          {
+            foreignKeyName: 'matches_room_id_fkey'
+            columns: ['room_id']
+            isOneToOne: false
+            referencedRelation: 'rooms'
+            referencedColumns: ['id']
+          },
+        ]
       }
       match_players: {
         Row: {
@@ -103,7 +121,25 @@ export interface Database {
           color?: string
           final_position?: number | null
         }
+        Relationships: [
+          {
+            foreignKeyName: 'match_players_match_id_fkey'
+            columns: ['match_id']
+            isOneToOne: false
+            referencedRelation: 'matches'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'match_players_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
       }
     }
+    Views: Record<string, never>
+    Functions: Record<string, never>
   }
 }

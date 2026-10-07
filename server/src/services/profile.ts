@@ -30,7 +30,7 @@ export function createProfileService(supabase: SupabaseClient<Database>): Profil
     },
 
     async updateProfile(userId: string, updates: { displayName?: string; avatarUrl?: string | null }) {
-      const updateData: any = {};
+      const updateData: Database['public']['Tables']['users']['Update'] = {};
       if (updates.displayName !== undefined) {
         updateData.display_name = updates.displayName;
       }

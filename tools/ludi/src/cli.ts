@@ -13,32 +13,32 @@ function isParsed(x: ParsedInvocation | Result): x is ParsedInvocation {
 function emit(command: string, started: number, result: Result, output: 'json' | 'text'): number {
   const io = defaultIo();
   const meta = { duration_ms: Date.now() - started, version: CLI_VERSION };
-  if (result.ok && 'dry_run' in result && result.dry_run) {
-    const body = {
-      ok: true,
-      command,
-      dry_run: true,
-      planned_actions: result.planned_actions,
-      meta,
-    };
-    io.stdout(JSON.stringify(body, null, 2) + '\n');
-    return ExitCode.DRY_RUN;
+  if (!result.ok) {
+    const body = { ok: false, command, error: result.error, meta };
+    if (output === 'json') {
+      io.stdout(JSON.stringify(body, null, 2) + '\n');
+    } else {
+      io.stderr(
+        `Error [${result.error.code}]: ${result.error.message}\n  Hint: ${result.error.hint}\n`,
+      );
+    }
+    return exitFor(result.error.code);
   }
-  if (result.ok) {
+  if ('data' in result) {
     const body = { ok: true, command, data: result.data, meta };
     if (output === 'json') io.stdout(JSON.stringify(body, null, 2) + '\n');
     else io.stdout(typeof result.data === 'string' ? result.data + '\n' : JSON.stringify(result.data, null, 2) + '\n');
     return ExitCode.SUCCESS;
   }
-  const body = { ok: false, command, error: result.error, meta };
-  if (output === 'json') {
-    io.stdout(JSON.stringify(body, null, 2) + '\n');
-  } else {
-    io.stderr(
-      `Error [${result.error.code}]: ${result.error.message}\n  Hint: ${result.error.hint}\n`,
-    );
-  }
-  return exitFor(result.error.code);
+  const body = {
+    ok: true,
+    command,
+    dry_run: true,
+    planned_actions: result.planned_actions,
+    meta,
+  };
+  io.stdout(JSON.stringify(body, null, 2) + '\n');
+  return ExitCode.DRY_RUN;
 }
 
 async function main(argv: string[]): Promise<void> {

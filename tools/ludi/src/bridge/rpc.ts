@@ -218,7 +218,7 @@ export async function handleRpc(state: BridgeState, run: RunDir, method: string,
           return { ok: false, error: response.error ?? 'seat failed', code: 'CONFLICT' };
         }
         writeSession(run, { color });
-        await waitFor(() => state.room?.players.some((p) => p.id === state.playerId && p.color === color), 2000);
+        await waitFor(() => state.room?.players.some((p) => p.id === state.playerId && p.color === color) ?? false, 2000);
         return { ok: true, data: { color, room: state.room } };
       }
 

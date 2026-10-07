@@ -53,7 +53,10 @@ export class RoomRegistry {
     const room: RoomState = {
       roomCode,
       players: [host],
-      houseRules,
+      houseRules: {
+        ...houseRules,
+        blockadeCanMoveTogether: false,
+      },
       status: 'lobby',
       hostId: playerId,
     };
