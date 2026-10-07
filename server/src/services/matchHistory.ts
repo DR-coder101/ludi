@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '../db/types.js';
 import type { Color, HouseRules, MatchHistory } from '@ludi/protocol';
 import { createTtlCache, type TtlCache } from '../cache/ttlCache.js';
+import { isPostgresUuid } from '../db/postgresUuid.js';
 
 export interface MatchData {
   roomCode: string;
@@ -48,7 +49,7 @@ function houseRulesJson(rules: HouseRules): Json {
 
 function placementsJson(players: MatchData['players']): Json {
   return players.map((player) => ({
-    userId: player.userId,
+    userId: isPostgresUuid(player.userId) ? player.userId : null,
     color: player.color,
     position: player.finalPosition,
   }));
@@ -99,13 +100,16 @@ export function createMatchHistoryService(
         roomId = newRoom.id;
       }
 
+      const attributedPlayers = match.players.filter((p) => isPostgresUuid(p.userId));
+      const winnerId = isPostgresUuid(match.winnerId) ? match.winnerId : null;
+
       const { data: matchRecord, error: matchError } = await supabase
         .from('matches')
         .insert({
           room_id: roomId,
           started_at: match.startedAt.toISOString(),
           ended_at: match.endedAt.toISOString(),
-          winner_id: match.winnerId,
+          winner_id: winnerId,
           house_rules: houseRulesJson(match.houseRules),
           placements: placementsJson(match.players),
         })
@@ -116,22 +120,24 @@ export function createMatchHistoryService(
         throw new Error('Failed to create match record');
       }
 
-      const matchPlayers = match.players.map(p => ({
+      const matchPlayers = attributedPlayers.map(p => ({
         match_id: matchRecord.id,
         user_id: p.userId,
         color: p.color,
         final_position: p.finalPosition,
       }));
 
-      const { error: playersError } = await supabase
-        .from('match_players')
-        .insert(matchPlayers);
+      if (matchPlayers.length > 0) {
+        const { error: playersError } = await supabase
+          .from('match_players')
+          .insert(matchPlayers);
 
-      if (playersError) {
-        throw new Error('Failed to save match players');
+        if (playersError) {
+          throw new Error('Failed to save match players');
+        }
       }
 
-      for (const player of match.players) {
+      for (const player of attributedPlayers) {
         invalidateUserHistory(player.userId);
       }
 
