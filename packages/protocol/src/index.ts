@@ -16,7 +16,10 @@ export type Color = z.infer<typeof ColorSchema>;
 export const HouseRulesSchema = z.object({
   maxConsecutiveSixes: z.union([z.literal(2), z.literal(3), z.literal('unlimited')]),
   extraRollOnCapture: z.boolean(),
-  blockadeCanMoveTogether: z.boolean(),
+  blockadeCanMoveTogether: z
+    .boolean()
+    .default(false)
+    .transform((): false => false),
   exactFinishBonus: z.boolean(),
   playForPlacements: z.boolean(),
 });

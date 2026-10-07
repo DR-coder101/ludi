@@ -575,13 +575,13 @@ describe('Room Lifecycle', () => {
       return { host, guest };
     }
 
-    it('stores the host update, forces blockade off, and copies the rules into the game', async () => {
+    it('stores the host update, keeps blockade off, and copies the rules into the game', async () => {
       const { host, guest } = await openRoom();
       try {
         const sent: HouseRules = {
           maxConsecutiveSixes: 3,
           extraRollOnCapture: true,
-          blockadeCanMoveTogether: true,
+          blockadeCanMoveTogether: false,
           exactFinishBonus: true,
           playForPlacements: true,
         };
@@ -611,6 +611,33 @@ describe('Room Lifecycle', () => {
         host.emit('room:ready');
         const game = await gamePromise;
         expect(game.config.houseRules).toEqual(stored);
+      } finally {
+        host.disconnect();
+        guest.disconnect();
+      }
+    });
+
+    it('coerces blockadeCanMoveTogether true to false', async () => {
+      const { host, guest } = await openRoom();
+      try {
+        const payload = {
+          ...baseRules,
+          extraRollOnCapture: true,
+          blockadeCanMoveTogether: true,
+        };
+        const statePromise = new Promise<RoomState>((resolve) => {
+          guest.once('room:state', resolve);
+        });
+        const response = await new Promise<{ success: boolean; error?: string }>((resolve) => {
+          host.emit('room:updateHouseRules', payload as unknown as HouseRules, resolve);
+        });
+        expect(response).toEqual({ success: true });
+        const state = await statePromise;
+        expect(state.houseRules).toEqual({
+          ...baseRules,
+          extraRollOnCapture: true,
+          blockadeCanMoveTogether: false,
+        });
       } finally {
         host.disconnect();
         guest.disconnect();

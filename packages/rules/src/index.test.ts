@@ -103,7 +103,7 @@ describe("Game Types and Configuration", () => {
       houseRules: {
         maxConsecutiveSixes: 3,
         extraRollOnCapture: true,
-        blockadeCanMoveTogether: true,
+        blockadeCanMoveTogether: false,
         exactFinishBonus: true,
         playForPlacements: true,
       },
