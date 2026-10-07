@@ -10,7 +10,7 @@ Read-only probes that the Ludi server process is up and identifies as Ludi.
 
 ## How to get to it (user POV)
 
-- Open `http://127.0.0.1:<port>/health` (or `/`) in a browser. The Expo app's socket connection status is a different signal — it does not call these HTTP probes.
+- Open `http://127.0.0.1:<port>/health` (or `/`) in a browser. The Expo app's socket connection status is a different signal. It does not call these HTTP probes.
 - Via `ludi`: `ludi http health`, `ludi http info`, `ludi doctor`.
 
 ## Driving it with ludi
@@ -25,5 +25,7 @@ Preconditions:
 
 ## Gotchas
 
-- Doctor without a server returns a JSON error whose `hint` starts with `ludi server start`.
+- URL order is `--url`, then `LUDI_URL`, then `server.json`, then `http://127.0.0.1:3000`. `LUDI_URL` wins over a recorded `server.json`.
+- Doctor without `server.json` still probes the resolved URL. `worth_driving` is true when `/health` and identity pass, even if this run did not start the process.
+- A dead URL returns a JSON error whose `hint` starts with `ludi server start`.
 - Auth HTTP routes (`/auth/guest`, …) need Supabase. They are out of scope for this map until configured.

@@ -1,8 +1,4 @@
 #!/usr/bin/env node
-/**
- * ludi. One entry point. Subcommands hang under `ludi`.
- * Surface: Ludi server (HTTP + Socket.IO). Not the Expo mobile UI.
- */
 import { ExitCode } from './exit.js';
 import { exitFor, isLeaf, type Result } from './command.js';
 import { ACLI_VERSION, CLI_VERSION, defaultIo } from './output.js';

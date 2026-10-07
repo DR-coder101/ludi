@@ -1,0 +1,68 @@
+{
+  "url": "http://127.0.0.1:4173",
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 2
+  },
+  "results": [
+    {
+      "id": "home",
+      "width": 780,
+      "height": 1688,
+      "baseline_width": 780,
+      "baseline_height": 1688,
+      "max_diff_ratio": 0.005,
+      "actual": "/tmp/ludi-screens-verify/evidence/screens/home.png",
+      "baseline": "/workspace/.cursor/skills/verify-ludi/baselines/web/home.png",
+      "ok": true,
+      "pixels_differ": 0,
+      "diff_ratio": 0,
+      "diff": null
+    },
+    {
+      "id": "lobby",
+      "width": 780,
+      "height": 1688,
+      "baseline_width": 780,
+      "baseline_height": 1688,
+      "max_diff_ratio": 0.005,
+      "actual": "/tmp/ludi-screens-verify/evidence/screens/lobby.png",
+      "baseline": "/workspace/.cursor/skills/verify-ludi/baselines/web/lobby.png",
+      "ok": true,
+      "pixels_differ": 0,
+      "diff_ratio": 0,
+      "diff": null
+    },
+    {
+      "id": "board-start",
+      "width": 780,
+      "height": 1688,
+      "baseline_width": 780,
+      "baseline_height": 1688,
+      "max_diff_ratio": 0.005,
+      "actual": "/tmp/ludi-screens-verify/evidence/screens/board-start.png",
+      "baseline": "/workspace/.cursor/skills/verify-ludi/baselines/web/board-start.png",
+      "ok": true,
+      "pixels_differ": 0,
+      "diff_ratio": 0,
+      "diff": null
+    },
+    {
+      "id": "win",
+      "width": 780,
+      "height": 1688,
+      "baseline_width": 780,
+      "baseline_height": 1688,
+      "max_diff_ratio": 0.005,
+      "actual": "/tmp/ludi-screens-verify/evidence/screens/win.png",
+      "baseline": "/workspace/.cursor/skills/verify-ludi/baselines/web/win.png",
+      "ok": true,
+      "pixels_differ": 0,
+      "diff_ratio": 0,
+      "diff": null
+    }
+  ],
+  "evidence": "/tmp/ludi-screens-verify/evidence/screens",
+  "note": "Compare against baselines/web (Expo web / Chromium). baselines/emulator is human context only."
+}
