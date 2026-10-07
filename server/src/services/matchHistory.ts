@@ -8,10 +8,10 @@ export interface MatchData {
   roomCode: string;
   startedAt: Date;
   endedAt: Date;
-  winnerId: string;
+  winnerId: string | null;
   houseRules: HouseRules;
   players: Array<{
-    userId: string;
+    userId: string | null;
     color: Color;
     finalPosition: number;
   }>;
@@ -100,7 +100,9 @@ export function createMatchHistoryService(
         roomId = newRoom.id;
       }
 
-      const attributedPlayers = match.players.filter((p) => isPostgresUuid(p.userId));
+      const attributedPlayers = match.players.filter(
+        (p): p is { userId: string; color: Color; finalPosition: number } => isPostgresUuid(p.userId),
+      );
       const winnerId = isPostgresUuid(match.winnerId) ? match.winnerId : null;
 
       const { data: matchRecord, error: matchError } = await supabase
