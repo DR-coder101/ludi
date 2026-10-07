@@ -3,10 +3,10 @@
  * Source: docs/GAME_RULES.md §2, §4, §8, §11
  */
 
-import type { GameState } from "./types.js";
-import type { GameEvent } from "./applyMove.js";
-import { legalMoves } from "./legalMoves.js";
-import { endThrow, passTurn } from "./turn.js";
+import type { GameState } from "./types";
+import type { GameEvent } from "./applyMove";
+import { legalMoves } from "./legalMoves";
+import { endThrow, passTurn } from "./turn";
 
 export interface RollDiceResult {
   state: GameState;

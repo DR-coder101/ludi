@@ -5,9 +5,9 @@
  * Server is sole source of truth; client uses for validation and prediction.
  */
 
-export * from "./types.js";
-export * from "./topology.js";
-export * from "./game.js";
-export * from "./legalMoves.js";
-export * from "./rollDice.js";
-export * from "./applyMove.js";
+export * from "./types";
+export * from "./topology";
+export * from "./game";
+export * from "./legalMoves";
+export * from "./rollDice";
+export * from "./applyMove";

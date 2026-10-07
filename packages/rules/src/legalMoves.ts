@@ -3,8 +3,8 @@
  * Source: docs/GAME_RULES.md §3-§8, §10, §11
  */
 
-import type { GameState, TokenPos, Color, TokenState } from "./types.js";
-import { computePath, isSafeCell } from "./topology.js";
+import type { GameState, TokenPos, Color, TokenState } from "./types";
+import { computePath, isSafeCell } from "./topology";
 
 export interface TokenRef {
   color: Color;
