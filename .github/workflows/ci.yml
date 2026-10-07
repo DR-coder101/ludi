@@ -65,5 +65,5 @@ jobs:
           cache: pnpm
       - name: Install with lockfile
         run: pnpm install --frozen-lockfile
-      - name: Typecheck packages/**
-        run: pnpm --filter "./packages/**" --fail-if-no-match lint
+      - name: Typecheck every workspace
+        run: pnpm -r --fail-if-no-match lint
