@@ -3,9 +3,9 @@
  * Source: docs/GAME_RULES.md §2-§6, §8, §9, §11
  */
 
-import type { GameState, TokenPos, Color, Dice } from "./types";
-import { legalMoves } from "./legalMoves";
-import { endThrow, passTurn } from "./turn";
+import type { GameState, TokenPos, Color, Dice } from "./types.js";
+import { legalMoves } from "./legalMoves.js";
+import { endThrow, passTurn } from "./turn.js";
 
 export type GameEventType =
   | "moved"

@@ -3,8 +3,8 @@
  * Source: docs/GAME_RULES.md §2, §4, §8
  */
 
-import type { Color, GameState } from "./types";
-import type { GameEvent } from "./applyMove";
+import type { Color, GameState } from "./types.js";
+import type { GameEvent } from "./applyMove.js";
 
 /** Next colour in turn order, skipping players who have already finished. */
 export function nextTurn(state: GameState): Color {

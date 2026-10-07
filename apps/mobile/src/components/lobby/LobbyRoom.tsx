@@ -2,7 +2,7 @@ import React, { type ReactNode } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import type { HouseRules } from '@ludi/protocol';
+import type { Color, HouseRules } from '@ludi/protocol';
 import { color, font } from '../../theme/tokens';
 import { antonBold } from '../../theme/antonBold';
 import { useLudiFonts } from '../../theme/fonts';
@@ -35,7 +35,7 @@ export interface LobbyRoomProps {
   onCopy: () => void;
   onShare: () => void;
   onStart?: () => void;
-  onSelectSeat?: (color: string) => void;
+  onSelectSeat?: (color: Color) => void;
   /** Overrides device safe-area insets (the dev preview simulates an iPhone frame on web). */
   insets?: { top: number; bottom: number };
   children?: ReactNode;

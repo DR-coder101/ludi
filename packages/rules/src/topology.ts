@@ -16,7 +16,7 @@
  * Source: docs/GAME_RULES.md §1, §7, §8
  */
 
-import type { Color, TokenPos } from "./types";
+import type { Color, TokenPos } from "./types.js";
 
 export const TRACK_SIZE = 68;
 export const ARM_LENGTH = TRACK_SIZE / 4;

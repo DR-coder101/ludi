@@ -2,7 +2,7 @@
  * Detached Ludi server entry for `ludi server start`.
  * Args: port graceMs aiDelayMs
  */
-import { createLudiServer } from '../../../../server/src/server.ts';
+import { createLudiServer } from '../../../../server/src/server.js';
 
 const port = Number(process.argv[2] ?? process.env.PORT ?? 3000);
 const graceMs = Number(process.argv[3] ?? 500);

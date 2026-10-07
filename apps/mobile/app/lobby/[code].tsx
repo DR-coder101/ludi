@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Share } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import type { HouseRules } from '@ludi/protocol';
+import type { Color, HouseRules } from '@ludi/protocol';
 import { socketManager } from '../../src/net/socket';
 import { useRoomStore } from '../../src/stores/roomStore';
 import { useConnectionStore } from '../../src/stores/connectionStore';
@@ -191,7 +191,7 @@ export default function LobbyScreen() {
     });
   };
 
-  const handleSelectSeat = (color: string) => {
+  const handleSelectSeat = (color: Color) => {
     const socket = socketManager.getSocket();
     if (!socket) return;
 

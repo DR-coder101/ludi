@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '../db/types.js';
+import type { Database, Json } from '../db/types.js';
 import type { Color, HouseRules, MatchHistory } from '@ludi/protocol';
 import { createTtlCache, type TtlCache } from '../cache/ttlCache.js';
 
@@ -36,6 +36,24 @@ function historyCachePrefix(userId: string): string {
   return `match-history:${userId}:`;
 }
 
+function houseRulesJson(rules: HouseRules): Json {
+  return {
+    maxConsecutiveSixes: rules.maxConsecutiveSixes,
+    extraRollOnCapture: rules.extraRollOnCapture,
+    blockadeCanMoveTogether: rules.blockadeCanMoveTogether,
+    exactFinishBonus: rules.exactFinishBonus,
+    playForPlacements: rules.playForPlacements,
+  };
+}
+
+function placementsJson(players: MatchData['players']): Json {
+  return players.map((player) => ({
+    userId: player.userId,
+    color: player.color,
+    position: player.finalPosition,
+  }));
+}
+
 export function createMatchHistoryService(
   supabase: SupabaseClient<Database>,
   options: MatchHistoryServiceOptions = {}
@@ -68,7 +86,7 @@ export function createMatchHistoryService(
           .from('rooms')
           .insert({
             code: match.roomCode,
-            house_rules: match.houseRules as any,
+            house_rules: houseRulesJson(match.houseRules),
             status: 'finished',
           })
           .select()
@@ -88,12 +106,8 @@ export function createMatchHistoryService(
           started_at: match.startedAt.toISOString(),
           ended_at: match.endedAt.toISOString(),
           winner_id: match.winnerId,
-          house_rules: match.houseRules as any,
-          placements: match.players.map(p => ({
-            userId: p.userId,
-            color: p.color,
-            position: p.finalPosition,
-          })) as any,
+          house_rules: houseRulesJson(match.houseRules),
+          placements: placementsJson(match.players),
         })
         .select()
         .single();
@@ -143,9 +157,10 @@ export function createMatchHistoryService(
       }
 
       const matchesWithPlayers: MatchHistory[] = await Promise.all(
-        (data || []).map(async (match: any) => {
+        (data || []).map(async (match) => {
+          const playerRows = [match.match_players].flat();
           const players = await Promise.all(
-            match.match_players.map(async (mp: any) => {
+            playerRows.map(async (mp) => {
               const { data: user } = await supabase
                 .from('users')
                 .select('display_name')

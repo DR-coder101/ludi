@@ -3,7 +3,7 @@
  * Source: docs/GAME_RULES.md §1, §2, §11
  */
 
-import type { GameConfig, GameState, TokenState, Color } from "./types";
+import type { GameConfig, GameState, TokenState, Color } from "./types.js";
 
 /**
  * Create a new game with the given configuration.
