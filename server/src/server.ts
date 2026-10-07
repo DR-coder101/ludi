@@ -38,6 +38,7 @@ import { getSupabaseClient } from './db/supabase.js';
 import { createAuthService } from './services/auth.js';
 import { createProfileService } from './services/profile.js';
 import { createMatchHistoryService, type MatchData } from './services/matchHistory.js';
+import { verifyHandshakeUser } from './auth/verifyHandshakeUser.js';
 import { runInBackground } from './runInBackground.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './db/types.js';
@@ -353,14 +354,14 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
   }
 
   function bindAuthUserId(socket: TypedSocket, playerId: string): void {
-    const userId = socket.handshake.auth?.userId;
+    const userId = socket.data.verifiedUserId;
     if (typeof userId === 'string' && userId.length > 0) {
       playerToAuthUserId.set(playerId, userId);
     }
   }
 
-  function historyUserId(playerId: string): string {
-    return playerToAuthUserId.get(playerId) ?? playerId;
+  function historyUserId(playerId: string): string | null {
+    return playerToAuthUserId.get(playerId) ?? null;
   }
 
   function buildFinishedMatch(
@@ -597,6 +598,11 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
     return { success: true, roomCode, playerId, color };
   }
+
+  io.use(async (socket, next) => {
+    socket.data.verifiedUserId = await verifyHandshakeUser(supabase, socket.handshake.auth);
+    next();
+  });
 
   io.on('connection', (socket: TypedSocket) => {
     console.log(`Client connected: ${socket.id}`);

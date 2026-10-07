@@ -1,11 +1,36 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './types.js';
+import { isPostgresUuid } from './postgresUuid.js';
 
 export interface MockSupabaseStorage {
   users: Map<string, Database['public']['Tables']['users']['Row']>;
   rooms: Map<string, Database['public']['Tables']['rooms']['Row']>;
   matches: Map<string, Database['public']['Tables']['matches']['Row']>;
   match_players: Array<Database['public']['Tables']['match_players']['Row']>;
+  accessTokens: Map<string, string>;
+}
+
+function uuidColumnError(column: string): { data: null; error: { message: string; code: string } } {
+  return {
+    data: null,
+    error: {
+      message: `invalid input syntax for type uuid: ${column}`,
+      code: '22P02',
+    },
+  };
+}
+
+function assertUuidOrNull(
+  value: unknown,
+  column: string,
+): { data: null; error: { message: string; code: string } } | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (isPostgresUuid(value)) {
+    return null;
+  }
+  return uuidColumnError(column);
 }
 
 export function createMockSupabaseClient(storage: MockSupabaseStorage): SupabaseClient<Database> {
@@ -89,6 +114,10 @@ export function createMockSupabaseClient(storage: MockSupabaseStorage): Supabase
           insert: (data: any) => ({
             select: () => ({
               single: async () => {
+                const winnerCheck = assertUuidOrNull(data.winner_id, 'winner_id');
+                if (winnerCheck) {
+                  return winnerCheck;
+                }
                 const match = { 
                   id: crypto.randomUUID(), 
                   started_at: new Date().toISOString(),
@@ -142,6 +171,12 @@ export function createMockSupabaseClient(storage: MockSupabaseStorage): Supabase
         return {
           insert: (data: any) => (async () => {
             const rows = Array.isArray(data) ? data : [data];
+            for (const row of rows) {
+              const userCheck = assertUuidOrNull(row.user_id, 'user_id');
+              if (userCheck) {
+                return userCheck;
+              }
+            }
             storage.match_players.push(...rows);
             return { data: rows, error: null };
           })(),
@@ -168,6 +203,7 @@ export function createMockSupabaseClient(storage: MockSupabaseStorage): Supabase
       },
       signInAnonymously: async () => {
         const userId = crypto.randomUUID();
+        const accessToken = `mock-token-${userId}`;
         const user = {
           id: userId,
           is_anonymous: true,
@@ -180,7 +216,18 @@ export function createMockSupabaseClient(storage: MockSupabaseStorage): Supabase
           is_guest: true,
           created_at: new Date().toISOString(),
         });
-        return { data: { user, session: { access_token: 'mock-token' } }, error: null };
+        storage.accessTokens.set(accessToken, userId);
+        return { data: { user, session: { access_token: accessToken } }, error: null };
+      },
+      getUser: async (jwt?: string) => {
+        if (typeof jwt !== 'string' || jwt.length === 0) {
+          return { data: { user: null }, error: { message: 'Auth session missing!' } };
+        }
+        const userId = storage.accessTokens.get(jwt);
+        if (!userId) {
+          return { data: { user: null }, error: { message: 'invalid JWT' } };
+        }
+        return { data: { user: { id: userId } }, error: null };
       },
     },
   };
@@ -194,5 +241,6 @@ export function createMockStorage(): MockSupabaseStorage {
     rooms: new Map(),
     matches: new Map(),
     match_players: [],
+    accessTokens: new Map(),
   };
 }
