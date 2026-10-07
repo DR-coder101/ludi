@@ -68,6 +68,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
   const socketToRoom = new Map<string, string>();
   const socketToPlayer = new Map<string, string>();
   const socketToColor = new Map<string, Color>();
+  const playerToAuthUserId = new Map<string, string>();
 
   const cleanupInterval = setInterval(() => rateLimiter.cleanup(), 10000);
 
@@ -351,14 +352,25 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     return true;
   }
 
+  function bindAuthUserId(socket: TypedSocket, playerId: string): void {
+    const userId = socket.handshake.auth?.userId;
+    if (typeof userId === 'string' && userId.length > 0) {
+      playerToAuthUserId.set(playerId, userId);
+    }
+  }
+
+  function historyUserId(playerId: string): string {
+    return playerToAuthUserId.get(playerId) ?? playerId;
+  }
+
   function buildFinishedMatch(
     roomCode: string,
     houseRules: HouseRules,
     placements: GameOverPayload['placements'],
     now: Date,
   ): MatchData | null {
-    const winnerId = placements.find(p => p.placement === 1)?.playerId;
-    if (!winnerId) {
+    const winnerPlayerId = placements.find(p => p.placement === 1)?.playerId;
+    if (!winnerPlayerId) {
       return null;
     }
 
@@ -366,10 +378,10 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       roomCode,
       startedAt: new Date(now.getTime() - 600000),
       endedAt: now,
-      winnerId,
+      winnerId: historyUserId(winnerPlayerId),
       houseRules: { ...houseRules },
       players: placements.map(p => ({
-        userId: p.playerId,
+        userId: historyUserId(p.playerId),
         color: p.color,
         finalPosition: p.placement,
       })),
@@ -554,6 +566,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     socketToRoom.set(socket.id, roomCode);
     socketToPlayer.set(socket.id, playerId);
     socketToColor.set(socket.id, color);
+    bindAuthUserId(socket, playerId);
 
     const game = gameRegistry.getGame(roomCode);
     const room = roomRegistry.getRoom(roomCode);
@@ -617,6 +630,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       socket.join(roomCode);
       socketToRoom.set(socket.id, roomCode);
       socketToPlayer.set(socket.id, playerId);
+      bindAuthUserId(socket, playerId);
 
       const room = roomRegistry.getRoom(roomCode);
       if (room) {
@@ -671,6 +685,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       socket.join(roomCode);
       socketToRoom.set(socket.id, roomCode);
       socketToPlayer.set(socket.id, playerId);
+      bindAuthUserId(socket, playerId);
       if (result.color) {
         socketToColor.set(socket.id, result.color);
       }
