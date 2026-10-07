@@ -3,7 +3,10 @@ import { createMatchHistoryService } from './services/matchHistory.js';
 import { createAuthService } from './services/auth.js';
 import { createMockSupabaseClient, createMockStorage } from './db/mock.js';
 import { createTtlCache } from './cache/ttlCache.js';
+import { isPostgresUuid } from './db/postgresUuid.js';
 import type { Color, MatchHistory } from '@ludi/protocol';
+
+const BOT_HEX_ID = 'a'.repeat(32);
 
 const defaultHouseRules = {
   maxConsecutiveSixes: 2,
@@ -59,6 +62,43 @@ describe('Match History Service', () => {
       expect(matchPlayers[0].user_id).toBe(player1.userId);
       expect(matchPlayers[0].color).toBe('red');
       expect(matchPlayers[0].final_position).toBe(1);
+    });
+
+    it('rejects a non-UUID match_players.user_id the way Postgres does', async () => {
+      const mockSupabase = createMockSupabaseClient(storage);
+      const result = await mockSupabase.from('match_players').insert({
+        match_id: crypto.randomUUID(),
+        user_id: BOT_HEX_ID,
+        color: 'green',
+        final_position: 2,
+      });
+      expect(result.error).toEqual(
+        expect.objectContaining({ code: '22P02' }),
+      );
+      expect(storage.match_players).toHaveLength(0);
+    });
+
+    it('saves a vs-bots match without writing non-UUID user ids', async () => {
+      const human = await authService.createGuest('Human');
+
+      const matchId = await matchHistoryService.saveMatch({
+        roomCode: 'BOTS1',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: human.userId,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: human.userId, color: 'red' as Color, finalPosition: 1 },
+          { userId: BOT_HEX_ID, color: 'green' as Color, finalPosition: 2 },
+          { userId: 'b'.repeat(32), color: 'yellow' as Color, finalPosition: 3 },
+          { userId: 'c'.repeat(32), color: 'blue' as Color, finalPosition: 4 },
+        ],
+      });
+
+      expect(matchId).toEqual(expect.any(String));
+      const matchPlayers = storage.match_players.filter((mp) => mp.match_id === matchId);
+      expect(matchPlayers.map((row) => row.user_id)).toEqual([human.userId]);
+      expect(matchPlayers.every((row) => isPostgresUuid(row.user_id))).toBe(true);
     });
   });
 
