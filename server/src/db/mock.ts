@@ -34,6 +34,7 @@ function assertUuidOrNull(
 }
 
 export function createMockSupabaseClient(storage: MockSupabaseStorage): SupabaseClient<Database> {
+  let session: { access_token: string; user: { id: string } } | null = null;
   const mockClient = {
     from: (table: string) => {
       if (table === 'users') {
@@ -217,8 +218,10 @@ export function createMockSupabaseClient(storage: MockSupabaseStorage): Supabase
           created_at: new Date().toISOString(),
         });
         storage.accessTokens.set(accessToken, userId);
-        return { data: { user, session: { access_token: accessToken } }, error: null };
+        session = { access_token: accessToken, user: { id: userId } };
+        return { data: { user, session: { access_token: accessToken, user } }, error: null };
       },
+      getSession: async () => ({ data: { session }, error: null }),
       getUser: async (jwt?: string) => {
         if (typeof jwt !== 'string' || jwt.length === 0) {
           return { data: { user: null }, error: { message: 'Auth session missing!' } };
