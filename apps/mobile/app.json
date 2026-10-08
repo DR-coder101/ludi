@@ -14,19 +14,38 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ludi.app"
+      "bundleIdentifier": "com.ludi.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Ludi uses the camera for in-match video with other players.",
+        "NSMicrophoneUsageDescription": "Ludi uses the microphone for in-match voice with other players."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ludi.app"
+      "package": "com.ludi.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE",
+        "android.permission.CHANGE_NETWORK_STATE",
+        "android.permission.BLUETOOTH",
+        "android.permission.BLUETOOTH_CONNECT"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "scheme": "ludi",
-    "plugins": ["expo-router"]
+    "plugins": [
+      "expo-router",
+      "expo-dev-client",
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc"
+    ]
   }
 }
