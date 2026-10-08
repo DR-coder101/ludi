@@ -5,11 +5,9 @@
 
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { storage } from '../utils/storage';
+import { AUTH_TOKEN_KEY, AUTH_USER_ID_KEY } from '../auth/storageKeys';
 import { authService } from '../services/authService';
-
-const AUTH_USER_ID_KEY = 'ludi_auth_user_id';
-const AUTH_TOKEN_KEY = 'ludi_auth_token';
+import { storage } from '../utils/storage';
 
 export interface AuthState {
   userId: string | null;

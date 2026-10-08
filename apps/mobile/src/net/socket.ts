@@ -1,6 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 import type { ClientToServerEvents, ServerToClientEvents } from '@ludi/protocol';
 import { storage } from '../utils/storage';
+import {
+  compactHandshakeAuth,
+  resolveHandshakeSecretsForConnect,
+  type SocketHandshakeAuth,
+} from './handshakeAuth';
 import { resolveSocketServerUrl } from './socketUrl';
 
 export type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -39,9 +44,10 @@ class SocketManager {
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       reconnectionAttempts: Infinity,
-      // Read token at handshake time so mid-match reconnects send the seat session.
-      auth: (cb: (data: { token?: string }) => void) => {
-        cb(this.sessionToken ? { token: this.sessionToken } : {});
+      auth: (cb: (data: SocketHandshakeAuth) => void) => {
+        void resolveHandshakeSecretsForConnect(this.sessionToken, storage).then((secrets) => {
+          cb(compactHandshakeAuth(secrets));
+        });
       },
     }) as TypedSocket;
 
