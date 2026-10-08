@@ -16,7 +16,7 @@ export function buildFinishedMatch(
 
   return {
     roomCode,
-    startedAt: new Date(endedAt.getTime() - 600000),
+    startedAt: startedAt ?? endedAt,
     endedAt,
     winnerId: historyUserId(winnerPlayerId),
     houseRules: { ...houseRules },

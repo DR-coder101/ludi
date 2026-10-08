@@ -428,7 +428,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         state.config.houseRules,
         placements,
         new Date(),
-        undefined,
+        game.startedAt,
         historyUserId,
       );
       if (match !== null && matchHistoryService) {

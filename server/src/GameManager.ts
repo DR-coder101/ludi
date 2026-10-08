@@ -18,6 +18,7 @@ export interface DisconnectGrace {
 
 export interface GameManager {
   state: GameState;
+  startedAt: Date;
   moveTimer: NodeJS.Timeout | null;
   disconnectGraces: Map<Color, DisconnectGrace>;
   aiSubstitutes: Set<Color>;
@@ -48,6 +49,7 @@ export class GameManagerRegistry {
 
     this.games.set(roomCode, {
       state: gameState,
+      startedAt: new Date(),
       moveTimer: null,
       disconnectGraces: new Map(),
       aiSubstitutes: new Set(),
