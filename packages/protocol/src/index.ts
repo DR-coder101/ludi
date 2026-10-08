@@ -316,6 +316,7 @@ export const MatchHistorySchema = z.object({
   startedAt: z.string(),
   endedAt: z.string().nullable(),
   winnerId: z.string().nullable(),
+  winnerIsBot: z.boolean(),
   houseRules: HouseRulesSchema,
   players: z.array(z.object({
     userId: z.string(),

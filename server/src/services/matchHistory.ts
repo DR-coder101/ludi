@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database, Json } from '../db/types.js';
-import type { Color, HouseRules, MatchHistory } from '@ludi/protocol';
+import { ColorSchema, type Color, type HouseRules, type MatchHistory } from '@ludi/protocol';
 import { createTtlCache, type TtlCache } from '../cache/ttlCache.js';
 import { isPostgresUuid } from '../db/postgresUuid.js';
 
@@ -53,6 +53,56 @@ function placementsJson(players: MatchData['players']): Json {
     color: player.color,
     position: player.finalPosition,
   }));
+}
+
+type StoredPlacement = {
+  userId: string | null;
+  color: Color;
+  position: number;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function parsePlacements(raw: unknown): StoredPlacement[] {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const placements: StoredPlacement[] = [];
+  for (const row of raw) {
+    if (!isRecord(row)) {
+      continue;
+    }
+    const color = ColorSchema.safeParse(row.color);
+    if (!color.success) {
+      continue;
+    }
+    if (typeof row.position !== 'number' || !Number.isFinite(row.position)) {
+      continue;
+    }
+    placements.push({
+      userId: typeof row.userId === 'string' ? row.userId : null,
+      color: color.data,
+      position: row.position,
+    });
+  }
+  return placements;
+}
+
+function winnerIsBotFromPlacements(
+  winnerId: string | null,
+  placements: StoredPlacement[],
+): boolean {
+  if (isPostgresUuid(winnerId)) {
+    return false;
+  }
+  const first = placements.find((placement) => placement.position === 1);
+  if (!first) {
+    return false;
+  }
+  return first.userId === null;
 }
 
 export function createMatchHistoryService(
@@ -189,6 +239,10 @@ export function createMatchHistoryService(
             startedAt: match.started_at,
             endedAt: match.ended_at,
             winnerId: match.winner_id,
+            winnerIsBot: winnerIsBotFromPlacements(
+              match.winner_id,
+              parsePlacements(match.placements),
+            ),
             houseRules: match.house_rules as HouseRules,
             players,
           };
