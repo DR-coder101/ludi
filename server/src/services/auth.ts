@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { createThrowawayAuthClient } from '../db/supabase.js';
 import type { Database } from '../db/types.js';
 
 export interface AuthService {
@@ -11,7 +12,11 @@ export interface AuthService {
 export function createAuthService(supabase: SupabaseClient<Database>): AuthService {
   return {
     async createGuest(displayName = 'Guest') {
-      const { data, error } = await supabase.auth.signInAnonymously();
+      const signInClient =
+        process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+          ? createThrowawayAuthClient()
+          : supabase;
+      const { data, error } = await signInClient.auth.signInAnonymously();
 
       if (error || !data.user) {
         throw new Error(error?.message || 'Failed to create guest user');
