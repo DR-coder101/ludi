@@ -6,6 +6,7 @@ import type {
   ClientToServerEvents, 
   ServerToClientEvents, 
   Color,
+  RoomState,
   TokenMovedPayload,
   DiceRolledPayload,
   TurnChangedPayload,
@@ -31,6 +32,7 @@ import {
   UpdateProfilePayloadSchema,
 } from '@ludi/protocol';
 import { RoomRegistry } from './RoomRegistry.js';
+import { publicRoom } from './publicRoom.js';
 import { RateLimiter } from './RateLimiter.js';
 import { GameManagerRegistry, type GameTimingConfig } from './GameManager.js';
 import { getSupabaseClient } from './db/supabase.js';
@@ -348,6 +350,13 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
   type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
+  function emitRoomState(
+    target: { emit: (event: 'room:state', state: RoomState) => void },
+    room: RoomState,
+  ): void {
+    target.emit('room:state', publicRoom(room));
+  }
+
   function getPlayerIdBySocket(socketId: string): string | undefined {
     return socketToPlayer.get(socketId);
   }
@@ -576,7 +585,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
       roomRegistry.updatePlayerStatus(roomCode, playerId, 'connected');
 
-      io.to(roomCode).emit('room:state', room);
+      emitRoomState(io.to(roomCode), room);
 
       if (game) {
         socket.emit('game:state', game.state);
@@ -640,7 +649,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       const room = roomRegistry.getRoom(roomCode);
       if (room) {
         socketToColor.set(socket.id, room.players[0].color);
-        socket.emit('room:state', room);
+        emitRoomState(socket, room);
       }
 
       callback({ success: true, roomCode, sessionToken, playerId });
@@ -697,7 +706,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
       const room = roomRegistry.getRoom(roomCode);
       if (room) {
-        io.to(roomCode).emit('room:state', room);
+        emitRoomState(io.to(roomCode), room);
       }
 
       callback({ success: true, sessionToken: sessionTokenNew, playerId });
@@ -713,7 +722,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
       const room = roomRegistry.getRoom(roomCode);
       if (room) {
-        socket.emit('room:state', room);
+        emitRoomState(socket, room);
       } else {
         socket.emit('error', 'Room not found');
       }
@@ -755,7 +764,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
       const room = roomRegistry.getRoom(roomCode);
       if (room) {
-        io.to(roomCode).emit('room:state', room);
+        emitRoomState(io.to(roomCode), room);
       }
 
       callback({ success: true });
@@ -794,7 +803,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
       const room = roomRegistry.getRoom(roomCode);
       if (room) {
-        io.to(roomCode).emit('room:state', room);
+        emitRoomState(io.to(roomCode), room);
       }
 
       callback({ success: true });
@@ -822,7 +831,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
       const room = roomRegistry.getRoom(roomCode);
       if (room) {
-        io.to(roomCode).emit('room:state', room);
+        emitRoomState(io.to(roomCode), room);
         console.log(`Player ${playerId} left room ${roomCode}`);
       }
     });
@@ -841,7 +850,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         botColors = roomRegistry.fillEmptySeatsWithBots(roomCode);
         const filledRoom = roomRegistry.getRoom(roomCode);
         if (filledRoom) {
-          io.to(roomCode).emit('room:state', filledRoom);
+          emitRoomState(io.to(roomCode), filledRoom);
         }
       } else if (room.players.length < 2) {
         return;
@@ -992,7 +1001,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       if (room && playerColor && playerId && game && game.state.phase !== 'finished') {
         roomRegistry.updatePlayerStatus(roomCode, playerId, 'reconnecting');
         
-        io.to(roomCode).emit('room:state', room);
+        emitRoomState(io.to(roomCode), room);
         
         const statusPayload: PlayerStatusChangedPayload = {
           playerId,
@@ -1013,7 +1022,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
             roomRegistry.updatePlayerStatus(roomCode, player.id, 'ai-substitute');
             gameRegistry.markAsAISubstitute(roomCode, playerColor);
 
-            io.to(roomCode).emit('room:state', currentRoom);
+            emitRoomState(io.to(roomCode), currentRoom);
             
             const aiStatusPayload: PlayerStatusChangedPayload = {
               playerId: player.id,
@@ -1047,7 +1056,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         }
         
         if (room) {
-          io.to(roomCode).emit('room:state', room);
+          emitRoomState(io.to(roomCode), room);
         }
         
         socketToRoom.delete(socket.id);
