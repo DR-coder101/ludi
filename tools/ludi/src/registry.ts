@@ -563,8 +563,16 @@ const authGuest: Command = {
     );
   },
   async run(args, ctx) {
+    const run = resolveRunDir(ctx.runDir);
+    const bridge = readBridge(run);
+    if (bridge && isPidAlive(bridge.pid)) {
+      return err(
+        'PRECONDITION_FAILED',
+        'A session bridge is already open. Handshake auth is fixed at connect.',
+        `ludi session close --run-dir ${run.root}`,
+      );
+    }
     try {
-      const run = resolveRunDir(ctx.runDir);
       const data = await runGuestAuth({
         url: resolveServerUrl(run, ctx.url),
         run,

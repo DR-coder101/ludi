@@ -24,7 +24,6 @@ export interface BridgeState {
   sessionToken: string | null;
   playerId: string | null;
   displayName: string | null;
-  accessToken: string | null;
   lastError: string | null;
 }
 
@@ -39,7 +38,6 @@ export function createBridgeState(url: string): BridgeState {
     sessionToken: null,
     playerId: null,
     displayName: null,
-    accessToken: null,
     lastError: null,
   };
 }
@@ -49,7 +47,6 @@ function hydrateFromSessionFile(state: BridgeState, run: RunDir): void {
   if (session.session_token) state.sessionToken = session.session_token;
   if (session.player_id) state.playerId = session.player_id;
   if (session.display_name) state.displayName = session.display_name;
-  if (session.access_token) state.accessToken = session.access_token;
 }
 
 function requireSocket(state: BridgeState): BridgeSocket {
@@ -467,7 +464,6 @@ async function waitFor(pred: () => boolean, ms: number): Promise<void> {
 /** Run the bridge as an HTTP JSON-RPC server on an ephemeral port. */
 export async function startBridgeHttp(run: RunDir, url: string): Promise<{ port: number; close: () => Promise<void> }> {
   const state = createBridgeState(url);
-  // Socket.IO copies auth at connect. Hydrate first so a prior auth guest is on the handshake.
   hydrateFromSessionFile(state, run);
   await connectSocket(state, readSession(run));
 

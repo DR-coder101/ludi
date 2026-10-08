@@ -33,7 +33,8 @@ Set `USER_ID` from `data.user_id` in the `auth guest` JSON. Then create a room a
 - **Probe.** Run `pnpm -s ludi -- http matches --user-id "$USER_ID" --run-dir "$RUN_DIR" --output json`. Exit `0` when the HTTP call returns JSON (including 503/500). Read `data.status` and `data.body`.
 - **No service.** If `data.status` is `503` and `data.body.error` is `Match history service not available`, the feature is `verified-unreachable`. Prerequisite: `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on the server. Local `ludi server start` usually has neither.
 - **Service up, finished match.** After the match reaches `phase: "finished"`, probe again with the same guest user id. Expected when persist succeeded: `data.body.success` is `true` and `data.body.matches` contains an entry whose players include that user id.
-- **Production, read-mostly.** `pnpm -s ludi -- http matches --user-id test-user --url https://server-production-3749.up.railway.app --output json` is a safe GET. Do not start or finish matches on production. A 500 `Failed to fetch match history` means the service is wired but the query failed.
+- **Live handshake proof.** Guest auth, then a vs-bots finish, then `http matches --user-id` with that guest id, on `https://server-production-3749.up.railway.app`. Bots may fill the other seats. Loop `match play-turn` until `phase` is `finished`.
+- **Read-only probe.** `pnpm -s ludi -- http matches --user-id test-user --url https://server-production-3749.up.railway.app --output json` is a safe GET. A 500 `Failed to fetch match history` means the service is wired but the query failed.
 - **Cleanup.** None for the GET. Stop only a server this run started.
 
 ## Gotchas
