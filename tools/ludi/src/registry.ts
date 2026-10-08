@@ -7,6 +7,7 @@ import {
   type Ctx,
   type Result,
 } from './command.js';
+import { planGuestAuth, runGuestAuth } from './auth/guest.js';
 import { runDoctor } from './doctor.js';
 import { planSoloVsBots, playSoloVsBots } from './play/soloVsBots.js';
 import { planScreensCheck, runScreensCheck, runScreensDoctor } from './screens/run.js';
@@ -544,6 +545,47 @@ const screensCheck: Command = {
   },
 };
 
+const authGuest: Command = {
+  name: 'guest',
+  summary: 'Create a guest session and store its access token. Run before session open.',
+  args: [
+    { name: 'name', type: 'string', summary: 'Display name', default: 'Verifier' },
+  ],
+  mutates: true,
+  dryRun(args, ctx) {
+    const run = resolveRunDir(ctx.runDir);
+    return planned(
+      planGuestAuth({
+        url: resolveServerUrl(run, ctx.url),
+        runDir: ctx.runDir,
+        displayName: str(args, 'name'),
+      }),
+    );
+  },
+  async run(args, ctx) {
+    try {
+      const run = resolveRunDir(ctx.runDir);
+      const data = await runGuestAuth({
+        url: resolveServerUrl(run, ctx.url),
+        run,
+        displayName: str(args, 'name'),
+      });
+      return ok(data);
+    } catch (e) {
+      const ex = e as Error & { code?: string; hint?: string };
+      return err(ex.code ?? 'UPSTREAM_ERROR', ex.message, ex.hint ?? 'ludi auth guest --help');
+    }
+  },
+};
+
+const auth: Command = {
+  name: 'auth',
+  summary: 'HTTP auth helpers (guest session for match history)',
+  args: [],
+  mutates: false,
+  children: [authGuest],
+};
+
 const screens: Command = {
   name: 'screens',
   summary: 'Expo web screenshots of /dev home, lobby, board-start, and win',
@@ -557,5 +599,5 @@ export const registry: Command = {
   summary: 'Drive the Ludi server (HTTP + Socket.IO) and Expo web screens for verification',
   args: [],
   mutates: false,
-  children: [doctor, server, session, room, match, play, http, screens, introspect],
+  children: [doctor, auth, server, session, room, match, play, http, screens, introspect],
 };

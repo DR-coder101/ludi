@@ -142,4 +142,57 @@ describe('ludi CLI', () => {
     expect(res.status).toBe(0);
     expect(res.stdout).toContain('session-token');
   });
+
+  it('auth guest help says to run before session open', () => {
+    const res = run(['auth', 'guest', '--help']);
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('guest');
+    expect(res.stdout).toContain('access');
+    expect(res.stdout).toContain('Run before session open');
+    expect(res.stdout).toContain('Verifier');
+  });
+
+  it('auth guest dry-run exits 9 and does not write session.json', () => {
+    const runDir = join(root, '.tmp-auth-guest-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'auth',
+      'guest',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+      '--url',
+      'http://127.0.0.1:9',
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    expect(body.dry_run).toBe(true);
+    expect(body.command).toBe('ludi.auth.guest');
+    expect(body.planned_actions).toEqual([
+      {
+        action: 'POST',
+        url: 'http://127.0.0.1:9/auth/guest',
+        body: { displayName: 'Verifier' },
+      },
+      {
+        action: 'write',
+        path: join(runDir, 'session.json'),
+        fields: ['auth_user_id', 'access_token'],
+      },
+    ]);
+    expect(existsSync(join(runDir, 'session.json'))).toBe(false);
+  });
+
+  it('introspect JSON includes auth.guest', () => {
+    const res = run(['introspect', '--output', 'json']);
+    expect(res.status).toBe(0);
+    const body = JSON.parse(res.stdout);
+    const auth = body.data.commands.find((c: { name: string }) => c.name === 'auth');
+    const names = auth.subcommands.map((c: { name: string }) => c.name);
+    expect(names).toContain('guest');
+    expect(res.stdout).toContain('"name": "guest"');
+  });
 });
