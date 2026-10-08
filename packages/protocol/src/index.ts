@@ -213,6 +213,7 @@ export interface TurnChangedPayload {
 export const VideoTokenPayloadSchema = z.object({
   roomCode: z.string().length(5),
   userId: z.string().min(1),
+  sessionToken: z.string().min(1),
 });
 export type VideoTokenPayload = z.infer<typeof VideoTokenPayloadSchema>;
 

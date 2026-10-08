@@ -32,14 +32,13 @@ describe('Video Token Endpoint', () => {
   });
 
   async function createRoomWithPlayers() {
-    const { io } = server;
-    const roomCode = 'TEST01';
-    
     const client1 = await import('socket.io-client').then(m => m.io(baseUrl));
     const client2 = await import('socket.io-client').then(m => m.io(baseUrl));
     
     let player1Id: string | undefined;
     let player2Id: string | undefined;
+    let player1Token: string | undefined;
+    let player2Token: string | undefined;
     
     await new Promise<void>((resolve) => {
       client1.emit('room:create', {
@@ -77,8 +76,9 @@ describe('Video Token Endpoint', () => {
           playForPlacements: true,
         },
       }, (response) => {
-        if (response.success && response.roomCode && response.playerId) {
+        if (response.success && response.roomCode && response.playerId && response.sessionToken) {
           player1Id = response.playerId;
+          player1Token = response.sessionToken;
           resolve(response.roomCode);
         }
       });
@@ -89,8 +89,9 @@ describe('Video Token Endpoint', () => {
         roomCode: actualRoomCode,
         displayName: 'Player2-Final',
       }, (joinResponse) => {
-        if (joinResponse.success && joinResponse.playerId) {
+        if (joinResponse.success && joinResponse.playerId && joinResponse.sessionToken) {
           player2Id = joinResponse.playerId;
+          player2Token = joinResponse.sessionToken;
           resolve();
         }
       });
@@ -104,6 +105,10 @@ describe('Video Token Endpoint', () => {
       roomCode: actualRoomCode,
       player1Id: player1Id!,
       player2Id: player2Id!,
+      player1Token: player1Token!,
+      player2Token: player2Token!,
+      client1,
+      client2,
       cleanup: () => {
         client1.disconnect();
         client2.disconnect();
@@ -132,6 +137,7 @@ describe('Video Token Endpoint', () => {
         body: JSON.stringify({
           roomCode: 'NOTFD',
           userId: 'user123',
+          sessionToken: 'a'.repeat(64),
         }),
       });
 
@@ -142,7 +148,7 @@ describe('Video Token Endpoint', () => {
     });
 
     it('should reject player not seated in room', async () => {
-      const { roomCode, cleanup } = await createRoomWithPlayers();
+      const { roomCode, player1Token, cleanup } = await createRoomWithPlayers();
 
       const response = await fetch(`${baseUrl}/video-token`, {
         method: 'POST',
@@ -150,13 +156,14 @@ describe('Video Token Endpoint', () => {
         body: JSON.stringify({
           roomCode,
           userId: 'unknown-user',
+          sessionToken: player1Token,
         }),
       });
 
       expect(response.status).toBe(403);
       const data: VideoTokenResponse = await response.json();
       expect(data.success).toBe(false);
-      expect(data.error).toBe('Player not seated in room');
+      expect(data.error).toMatch(/session token/i);
 
       cleanup();
     });
@@ -165,6 +172,7 @@ describe('Video Token Endpoint', () => {
       const client = await import('socket.io-client').then(m => m.io(baseUrl));
       
       let playerId: string | undefined;
+      let sessionToken: string | undefined;
       
       const roomCode = await new Promise<string>((resolve) => {
         client.emit('room:create', {
@@ -177,8 +185,9 @@ describe('Video Token Endpoint', () => {
             playForPlacements: true,
           },
         }, (response) => {
-          if (response.success && response.roomCode && response.playerId) {
+          if (response.success && response.roomCode && response.playerId && response.sessionToken) {
             playerId = response.playerId;
+            sessionToken = response.sessionToken;
             resolve(response.roomCode);
           }
         });
@@ -192,6 +201,7 @@ describe('Video Token Endpoint', () => {
         body: JSON.stringify({
           roomCode,
           userId: playerId,
+          sessionToken,
         }),
       });
 
@@ -203,7 +213,30 @@ describe('Video Token Endpoint', () => {
       client.disconnect();
     });
 
-    it('should successfully issue token for seated player after game starts', async () => {
+    it('issues a LiveKit token when the seat session token matches the seated player', async () => {
+      const { roomCode, player1Id, player1Token, cleanup } = await createRoomWithPlayers();
+
+      const response = await fetch(`${baseUrl}/video-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode,
+          userId: player1Id,
+          sessionToken: player1Token,
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const data: VideoTokenResponse = await response.json();
+      expect(data.success).toBe(true);
+      expect(data.token).toBeDefined();
+      expect(typeof data.token).toBe('string');
+      expect(data.token!.length).toBeGreaterThan(0);
+
+      cleanup();
+    });
+
+    it('rejects a missing seat session token with 401 and says what to send', async () => {
       const { roomCode, player1Id, cleanup } = await createRoomWithPlayers();
 
       const response = await fetch(`${baseUrl}/video-token`, {
@@ -212,6 +245,96 @@ describe('Video Token Endpoint', () => {
         body: JSON.stringify({
           roomCode,
           userId: player1Id,
+        }),
+      });
+
+      expect(response.status).toBe(401);
+      const data: VideoTokenResponse = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.token).toBeUndefined();
+      expect(data.error).toMatch(/session token/i);
+      expect(data.error).toMatch(/handshake\.auth\.token/);
+
+      cleanup();
+    });
+
+    it('rejects a seat session token from another seat or room', async () => {
+      const roomA = await createRoomWithPlayers();
+      const roomB = await createRoomWithPlayers();
+
+      const otherSeat = await fetch(`${baseUrl}/video-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: roomA.roomCode,
+          userId: roomA.player1Id,
+          sessionToken: roomA.player2Token,
+        }),
+      });
+
+      expect(otherSeat.status).toBe(403);
+      const otherSeatData: VideoTokenResponse = await otherSeat.json();
+      expect(otherSeatData.success).toBe(false);
+      expect(otherSeatData.token).toBeUndefined();
+      expect(otherSeatData.error).toMatch(/session token/i);
+
+      const otherRoom = await fetch(`${baseUrl}/video-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode: roomB.roomCode,
+          userId: roomB.player1Id,
+          sessionToken: roomA.player1Token,
+        }),
+      });
+
+      expect(otherRoom.status).toBe(403);
+      const otherRoomData: VideoTokenResponse = await otherRoom.json();
+      expect(otherRoomData.success).toBe(false);
+      expect(otherRoomData.token).toBeUndefined();
+      expect(otherRoomData.error).toMatch(/session token/i);
+
+      roomA.cleanup();
+      roomB.cleanup();
+    });
+
+    it('rejects a correct seat session token when that id is no longer seated', async () => {
+      const { roomCode, player2Id, player2Token, client2, cleanup } = await createRoomWithPlayers();
+
+      await new Promise<void>((resolve) => {
+        client2.emit('room:leave');
+        setTimeout(resolve, 50);
+      });
+
+      const response = await fetch(`${baseUrl}/video-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode,
+          userId: player2Id,
+          sessionToken: player2Token,
+        }),
+      });
+
+      expect(response.status).toBe(403);
+      const data: VideoTokenResponse = await response.json();
+      expect(data.success).toBe(false);
+      expect(data.token).toBeUndefined();
+      expect(data.error).toMatch(/session token/i);
+
+      cleanup();
+    });
+
+    it('should successfully issue token for seated player after game starts', async () => {
+      const { roomCode, player1Id, player1Token, cleanup } = await createRoomWithPlayers();
+
+      const response = await fetch(`${baseUrl}/video-token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomCode,
+          userId: player1Id,
+          sessionToken: player1Token,
         }),
       });
 
@@ -228,7 +351,7 @@ describe('Video Token Endpoint', () => {
     it('should fail gracefully when LiveKit env vars are missing', async () => {
       delete process.env.LIVEKIT_API_KEY;
 
-      const { roomCode, player1Id, cleanup } = await createRoomWithPlayers();
+      const { roomCode, player1Id, player1Token, cleanup } = await createRoomWithPlayers();
 
       const response = await fetch(`${baseUrl}/video-token`, {
         method: 'POST',
@@ -236,6 +359,7 @@ describe('Video Token Endpoint', () => {
         body: JSON.stringify({
           roomCode,
           userId: player1Id,
+          sessionToken: player1Token,
         }),
       });
 
@@ -252,7 +376,7 @@ describe('Video Token Endpoint', () => {
       const consoleErrorSpy = vi.spyOn(console, 'error');
       const consoleWarnSpy = vi.spyOn(console, 'warn');
 
-      const { roomCode, player1Id, cleanup } = await createRoomWithPlayers();
+      const { roomCode, player1Id, player1Token, cleanup } = await createRoomWithPlayers();
 
       await fetch(`${baseUrl}/video-token`, {
         method: 'POST',
@@ -260,6 +384,7 @@ describe('Video Token Endpoint', () => {
         body: JSON.stringify({
           roomCode,
           userId: player1Id,
+          sessionToken: player1Token,
         }),
       });
 

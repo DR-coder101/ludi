@@ -94,8 +94,9 @@ export default function OnlineGameScreen() {
 
     if (shouldConnectVideo && !videoToken) {
       console.log('[Video] Fetching token for room:', roomCode);
+      const sessionToken = socketManager.getSessionToken() ?? '';
 
-      fetchVideoToken(roomCode, myPlayerId).then((result) => {
+      fetchVideoToken(roomCode, myPlayerId, sessionToken).then((result) => {
         if (result.token) {
           console.log('[Video] Token received, connecting to LiveKit');
           setConnection(roomCode, result.token);

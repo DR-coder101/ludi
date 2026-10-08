@@ -4,7 +4,8 @@ const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL || 'http://localhost:3000'
 
 export async function fetchVideoToken(
   roomCode: string,
-  userId: string
+  userId: string,
+  sessionToken: string,
 ): Promise<{ token: string; error?: never } | { error: string; token?: never }> {
   try {
     const response = await fetch(`${SERVER_URL}/video-token`, {
@@ -15,6 +16,7 @@ export async function fetchVideoToken(
       body: JSON.stringify({
         roomCode,
         userId,
+        sessionToken,
       }),
     });
 
