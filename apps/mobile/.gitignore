@@ -3,6 +3,10 @@
 dist/
 web-build/
 
+# Generated native projects
+/android
+/ios
+
 # Native
 *.orig.*
 *.jks
