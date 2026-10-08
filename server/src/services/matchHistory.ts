@@ -82,8 +82,11 @@ function parsePlacements(raw: unknown): StoredPlacement[] {
     if (typeof row.position !== 'number' || !Number.isFinite(row.position)) {
       continue;
     }
+    if (row.userId !== null && typeof row.userId !== 'string') {
+      continue;
+    }
     placements.push({
-      userId: typeof row.userId === 'string' ? row.userId : null,
+      userId: row.userId,
       color: color.data,
       position: row.position,
     });

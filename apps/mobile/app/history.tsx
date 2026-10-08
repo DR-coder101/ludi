@@ -30,7 +30,7 @@ function MatchCard({ match, currentUserId }: { match: MatchHistory; currentUserI
         <Text style={styles.matchDate}>
           {startDate.toLocaleDateString()} at {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
-        {badge ? (
+        {badge !== null ? (
           <View style={styles.winBadge}>
             <Text style={styles.winBadgeText}>{badge}</Text>
           </View>

@@ -205,6 +205,31 @@ describe('Match History Service', () => {
       expect(matches[0].winnerIsBot).toBe(false);
     });
 
+    it('does not claim a bot win when the first-place userId is not a string or null', async () => {
+      const human = await authService.createGuest('Human');
+
+      const matchId = await matchHistoryService.saveMatch({
+        roomCode: 'BADID',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: null,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: human.userId, color: 'red' as Color, finalPosition: 2 },
+        ],
+      });
+
+      const stored = storage.matches.get(matchId);
+      expect(stored).toBeDefined();
+      stored!.placements = [{ userId: 12, color: 'green', position: 1 }];
+
+      const matches = await matchHistoryService.getUserMatches(human.userId);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0].winnerId).toBeNull();
+      expect(matches[0].winnerIsBot).toBe(false);
+    });
+
     it('should return empty array if user has no matches', async () => {
       const player = await authService.createGuest('Player');
 
