@@ -129,9 +129,105 @@ describe('Match History Service', () => {
 
       expect(matches).toHaveLength(1);
       expect(matches[0].winnerId).toBe(player1.userId);
+      expect(matches[0].winnerIsBot).toBe(false);
       expect(matches[0].players).toHaveLength(2);
       expect(matches[0].players[0].userId).toBe(player1.userId);
       expect(matches[0].players[0].color).toBe('red');
+    });
+
+    it('marks a bot-win match from placements when winner_id is null', async () => {
+      const human = await authService.createGuest('Human');
+
+      await matchHistoryService.saveMatch({
+        roomCode: 'BOT1ST',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: BOT_HEX_ID,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: BOT_HEX_ID, color: 'green' as Color, finalPosition: 1 },
+          { userId: human.userId, color: 'red' as Color, finalPosition: 2 },
+        ],
+      });
+
+      const matches = await matchHistoryService.getUserMatches(human.userId);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0].winnerId).toBeNull();
+      expect(matches[0].winnerIsBot).toBe(true);
+    });
+
+    it('leaves a human-win vs-bots match unmarked as a bot win', async () => {
+      const human = await authService.createGuest('Human');
+
+      await matchHistoryService.saveMatch({
+        roomCode: 'HUM1ST',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: human.userId,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: human.userId, color: 'red' as Color, finalPosition: 1 },
+          { userId: BOT_HEX_ID, color: 'green' as Color, finalPosition: 2 },
+        ],
+      });
+
+      const matches = await matchHistoryService.getUserMatches(human.userId);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0].winnerId).toBe(human.userId);
+      expect(matches[0].winnerIsBot).toBe(false);
+    });
+
+    it('does not claim a bot win when placements are missing', async () => {
+      const human = await authService.createGuest('Human');
+
+      const matchId = await matchHistoryService.saveMatch({
+        roomCode: 'LEGACY',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: null,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: human.userId, color: 'red' as Color, finalPosition: 2 },
+          { userId: BOT_HEX_ID, color: 'green' as Color, finalPosition: 1 },
+        ],
+      });
+
+      const stored = storage.matches.get(matchId);
+      expect(stored).toBeDefined();
+      stored!.placements = [];
+
+      const matches = await matchHistoryService.getUserMatches(human.userId);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0].winnerId).toBeNull();
+      expect(matches[0].winnerIsBot).toBe(false);
+    });
+
+    it('does not claim a bot win when the first-place userId is not a string or null', async () => {
+      const human = await authService.createGuest('Human');
+
+      const matchId = await matchHistoryService.saveMatch({
+        roomCode: 'BADID',
+        startedAt: new Date('2024-01-01T10:00:00Z'),
+        endedAt: new Date('2024-01-01T10:30:00Z'),
+        winnerId: null,
+        houseRules: defaultHouseRules,
+        players: [
+          { userId: human.userId, color: 'red' as Color, finalPosition: 2 },
+        ],
+      });
+
+      const stored = storage.matches.get(matchId);
+      expect(stored).toBeDefined();
+      stored!.placements = [{ userId: 12, color: 'green', position: 1 }];
+
+      const matches = await matchHistoryService.getUserMatches(human.userId);
+
+      expect(matches).toHaveLength(1);
+      expect(matches[0].winnerId).toBeNull();
+      expect(matches[0].winnerIsBot).toBe(false);
     });
 
     it('should return empty array if user has no matches', async () => {

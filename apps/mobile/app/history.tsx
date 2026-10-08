@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, ScrollView, FlatList } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../src/stores/authStore';
 import { historyService } from '../src/services/historyService';
+import { historyWinnerBadge } from '../src/components/history/historyWinnerBadge';
 import type { MatchHistory, Color } from '@ludi/protocol';
 
 const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
@@ -15,9 +16,7 @@ const COLOR_DISPLAY: Record<Color, { name: string; hex: string }> = {
 function MatchCard({ match, currentUserId }: { match: MatchHistory; currentUserId: string }) {
   const startDate = new Date(match.startedAt);
   const endDate = match.endedAt ? new Date(match.endedAt) : null;
-  const winner = match.players.find((p: any) => p.userId === match.winnerId);
-  const currentPlayer = match.players.find((p: any) => p.userId === currentUserId);
-  const isWinner = match.winnerId === currentUserId;
+  const badge = historyWinnerBadge(match, currentUserId);
 
   const sortedPlayers = [...match.players].sort((a, b) => {
     const posA = a.finalPosition ?? 999;
@@ -31,11 +30,11 @@ function MatchCard({ match, currentUserId }: { match: MatchHistory; currentUserI
         <Text style={styles.matchDate}>
           {startDate.toLocaleDateString()} at {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </Text>
-        {isWinner && (
+        {badge !== null ? (
           <View style={styles.winBadge}>
-            <Text style={styles.winBadgeText}>🏆 Won</Text>
+            <Text style={styles.winBadgeText}>{badge}</Text>
           </View>
-        )}
+        ) : null}
       </View>
 
       <View style={styles.playersContainer}>
