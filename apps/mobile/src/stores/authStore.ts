@@ -1,8 +1,3 @@
-/**
- * Authentication state store
- * Manages user authentication state (guest or email account)
- */
-
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { AUTH_TOKEN_KEY, AUTH_USER_ID_KEY } from '../auth/storageKeys';
@@ -17,7 +12,6 @@ export interface AuthState {
   isLoading: boolean;
   error: string | null;
 
-  // Actions
   initializeAuth: () => Promise<void>;
   createGuest: (displayName?: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, displayName?: string) => Promise<void>;

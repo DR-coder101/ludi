@@ -461,7 +461,6 @@ async function waitFor(pred: () => boolean, ms: number): Promise<void> {
   if (!pred()) throw Object.assign(new Error('Condition not met in time'), { code: 'TIMEOUT' });
 }
 
-/** Run the bridge as an HTTP JSON-RPC server on an ephemeral port. */
 export async function startBridgeHttp(run: RunDir, url: string): Promise<{ port: number; close: () => Promise<void> }> {
   const state = createBridgeState(url);
   hydrateFromSessionFile(state, run);
