@@ -370,7 +370,9 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     }
 
     await matchHistoryService.saveMatch(match);
-    console.log(`Match history saved for room ${match.roomCode}`);
+    console.log(
+      `Match history saved for room ${match.roomCode} startedAt=${match.startedAt.toISOString()} endedAt=${match.endedAt.toISOString()}`,
+    );
   }
 
   function emitTokenMoved(
