@@ -867,7 +867,9 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         }, gameRegistry.getAIThinkDelay());
       }
 
-      console.log(`Game started in room ${roomCode}`);
+      const startedGame = gameRegistry.getGame(roomCode);
+      const startedAtIso = startedGame ? ` at ${startedGame.startedAt.toISOString()}` : '';
+      console.log(`Game started in room ${roomCode}${startedAtIso}`);
     });
 
     socket.on('game:roll', async (payload, callback) => {
