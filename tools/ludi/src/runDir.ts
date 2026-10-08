@@ -20,6 +20,8 @@ export interface SessionMeta {
   color?: string;
   bridge_port?: number;
   bridge_pid?: number;
+  auth_user_id?: string;
+  access_token?: string;
 }
 
 export interface RunDir {

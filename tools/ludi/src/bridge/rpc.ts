@@ -11,7 +11,8 @@ import type {
 } from '@ludi/protocol';
 import { legalMoves, type GameState as RulesGameState } from '@ludi/rules';
 import { DEFAULT_HOUSE_RULES, withTimeout } from '../defaults.js';
-import { readSession, writeSession, type RunDir } from '../runDir.js';
+import { readSession, writeSession, type RunDir, type SessionMeta } from '../runDir.js';
+import { handshakeAuthFromSession } from './handshakeAuth.js';
 
 export type BridgeSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -58,12 +59,13 @@ function requireSocket(state: BridgeState): BridgeSocket {
   return state.socket;
 }
 
-async function connectSocket(state: BridgeState): Promise<BridgeSocket> {
+async function connectSocket(state: BridgeState, session: SessionMeta): Promise<BridgeSocket> {
   if (state.socket?.connected) return state.socket;
   const socket = ioClient(state.url, {
     transports: ['websocket'],
     reconnection: false,
     autoConnect: false,
+    auth: handshakeAuthFromSession(session),
   }) as BridgeSocket;
 
   socket.on('room:state', (room) => {
@@ -120,7 +122,7 @@ export async function handleRpc(state: BridgeState, run: RunDir, method: string,
         return { ok: true, data: { url: state.url, connected: !!state.socket?.connected } };
 
       case 'connect': {
-        await connectSocket(state);
+        await connectSocket(state, readSession(run));
         return { ok: true, data: { url: state.url, connected: true } };
       }
 
@@ -133,7 +135,7 @@ export async function handleRpc(state: BridgeState, run: RunDir, method: string,
       }
 
       case 'room.create': {
-        const socket = await connectSocket(state);
+        const socket = await connectSocket(state, readSession(run));
         const displayName = String(args.displayName ?? 'Verifier');
         const houseRules = (args.houseRules as HouseRules | undefined) ?? DEFAULT_HOUSE_RULES;
         const response = await emitAck<{
@@ -169,7 +171,7 @@ export async function handleRpc(state: BridgeState, run: RunDir, method: string,
       }
 
       case 'room.join': {
-        const socket = await connectSocket(state);
+        const socket = await connectSocket(state, readSession(run));
         const roomCode = String(args.roomCode ?? '').toUpperCase();
         const displayName = String(args.displayName ?? state.displayName ?? 'Guest');
         const sessionToken =
@@ -459,11 +461,10 @@ async function waitFor(pred: () => boolean, ms: number): Promise<void> {
   if (!pred()) throw Object.assign(new Error('Condition not met in time'), { code: 'TIMEOUT' });
 }
 
-/** Run the bridge as an HTTP JSON-RPC server on an ephemeral port. */
 export async function startBridgeHttp(run: RunDir, url: string): Promise<{ port: number; close: () => Promise<void> }> {
   const state = createBridgeState(url);
-  await connectSocket(state);
   hydrateFromSessionFile(state, run);
+  await connectSocket(state, readSession(run));
 
   const server = createServer(async (req, res) => {
     if (req.method === 'GET' && req.url === '/health') {

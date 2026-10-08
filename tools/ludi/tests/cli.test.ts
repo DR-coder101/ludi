@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { existsSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { ExitCode } from '../src/exit.js';
@@ -141,5 +141,84 @@ describe('ludi CLI', () => {
     const res = run(['room', 'join', '--help']);
     expect(res.status).toBe(0);
     expect(res.stdout).toContain('session-token');
+  });
+
+  it('auth guest help says to run before session open', () => {
+    const res = run(['auth', 'guest', '--help']);
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('guest');
+    expect(res.stdout).toContain('access');
+    expect(res.stdout).toContain('Run before session open');
+    expect(res.stdout).toContain('Verifier');
+  });
+
+  it('auth guest dry-run exits 9 and does not write session.json', () => {
+    const runDir = join(root, '.tmp-auth-guest-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'auth',
+      'guest',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+      '--url',
+      'http://127.0.0.1:9',
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    expect(body.dry_run).toBe(true);
+    expect(body.command).toBe('ludi.auth.guest');
+    expect(body.planned_actions).toEqual([
+      {
+        action: 'POST',
+        url: 'http://127.0.0.1:9/auth/guest',
+        body: { displayName: 'Verifier' },
+      },
+      {
+        action: 'write',
+        path: join(runDir, 'session.json'),
+        fields: ['auth_user_id', 'access_token'],
+      },
+    ]);
+    expect(existsSync(join(runDir, 'session.json'))).toBe(false);
+  });
+
+  it('auth guest fails when the run-dir bridge is alive', () => {
+    const runDir = join(root, '.tmp-auth-guest-bridge');
+    rmSync(runDir, { recursive: true, force: true });
+    mkdirSync(runDir, { recursive: true });
+    writeFileSync(
+      join(runDir, 'bridge.json'),
+      JSON.stringify({ port: 1, pid: process.pid }) + '\n',
+    );
+    const res = run([
+      'auth',
+      'guest',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+      '--url',
+      'http://127.0.0.1:9',
+    ]);
+    expect(res.status).toBe(ExitCode.PRECONDITION_FAILED);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(false);
+    expect(body.error.code).toBe('PRECONDITION_FAILED');
+    expect(body.error.hint).toBe(`ludi session close --run-dir ${runDir}`);
+    rmSync(runDir, { recursive: true, force: true });
+  });
+
+  it('introspect JSON includes auth.guest', () => {
+    const res = run(['introspect', '--output', 'json']);
+    expect(res.status).toBe(0);
+    const body = JSON.parse(res.stdout);
+    const auth = body.data.commands.find((c: { name: string }) => c.name === 'auth');
+    const names = auth.subcommands.map((c: { name: string }) => c.name);
+    expect(names).toContain('guest');
+    expect(res.stdout).toContain('"name": "guest"');
   });
 });
