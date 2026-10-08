@@ -112,15 +112,20 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
   app.post('/video-token', async (req, res) => {
     const validationResult = VideoTokenPayloadSchema.safeParse(req.body);
     if (!validationResult.success) {
+      const tokenOnly = validationResult.error.issues.every(
+        (issue) => issue.path[0] === 'sessionToken',
+      );
       const response: VideoTokenResponse = {
         success: false,
-        error: 'Invalid request payload',
+        error: tokenOnly
+          ? 'Seat session token required. Send the same token used as socket handshake.auth.token for reconnect.'
+          : 'Invalid request payload',
       };
-      res.status(400).json(response);
+      res.status(tokenOnly ? 401 : 400).json(response);
       return;
     }
 
-    const { roomCode, userId } = validationResult.data;
+    const { roomCode, userId, sessionToken } = validationResult.data;
 
     const room = roomRegistry.getRoom(roomCode);
     if (!room) {
@@ -129,6 +134,16 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         error: 'Room not found',
       };
       res.status(404).json(response);
+      return;
+    }
+
+    const session = roomRegistry.getPlayerBySessionToken(sessionToken);
+    if (!session || session.roomCode !== roomCode || session.player.id !== userId) {
+      const response: VideoTokenResponse = {
+        success: false,
+        error: 'Seat session token does not belong to this player in this room',
+      };
+      res.status(403).json(response);
       return;
     }
 
