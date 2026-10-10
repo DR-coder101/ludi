@@ -23,7 +23,7 @@ export function CallBar({
   onLeave,
 }: CallBarProps) {
   return (
-    <View style={styles.bar} accessibilityLabel={`Video call, ${liveCount} of 4 live`}>
+    <View style={styles.card} accessibilityLabel={`Video call, ${liveCount} of 4 live`}>
       <View style={styles.header}>
         <View style={styles.dot} />
         <Text style={styles.kicker}>{`VIDEO CALL · ${liveCount}/4 LIVE`}</Text>
@@ -41,9 +41,16 @@ export function CallBar({
 }
 
 const styles = StyleSheet.create({
-  bar: {
+  card: {
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: color.gold,
+    backgroundColor: color.ink,
   },
   header: {
     flexDirection: 'row',

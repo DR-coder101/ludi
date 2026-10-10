@@ -1,15 +1,20 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { color, font } from '../../theme/tokens';
+import Svg, { Path, Rect } from 'react-native-svg';
+import { color, font, type PieceColor } from '../../theme/tokens';
+import { Icon } from '../game/Icon';
 import { LiveVideoFill } from './LiveVideoFill';
+import { PortraitAvatar } from './PortraitAvatar';
 import { tileLabel, type SeatVideo } from './seatVideo';
 
 export function SeatVideoTile({
   seat,
   tint,
+  piece,
 }: {
   seat: Exclude<SeatVideo, { kind: 'none' }>;
   tint: string;
+  piece: PieceColor;
 }) {
   const speaking = seat.speaking;
   const label = tileLabel(seat);
@@ -18,18 +23,23 @@ export function SeatVideoTile({
       accessibilityLabel={label}
       style={[
         styles.tile,
-        { borderColor: tint, borderWidth: speaking ? 2.2 : 1.3 },
+        { borderColor: tint, borderWidth: speaking ? 2.2 : 1.4 },
+        speaking ? { shadowColor: tint, shadowOpacity: 0.85, shadowRadius: 5, shadowOffset: { width: 0, height: 0 } } : null,
       ]}
     >
       {seat.kind === 'camOff' ? (
         <View style={styles.camOff}>
-          <Text style={styles.initial}>{seat.initial}</Text>
-          <Text style={styles.camOffLabel}>CAM OFF</Text>
+          <View style={[styles.initialCircle, { borderColor: tint }]}>
+            <Text style={styles.initial}>{seat.initial}</Text>
+          </View>
+          <View style={styles.camOffBadge} accessibilityLabel="Camera off">
+            <CamOffGlyph />
+            <Text style={styles.camOffLabel}>CAM OFF</Text>
+          </View>
         </View>
       ) : (
         <View style={styles.liveFill}>
-          <View style={styles.head} />
-          <View style={styles.shoulders} />
+          <PortraitAvatar piece={piece} />
           {seat.identity ? (
             <View style={StyleSheet.absoluteFill} pointerEvents="none">
               <LiveVideoFill identity={seat.identity} />
@@ -53,9 +63,25 @@ export function SeatVideoTile({
         <Text style={styles.name} numberOfLines={1}>
           {label}
         </Text>
-        {seat.muted ? <Text style={styles.micOff}>MIC OFF</Text> : null}
+        {seat.muted ? (
+          <View style={styles.micOffBadge} accessibilityLabel="Microphone off">
+            <Icon name="mic" size={7} color="#ff6b6b" strokeWidth={2} />
+          </View>
+        ) : (
+          <Icon name="mic" size={7} color={color.white} strokeWidth={2} />
+        )}
       </View>
     </View>
+  );
+}
+
+function CamOffGlyph() {
+  return (
+    <Svg width={8} height={8} viewBox="0 0 24 24" fill="none" stroke={color.creamMuted} strokeWidth={2} strokeLinecap="round">
+      <Rect x={3} y={7} width={11} height={10} rx={2} />
+      <Path d="M14 10.5l5-3v9l-5-3z" />
+      <Path d="M4 20L20 4" />
+    </Svg>
   );
 }
 
@@ -68,41 +94,41 @@ const styles = StyleSheet.create({
   },
   liveFill: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    backgroundColor: '#3a3b40',
-  },
-  head: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#7b7d83',
-    marginBottom: 2,
-  },
-  shoulders: {
-    width: 36,
-    height: 16,
-    borderTopLeftRadius: 18,
-    borderTopRightRadius: 18,
-    backgroundColor: '#7b7d83',
-    marginBottom: 16,
   },
   camOff: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: color.ink,
-    gap: 4,
+    gap: 5,
+  },
+  initialCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    borderWidth: 1.4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#2a2b2f',
   },
   initial: {
     fontFamily: font.display,
-    fontSize: 22,
+    fontSize: 16,
     color: color.cream,
+  },
+  camOffBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: 'rgba(0,0,0,0.45)',
   },
   camOffLabel: {
     fontFamily: font.sticker,
-    fontSize: 6,
-    letterSpacing: 0.6,
+    fontSize: 5.5,
+    letterSpacing: 0.5,
     color: color.creamMuted,
   },
   youBadge: {
@@ -150,9 +176,8 @@ const styles = StyleSheet.create({
     fontSize: 7,
     color: color.white,
   },
-  micOff: {
-    fontFamily: font.sticker,
-    fontSize: 5,
-    color: '#ff6b6b',
+  micOffBadge: {
+    minWidth: 10,
+    alignItems: 'center',
   },
 });

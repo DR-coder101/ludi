@@ -215,7 +215,7 @@ export function BoardView({ size, model, labels, onTokenPress, hop, onHopDone }:
                 height: slot.h * s,
               }}
             >
-              <SeatVideoTile seat={seat} tint={accent[PLACES[engine].piece]} />
+              <SeatVideoTile seat={seat} tint={accent[PLACES[engine].piece]} piece={PLACES[engine].piece} />
             </View>
           );
         })}

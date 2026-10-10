@@ -160,9 +160,11 @@ export function BoardScreen(props: BoardScreenProps) {
                   <PlayerStrip order={seatedOrder} turn={state.turn} names={names} timer={timer} />
                 )}
               </View>
-              <View style={[styles.eq, call ? styles.eqCall : null]}>
-                <Equalizer width={columnWidth - CENTRE_INSET * 2} />
-              </View>
+              {call ? null : (
+                <View style={styles.eq}>
+                  <Equalizer width={columnWidth - CENTRE_INSET * 2} />
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -222,9 +224,6 @@ const styles = StyleSheet.create({
     top: layout.turnCardHeight + layout.stripGap + 70,
     left: 0,
     right: 0,
-  },
-  eqCall: {
-    top: layout.turnCardHeight + layout.stripGap + 88,
   },
   notice: {
     position: 'absolute',

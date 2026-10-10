@@ -140,9 +140,18 @@ function glyph(name: IconName) {
     case 'home':
       return <Path d="M4 11l8-7 8 7M6 9.5V20h12V9.5" />;
     case 'flip':
-      return <Path d="M7 8l-3 3 3 3M17 16l3-3-3-3M4 11h10M20 13H10" />;
+      return (
+        <>
+          <Rect x={6} y={8.2} width={8.2} height={6.4} rx={1.5} />
+          <Path d="M14.2 10l3.4-1.8v6.4L14.2 13z" />
+          <Path d="M7.2 5.4A7 7 0 0 1 18.4 8.2M18.6 5.2V8.4H15.6" />
+          <Path d="M16.8 18.6A7 7 0 0 1 5.6 15.8M5.4 18.8v-3.2H8.4" />
+        </>
+      );
     case 'leave':
-      return <Path d="M15 4l5 8-5 8M4 12h15" />;
+      return (
+        <Path d="M4.8 14.2c.6-1.6 2.4-2.7 4.4-2.7h5.6c2 0 3.8 1.1 4.4 2.7M6.6 16.6c.4-1.5 2-2.5 3.8-2.5h3.2c1.8 0 3.4 1 3.8 2.5" />
+      );
     default: {
       const _never: never = name;
       return _never;

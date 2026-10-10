@@ -6,6 +6,7 @@ import type { Die } from '@ludi/rules';
 import type { TurnCopy } from './turnCopy';
 import { DiceFace } from './DiceFace';
 import type { DieIndex } from './diceModel';
+import { dieStatusLabel } from './dieStatus';
 
 interface TurnCardProps {
   copy: TurnCopy;
@@ -85,6 +86,7 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
                 const index = i as DieIndex;
                 const pickable = !idle && !die.used && !!onPickDie;
                 const isActive = activeDie === index;
+                const tag = dieStatusLabel(die.used, isActive);
                 return (
                   <Pressable
                     key={i}
@@ -105,6 +107,7 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
                         buzz={i === 0 && buzzOn}
                       />
                     </View>
+                    {tag ? <Text style={styles.dieTag}>{tag}</Text> : null}
                   </Pressable>
                 );
               })}
@@ -207,6 +210,14 @@ const styles = StyleSheet.create({
   },
   dieUsed: {
     opacity: 0.3,
+  },
+  dieTag: {
+    marginTop: 1,
+    fontFamily: font.sticker,
+    fontSize: 6,
+    letterSpacing: 0.6,
+    color: color.creamMuted,
+    textAlign: 'center',
   },
   pill: {
     flexShrink: 1,
