@@ -232,6 +232,7 @@ describe('Video Token Endpoint', () => {
       expect(data.token).toBeDefined();
       expect(typeof data.token).toBe('string');
       expect(data.token!.length).toBeGreaterThan(0);
+      expect(data.url).toBe('wss://test.livekit.cloud');
 
       cleanup();
     });

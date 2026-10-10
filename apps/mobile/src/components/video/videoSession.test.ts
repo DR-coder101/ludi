@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  resolveLivekitUrl,
   resolveVideoSession,
   shouldFetchVideoToken,
   shouldMountLiveKit,
@@ -54,5 +55,13 @@ describe('resolveVideoSession', () => {
     const facts = { ...ready, token: null, url: null };
     expect(shouldFetchVideoToken(facts)).toBe(true);
     expect(resolveVideoSession(facts)).toEqual({ status: 'idle' });
+  });
+});
+
+describe('resolveLivekitUrl', () => {
+  it('prefers the server URL and falls back to the publishable env URL', () => {
+    expect(resolveLivekitUrl('wss://from.server', 'wss://from.env')).toBe('wss://from.server');
+    expect(resolveLivekitUrl(undefined, 'wss://from.env')).toBe('wss://from.env');
+    expect(resolveLivekitUrl(null, undefined)).toBeNull();
   });
 });

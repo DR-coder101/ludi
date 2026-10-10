@@ -45,3 +45,10 @@ export function shouldMountLiveKit(session: VideoSession): boolean {
 export function videoNotice(session: VideoSession): string | null {
   return session.status === 'unavailable' ? session.notice : null;
 }
+
+export function resolveLivekitUrl(
+  fromServer: string | null | undefined,
+  fromEnv: string | undefined,
+): string | null {
+  return fromServer || fromEnv || null;
+}

@@ -220,6 +220,8 @@ export type VideoTokenPayload = z.infer<typeof VideoTokenPayloadSchema>;
 export interface VideoTokenResponse {
   success: boolean;
   token?: string;
+  /** LiveKit websocket URL from the server's LIVEKIT_URL. */
+  url?: string;
   error?: string;
 }
 

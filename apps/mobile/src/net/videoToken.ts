@@ -1,14 +1,22 @@
 import type { VideoTokenResponse } from '@ludi/protocol';
+import { resolveSocketServerUrl } from './socketUrl';
 
-const SERVER_URL = process.env.EXPO_PUBLIC_SERVER_URL || 'http://localhost:3000';
+export function readVideoToken(
+  data: VideoTokenResponse,
+): { token: string; url: string | null } | { error: string } {
+  if (!data.success || !data.token) {
+    return { error: data.error || 'Failed to fetch video token' };
+  }
+  return { token: data.token, url: data.url ?? null };
+}
 
 export async function fetchVideoToken(
   roomCode: string,
   userId: string,
   sessionToken: string,
-): Promise<{ token: string; error?: never } | { error: string; token?: never }> {
+): Promise<{ token: string; url: string | null } | { error: string }> {
   try {
-    const response = await fetch(`${SERVER_URL}/video-token`, {
+    const response = await fetch(`${resolveSocketServerUrl()}/video-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,18 +29,8 @@ export async function fetchVideoToken(
     });
 
     const data: VideoTokenResponse = await response.json();
-
-    if (!data.success || !data.token) {
-      return {
-        error: data.error || 'Failed to fetch video token',
-      };
-    }
-
-    return {
-      token: data.token,
-    };
+    return readVideoToken(data);
   } catch (error) {
-    console.error('[VideoToken] Fetch error:', error);
     return {
       error: error instanceof Error ? error.message : 'Network error',
     };
