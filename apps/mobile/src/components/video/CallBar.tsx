@@ -26,9 +26,12 @@ export function CallBar({
     <View style={styles.card} accessibilityLabel={`Video call, ${liveCount} of 4 live`}>
       <View style={styles.header}>
         <View style={styles.dot} />
-        <Text style={styles.kicker}>{`VIDEO CALL · ${liveCount}/4 LIVE`}</Text>
+        <Text style={styles.kicker} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.7}>
+          {`VIDEO CALL · ${liveCount}/4 LIVE`}
+        </Text>
       </View>
       <MicCamControls
+        compact
         micEnabled={micOn}
         cameraEnabled={cameraOn}
         onToggleMic={onMic}
@@ -42,11 +45,10 @@ export function CallBar({
 
 const styles = StyleSheet.create({
   card: {
+    alignSelf: 'stretch',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingTop: 8,
-    paddingBottom: 8,
+    gap: 10,
+    padding: 10,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: color.gold,
@@ -55,6 +57,8 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
     gap: 6,
   },
   dot: {
@@ -64,6 +68,7 @@ const styles = StyleSheet.create({
     backgroundColor: color.hot,
   },
   kicker: {
+    flexShrink: 1,
     fontFamily: font.sticker,
     fontSize: 9,
     letterSpacing: 0.8,
