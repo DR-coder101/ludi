@@ -199,6 +199,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       const response: VideoTokenResponse = {
         success: true,
         token: jwt,
+        url: livekitUrl,
       };
       res.json(response);
     } catch (error) {

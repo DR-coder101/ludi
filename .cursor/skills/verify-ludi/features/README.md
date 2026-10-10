@@ -6,7 +6,7 @@ Maintained source for verifying Ludi behavior agents can drive. Read this index,
 
 Primary: Ludi server over HTTP + Socket.IO (guest room, lobby, match, solo vs bots).
 
-Screens: Expo web export of `apps/mobile` at 390×844, driven by `ludi screens`. Routes are `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/win`. No simulator is required.
+Screens: Expo web export of `apps/mobile` at 390×844, driven by `ludi screens`. Routes are `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win`. No simulator is required.
 
 `baselines/emulator/` holds owner-approved simulator shots for humans. `ludi screens check` compares against `baselines/web/`, which are Chromium captures of the same fixtures. They will not match the emulator files.
 
@@ -50,5 +50,5 @@ Each feature file: H1, one paragraph, then exactly `Sub-features`, `How to get t
 - [Match history](./match-history.md) covers `GET /matches/:userId` for a finished match, and the Supabase prerequisite.
 - [Home screen](./home-screen.md) covers `/dev/home` screenshot vs `baselines/web/home.png`.
 - [Lobby screen](./lobby-screen.md) covers `/dev/lobby` screenshot vs `baselines/web/lobby.png`.
-- [Board screen](./board-screen.md) covers `/dev/board?state=start`, 68-cell track, 7-cell home columns, empty unused yards in 2-player, two dice, and single-6 come-out.
+- [Board screen](./board-screen.md) covers `/dev/board?state=start`, `/dev/board?state=video`, 68-cell track, 7-cell home columns, empty unused yards in 2-player, two dice, single-6 come-out, and the yard video tiles plus call bar.
 - [Win screen](./win-screen.md) covers `/dev/win` screenshot vs `baselines/web/win.png`.

@@ -10,15 +10,19 @@ export interface VideoStoreState {
   micEnabled: boolean;
   cameraEnabled: boolean;
   isVideoCollapsed: boolean;
+  declined: boolean;
+  facingUser: boolean;
   error: string | null;
 
-  setLivekitUrl: (url: string) => void;
+  setLivekitUrl: (url: string | null) => void;
   setConnection: (roomCode: string, token: string) => void;
   setConnected: (connected: boolean) => void;
   setConnecting: (connecting: boolean) => void;
   toggleMic: () => void;
   toggleCamera: () => void;
   toggleVideoCollapsed: () => void;
+  flipCamera: () => void;
+  leaveCall: () => void;
   setError: (error: string | null) => void;
   reset: () => void;
 }
@@ -32,6 +36,8 @@ const initialState = {
   micEnabled: true,
   cameraEnabled: true,
   isVideoCollapsed: false,
+  declined: false,
+  facingUser: true,
   error: null,
 };
 
@@ -78,6 +84,22 @@ export const useVideoStore = create<VideoStoreState>()(
     toggleVideoCollapsed: () =>
       set((state) => {
         state.isVideoCollapsed = !state.isVideoCollapsed;
+      }),
+
+    flipCamera: () =>
+      set((state) => {
+        state.facingUser = !state.facingUser;
+      }),
+
+    leaveCall: () =>
+      set((state) => {
+        state.token = null;
+        state.livekitUrl = null;
+        state.roomCode = null;
+        state.isConnected = false;
+        state.isConnecting = false;
+        state.declined = true;
+        state.error = null;
       }),
 
     setError: (error) =>

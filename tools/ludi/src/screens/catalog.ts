@@ -11,7 +11,7 @@ export const PHONE = {
 export const PIXEL_THRESHOLD = 0.1;
 export const MAX_DIFF_RATIO = 0.005;
 
-export type ScreenId = 'home' | 'lobby' | 'board-start' | 'win';
+export type ScreenId = 'home' | 'lobby' | 'board-start' | 'board-video' | 'win';
 
 export type WaitFor = {
   role: 'button' | 'heading';
@@ -46,6 +46,12 @@ export const SCREENS: readonly ScreenSpec[] = [
     path: '/dev/board?state=start',
     waitFor: { role: 'button', name: 'Roll the dice' },
     file: 'board-start.png',
+  },
+  {
+    id: 'board-video',
+    path: '/dev/board?state=video',
+    waitFor: { role: 'button', name: 'Leave video call' },
+    file: 'board-video.png',
   },
   {
     id: 'win',

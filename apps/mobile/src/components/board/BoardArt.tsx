@@ -21,6 +21,7 @@ import Svg, {
   Text,
 } from 'react-native-svg';
 import type { Color } from '@ludi/rules';
+import type { SeatVideo } from '../video/seatVideo';
 import {
   HOME_COLUMNS,
   HOME_COLUMN_ENTRY,
@@ -41,6 +42,7 @@ const YARD = 8 * C;
 
 export const TRACK_PIECE_R = 7.4;
 export const YARD_PIECE_R = 9.6;
+export const YARD_PORTRAIT = { dx: 90, dy: 13, w: 57, h: 70 } as const;
 
 type Dir = 'right' | 'down' | 'left' | 'up';
 const ROT: Record<Dir, number> = { right: 0, down: 90, left: 180, up: 270 };
@@ -265,8 +267,8 @@ function MicGlyph({ x, y, muted }: { x: number; y: number; muted: boolean }) {
 
 /** Player video tile placeholder: silhouette, name bar, and with video on, mic state and a LIVE badge on the active player. */
 function VideoTile({ id, x, y, name, tint, active, muted, video }: { id: string; x: number; y: number; name: string; tint: string; active: boolean; muted: boolean; video: boolean }) {
-  const w = 57;
-  const h = 70;
+  const w = YARD_PORTRAIT.w;
+  const h = YARD_PORTRAIT.h;
   const mid = x + w / 2;
   return (
     <G>
@@ -304,6 +306,18 @@ export interface YardLabels {
   muted: Partial<Record<Color, boolean>>;
   /** A voice/video call is running (online rooms); pass-and-play has none. */
   video: boolean;
+  /** Live or fixture tiles. Missing or `none` keeps the SVG portrait. */
+  seats?: Partial<Record<Color, SeatVideo>>;
+}
+
+export function yardPortraitRect(engine: Color): { x: number; y: number; w: number; h: number } {
+  const tl = YARDS[engine].topLeft;
+  return {
+    x: tl.col * C + YARD_PORTRAIT.dx,
+    y: tl.row * C + YARD_PORTRAIT.dy,
+    w: YARD_PORTRAIT.w,
+    h: YARD_PORTRAIT.h,
+  };
 }
 
 /** Centre of yard slot `i` (0..3) for a colour, in board units. */
@@ -390,11 +404,11 @@ function Yard({ view, labels }: { view: YardView; labels: YardLabels }) {
         </Text>
       ))}
       <MiniMap pin={place.pin} x={x + 14} y={mapY} w={62} pinColor={a} />
-      {view.seated ? (
+      {view.seated && (labels.seats?.[engine]?.kind ?? 'none') === 'none' ? (
         <VideoTile
           id={id}
-          x={x + 90}
-          y={y + 13}
+          x={x + YARD_PORTRAIT.dx}
+          y={y + YARD_PORTRAIT.dy}
           name={`${name ?? place.full}${labels.me === engine ? ' · You' : ''}`}
           tint={a}
           active={view.active}

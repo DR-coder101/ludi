@@ -518,8 +518,8 @@ const screensCheck: Command = {
     {
       name: 'screen',
       type: 'enum',
-      summary: 'One fixture, or all four',
-      values: ['all', 'home', 'lobby', 'board-start', 'win'],
+      summary: 'One fixture, or all five',
+      values: ['all', 'home', 'lobby', 'board-start', 'board-video', 'win'],
       default: 'all',
     },
     {
@@ -596,7 +596,7 @@ const auth: Command = {
 
 const screens: Command = {
   name: 'screens',
-  summary: 'Expo web screenshots of /dev home, lobby, board-start, and win',
+  summary: 'Expo web screenshots of /dev home, lobby, board-start, board-video, and win',
   args: [],
   mutates: false,
   children: [screensDoctor, screensCheck],

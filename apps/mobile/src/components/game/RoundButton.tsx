@@ -6,7 +6,7 @@ import { color, font, motion } from '../../theme/tokens';
 import { triggerHaptic } from '../../utils/gameAudio';
 import { Icon, type IconName } from './Icon';
 
-export type RoundButtonTone = 'dark' | 'gold' | 'voice';
+export type RoundButtonTone = 'dark' | 'gold' | 'voice' | 'leave';
 
 interface RoundButtonProps {
   icon: IconName;
@@ -17,9 +17,10 @@ interface RoundButtonProps {
   onPress?: () => void;
 }
 
-const FACE: Record<'dark' | 'gold', [string, string, string, number]> = {
+const FACE: Record<'dark' | 'gold' | 'leave', [string, string, string, number]> = {
   dark: ['#2a2a2f', color.ink, color.ink, 0.7],
   gold: [color.goldHot, color.gold, color.goldDeep, 0.6],
+  leave: [color.redText, color.red, color.redDeep, 0.55],
 };
 
 /** `inset 0 1px 0` highlight: the upper rim, one pixel inside the edge. */
@@ -34,10 +35,17 @@ function topArc(size: number) {
 export function RoundButton({ icon, size, tone = 'dark', badge, label, onPress }: RoundButtonProps) {
   const pressed = useSharedValue(0);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: 1 - pressed.value * (1 - motion.pressScale) }] }));
-  const face = tone === 'gold' ? 'gold' : 'dark';
+  const face = tone === 'gold' ? 'gold' : tone === 'leave' ? 'leave' : 'dark';
   const [c0, c1, c2, mid] = FACE[face];
-  const border = tone === 'gold' ? color.goldLight : tone === 'voice' ? 'rgba(25,196,90,0.6)' : 'rgba(254,209,0,0.28)';
-  const ink = tone === 'gold' ? color.bg : tone === 'voice' ? color.greenBright : color.cream;
+  const leave = tone === 'leave';
+  const border = leave
+    ? 'rgba(255,51,64,0.7)'
+    : tone === 'gold'
+      ? color.goldLight
+      : tone === 'voice'
+        ? 'rgba(25,196,90,0.6)'
+        : 'rgba(254,209,0,0.28)';
+  const ink = leave ? color.white : tone === 'gold' ? color.bg : tone === 'voice' ? color.greenBright : color.cream;
   const iconSize = size >= 48 ? 22 : 20;
 
   return (

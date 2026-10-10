@@ -14,9 +14,10 @@ import Animated, {
 import type { Color, GameState, TokenPos } from '@ludi/rules';
 import { YARDS, type CellPosition } from './boardLayout';
 import { cellOf, hopCells, type BoardModel } from './boardModel';
-import { BoardArt, C, pieceCentre, TRACK_PIECE_R, UNITS, yardSlot, type YardLabels } from './BoardArt';
+import { BoardArt, C, pieceCentre, TRACK_PIECE_R, UNITS, yardPortraitRect, yardSlot, type YardLabels } from './BoardArt';
+import { SeatVideoTile } from '../video/SeatVideoTile';
 import { PieceDefs, PieceGlyph } from './PieceGlyph';
-import { accent, color, layout, motion, PLACES, type PieceColor } from '../../theme/tokens';
+import { accent, color, layout, motion, PLACES, TURN_ORDER, type PieceColor } from '../../theme/tokens';
 import { gameAudio, triggerHaptic } from '../../utils/gameAudio';
 
 export interface HopAnimation {
@@ -198,6 +199,26 @@ export function BoardView({ size, model, labels, onTokenPress, hop, onHopDone }:
       <Bevel size={size} />
       <View style={[styles.inner, { width: inner, height: inner }]}>
         <BoardArt size={inner} model={model} labels={labels} />
+        {TURN_ORDER.map((engine) => {
+          const seat = labels.seats?.[engine];
+          if (!seat || seat.kind === 'none') return null;
+          const slot = yardPortraitRect(engine);
+          return (
+            <View
+              key={`vid-${engine}`}
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: slot.x * s,
+                top: slot.y * s,
+                width: slot.w * s,
+                height: slot.h * s,
+              }}
+            >
+              <SeatVideoTile seat={seat} tint={accent[PLACES[engine].piece]} piece={PLACES[engine].piece} />
+            </View>
+          );
+        })}
         {!reduce && active ? <Breathe engine={active.color} s={s} /> : null}
         {!reduce
           ? targets.map((t) => <Ripple key={`r-${t.key}`} x={t.x * s} y={t.y * s} r={t.r * s} tint={color.gold} />)

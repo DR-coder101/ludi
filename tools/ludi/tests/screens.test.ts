@@ -32,10 +32,11 @@ function pngBuffer(width: number, height: number, fill: [number, number, number,
 }
 
 describe('screen catalog', () => {
-  it('names the four rebuilt screens and the phone viewport', () => {
-    expect(SCREENS.map((s) => s.id)).toEqual(['home', 'lobby', 'board-start', 'win']);
-    expect(screensToRun('all')).toHaveLength(4);
+  it('names the rebuilt screens and the phone viewport', () => {
+    expect(SCREENS.map((s) => s.id)).toEqual(['home', 'lobby', 'board-start', 'board-video', 'win']);
+    expect(screensToRun('all')).toHaveLength(5);
     expect(screensToRun('board-start')[0]?.path).toBe('/dev/board?state=start');
+    expect(screensToRun('board-video')[0]?.path).toBe('/dev/board?state=video');
     expect(PHONE).toEqual({ width: 390, height: 844, deviceScaleFactor: 2 });
   });
 
@@ -89,7 +90,7 @@ describe('ludi screens CLI', () => {
     expect(res.stdout).not.toContain('ludi-verify');
   });
 
-  it('check dry-run exits 9 and plans expo export plus four captures', () => {
+  it('check dry-run exits 9 and plans expo export plus five captures', () => {
     const runDir = join(root, '.tmp-screens-dry');
     rmSync(runDir, { recursive: true, force: true });
     const res = run([
@@ -111,6 +112,7 @@ describe('ludi screens CLI', () => {
       'home',
       'lobby',
       'board-start',
+      'board-video',
       'win',
     ]);
     expect(existsSync(join(runDir, 'web-dist'))).toBe(false);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Mask, Pattern, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { color, font, layout } from '../../theme/tokens';
@@ -6,6 +6,8 @@ import type { Die } from '@ludi/rules';
 import type { TurnCopy } from './turnCopy';
 import { DiceFace } from './DiceFace';
 import type { DieIndex } from './diceModel';
+import { dieStatusLabel } from './dieStatus';
+import { turnTitleSize, TURN_TITLE_MAX } from './turnTitle';
 
 interface TurnCardProps {
   copy: TurnCopy;
@@ -55,6 +57,8 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
   const canRoll = idle && !!onRoll;
   const buzzOn = dice.some((d) => d.value === 6);
   const faces = dice.map((d) => d.value).join(' and ');
+  const [titleWidth, setTitleWidth] = useState(0);
+  const titleSize = titleWidth > 0 ? turnTitleSize(copy.title, titleWidth) : TURN_TITLE_MAX;
   return (
     <View style={styles.shadow}>
       <View style={styles.card}>
@@ -66,9 +70,22 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
               {copy.kicker}
             </Text>
           </View>
-          <Text style={styles.title} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
-            {copy.title}
-          </Text>
+          <View
+            style={styles.titleBox}
+            onLayout={(e) => {
+              const next = e.nativeEvent.layout.width;
+              setTitleWidth((prev) => (prev === next ? prev : next));
+            }}
+          >
+            <Text
+              style={[styles.title, { fontSize: titleSize, lineHeight: titleSize + 1 }]}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.55}
+            >
+              {copy.title}
+            </Text>
+          </View>
           <Text style={styles.sub} numberOfLines={1}>
             {copy.sub}
           </Text>
@@ -85,6 +102,7 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
                 const index = i as DieIndex;
                 const pickable = !idle && !die.used && !!onPickDie;
                 const isActive = activeDie === index;
+                const tag = dieStatusLabel(die.used, isActive);
                 return (
                   <Pressable
                     key={i}
@@ -105,6 +123,7 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
                         buzz={i === 0 && buzzOn}
                       />
                     </View>
+                    {tag ? <Text style={styles.dieTag}>{tag}</Text> : null}
                   </Pressable>
                 );
               })}
@@ -166,11 +185,13 @@ const styles = StyleSheet.create({
     letterSpacing: 1.6,
     color: color.redText,
   },
-  title: {
-    // Stretch so adjustsFontSizeToFit can shrink long titles inside the centred column.
+  titleBox: {
     alignSelf: 'stretch',
-    textAlign: 'center',
     marginTop: 4,
+  },
+  title: {
+    width: '100%',
+    textAlign: 'center',
     fontFamily: font.display,
     fontSize: 29,
     lineHeight: 30,
@@ -207,6 +228,14 @@ const styles = StyleSheet.create({
   },
   dieUsed: {
     opacity: 0.3,
+  },
+  dieTag: {
+    marginTop: 1,
+    fontFamily: font.sticker,
+    fontSize: 6,
+    letterSpacing: 0.6,
+    color: color.creamMuted,
+    textAlign: 'center',
   },
   pill: {
     flexShrink: 1,
