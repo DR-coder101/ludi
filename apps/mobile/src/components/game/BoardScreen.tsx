@@ -1,10 +1,10 @@
 import React, { useState, type ReactNode } from 'react';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Color, GameState } from '@ludi/rules';
 import { buildBoardModel, type MoveLike } from '../board/boardModel';
 import { BoardView, type HopAnimation } from '../board/BoardView';
-import { layout, TURN_ORDER, color } from '../../theme/tokens';
+import { layout, TURN_ORDER, color, font } from '../../theme/tokens';
 import { useLudiFonts } from '../../theme/fonts';
 import { ScreenBackdrop } from './ScreenBackdrop';
 import { TopBar } from './TopBar';
@@ -12,6 +12,8 @@ import { SideRail, type RailItem } from './SideRail';
 import { TurnCard } from './TurnCard';
 import { PlayerStrip, type TurnTimer } from './PlayerStrip';
 import { Equalizer } from './Equalizer';
+import { CallBar, type CallBarProps } from '../video/CallBar';
+import type { SeatVideo } from '../video/seatVideo';
 import { turnCopy } from './turnCopy';
 import { activeDie, canPickDie, diceFaces, moveForToken, type DieIndex } from './diceModel';
 
@@ -37,6 +39,9 @@ export interface BoardScreenProps {
   onProfile?: () => void;
   voice?: { on: boolean; onToggle: () => void } | null;
   chat?: { unread: number; onToggle: () => void } | null;
+  call?: CallBarProps | null;
+  seats?: Partial<Record<Color, SeatVideo>>;
+  notice?: string | null;
   /** Overrides device safe-area insets (the dev preview simulates an iPhone frame on web). */
   insets?: { top: number; bottom: number };
   /** Toasts, banners and sheets drawn above the board. */
@@ -47,7 +52,7 @@ const MAX_COLUMN = 520;
 
 export function BoardScreen(props: BoardScreenProps) {
   const { state, moves, me, names, muted, roomCode, lastRoll, rollKey, timer, hop, onHopDone } = props;
-  const { onRoll, onMove, onMenu, onProfile, voice, chat, children } = props;
+  const { onRoll, onMove, onMenu, onProfile, voice, chat, call, seats, notice, children } = props;
   const fontsReady = useLudiFonts();
   const device = useSafeAreaInsets();
   const insets = props.insets ?? device;
@@ -125,7 +130,7 @@ export function BoardScreen(props: BoardScreenProps) {
             <BoardView
               size={boardSize}
               model={model}
-              labels={{ names, me, muted: muted ?? {}, video: roomCode !== null }}
+              labels={{ names, me, muted: muted ?? {}, video: roomCode !== null, seats }}
               onTokenPress={onTokenPress}
               hop={hop}
               onHopDone={onHopDone}
@@ -149,13 +154,22 @@ export function BoardScreen(props: BoardScreenProps) {
                 onPickDie={pickable ? (die) => setPick({ rollKey, die }) : undefined}
               />
               <View style={styles.strip}>
-                <PlayerStrip order={seatedOrder} turn={state.turn} names={names} timer={timer} />
+                {call ? (
+                  <CallBar {...call} />
+                ) : (
+                  <PlayerStrip order={seatedOrder} turn={state.turn} names={names} timer={timer} />
+                )}
               </View>
-              <View style={styles.eq}>
+              <View style={[styles.eq, call ? styles.eqCall : null]}>
                 <Equalizer width={columnWidth - CENTRE_INSET * 2} />
               </View>
             </View>
           </View>
+        </View>
+      ) : null}
+      {notice ? (
+        <View style={styles.notice} pointerEvents="none">
+          <Text style={styles.noticeText}>{notice}</Text>
         </View>
       ) : null}
       {children}
@@ -208,5 +222,22 @@ const styles = StyleSheet.create({
     top: layout.turnCardHeight + layout.stripGap + 70,
     left: 0,
     right: 0,
+  },
+  eqCall: {
+    top: layout.turnCardHeight + layout.stripGap + 88,
+  },
+  notice: {
+    position: 'absolute',
+    top: 120,
+    alignSelf: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+    backgroundColor: color.ink,
+  },
+  noticeText: {
+    fontFamily: font.bodySemi,
+    fontSize: 11,
+    color: color.cream,
   },
 });

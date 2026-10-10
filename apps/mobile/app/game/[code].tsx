@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { StyleSheet, View, SafeAreaView, Text, ActivityIndicator } from 'react-native';
+import { useEffect, useState, useMemo, useCallback, type ReactNode } from 'react';
+import { StyleSheet, View, SafeAreaView, Text, ActivityIndicator, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import type { Color } from '@ludi/protocol';
+import type { Color, Player } from '@ludi/protocol';
 import { legalMoves as engineMoves } from '@ludi/rules';
 import { socketManager } from '../../src/net/socket';
 import { useRoomStore } from '../../src/stores/roomStore';
@@ -23,9 +24,48 @@ import { OnboardingTooltip, useOnboarding } from '../../src/components/Onboardin
 import { gameAudio, triggerHaptic } from '../../src/utils/gameAudio';
 import { fetchVideoToken } from '../../src/net/videoToken';
 import { color, font } from '../../src/theme/tokens';
+import {
+  isTestRuntime,
+  shouldRegisterLiveKitGlobals,
+} from '../../src/livekit/liveKitRuntime';
+import { LiveKitSession, useCallParticipants } from '../../src/components/video/LiveKitSession';
+import { seatsFromCall } from '../../src/components/video/seatVideo';
+import {
+  resolveLivekitUrl,
+  resolveVideoSession,
+  shouldFetchVideoToken,
+  shouldMountLiveKit,
+  videoNotice,
+} from '../../src/components/video/videoSession';
 
 /** Server turn length (`deadlineTs: Date.now() + 30000`). */
 const TURN_MS = 30000;
+
+function LiveCallBoard({
+  players,
+  myPlayerId,
+  local,
+  children,
+}: {
+  players: Player[];
+  myPlayerId: string;
+  local: { cameraOn: boolean; micOn: boolean; speaking: boolean };
+  children: (
+    seats: ReturnType<typeof seatsFromCall>,
+    liveCount: number,
+  ) => ReactNode;
+}) {
+  const participants = useCallParticipants();
+  const seats = seatsFromCall({
+    players,
+    myPlayerId,
+    inCall: true,
+    participants,
+    local,
+  });
+  const liveCount = Object.values(seats).filter((seat) => seat && seat.kind !== 'none').length;
+  return <>{children(seats, liveCount)}</>;
+}
 
 export default function OnlineGameScreen() {
   const router = useRouter();
@@ -53,9 +93,20 @@ export default function OnlineGameScreen() {
   const toggleChat = useChatStore((state) => state.toggleChat);
 
   const videoToken = useVideoStore((state) => state.token);
+  const livekitUrl = useVideoStore((state) => state.livekitUrl);
   const micEnabled = useVideoStore((state) => state.micEnabled);
+  const cameraEnabled = useVideoStore((state) => state.cameraEnabled);
+  const declined = useVideoStore((state) => state.declined);
+  const facingUser = useVideoStore((state) => state.facingUser);
+  const videoError = useVideoStore((state) => state.error);
   const toggleMic = useVideoStore((state) => state.toggleMic);
+  const toggleCamera = useVideoStore((state) => state.toggleCamera);
+  const flipCamera = useVideoStore((state) => state.flipCamera);
+  const leaveCall = useVideoStore((state) => state.leaveCall);
   const setConnection = useVideoStore((state) => state.setConnection);
+  const setLivekitUrl = useVideoStore((state) => state.setLivekitUrl);
+  const setVideoError = useVideoStore((state) => state.setError);
+  const setVideoConnected = useVideoStore((state) => state.setConnected);
   const resetVideo = useVideoStore((state) => state.reset);
 
   const { visible, message, type, duration, showToast, hideToast } = useToastStore();
@@ -83,35 +134,49 @@ export default function OnlineGameScreen() {
     };
   }, []);
 
-  // Fetch video token when game reaches READY_CHECK or later
+  const liveKitAvailable = shouldRegisterLiveKitGlobals({
+    os: Platform.OS,
+    appOwnership: Constants.appOwnership ?? null,
+    executionEnvironment: Constants.executionEnvironment ?? null,
+    isTest: isTestRuntime(),
+  });
+  const videoFacts = {
+    matchStarted: !!gameState,
+    token: videoToken,
+    url: livekitUrl,
+    liveKitAvailable,
+    declined,
+    fetchError: videoError,
+  };
+  const videoSession = resolveVideoSession(videoFacts);
+
   useEffect(() => {
-    if (!roomState || !myPlayerId || !roomCode) return;
-
-    const shouldConnectVideo =
-      roomState.status === 'ready_check' ||
-      roomState.status === 'countdown' ||
-      roomState.status === 'in_progress';
-
-    if (shouldConnectVideo && !videoToken) {
-      console.log('[Video] Fetching token for room:', roomCode);
-      const sessionToken = socketManager.getSessionToken() ?? '';
-
-      fetchVideoToken(roomCode, myPlayerId, sessionToken).then((result) => {
-        if (result.token) {
-          console.log('[Video] Token received, connecting to LiveKit');
-          setConnection(roomCode, result.token);
-        } else {
-          console.error('[Video] Failed to fetch token:', result.error);
-        }
-      });
-    }
-
-    return () => {
-      if (roomState.status === 'finished' || roomState.status === 'closed') {
-        resetVideo();
+    if (!myPlayerId || !roomCode) return;
+    if (!shouldFetchVideoToken(videoFacts)) return;
+    const sessionToken = socketManager.getSessionToken() ?? '';
+    fetchVideoToken(roomCode, myPlayerId, sessionToken).then((result) => {
+      if ('error' in result) {
+        setVideoError(result.error);
+        return;
       }
-    };
-  }, [roomState?.status, myPlayerId, roomCode, videoToken, setConnection, resetVideo]);
+      const url = resolveLivekitUrl(result.url, process.env.EXPO_PUBLIC_LIVEKIT_URL);
+      setConnection(roomCode, result.token);
+      if (url) setLivekitUrl(url);
+      else setVideoError('LiveKit URL missing');
+    });
+  }, [
+    gameState,
+    myPlayerId,
+    roomCode,
+    videoToken,
+    livekitUrl,
+    declined,
+    videoError,
+    liveKitAvailable,
+    setConnection,
+    setLivekitUrl,
+    setVideoError,
+  ]);
 
   useEffect(() => {
     const socket = socketManager.getSocket();
@@ -315,47 +380,94 @@ export default function OnlineGameScreen() {
   const toast = (
     <Toast visible={visible} message={message} type={type} duration={duration} onDismiss={hideToast} />
   );
+  const overlays = (
+    <>
+      {isReconnecting ? (
+        <View style={styles.reconnecting} pointerEvents="none">
+          <Text style={styles.reconnectingText}>RECONNECTING…</Text>
+        </View>
+      ) : null}
+      <ChatPanel hideToggle roomCode={roomCode} myPlayerId={myPlayerId || ''} roomPlayers={roomState.players} />
+      {results ? null : toast}
+      {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
+      {results ? (
+        <WinScreen
+          view={results}
+          onRematch={myPlayer ? handleRematch : undefined}
+          rematchBusy={isRematching}
+          onLobby={handleLeave}
+        >
+          {toast}
+        </WinScreen>
+      ) : null}
+    </>
+  );
+  const board = (
+    seats?: ReturnType<typeof seatsFromCall>,
+    liveCount = 0,
+  ) => (
+    <BoardScreen
+      state={gameState}
+      moves={isMyTurn && !isMoving ? legalMoves : []}
+      me={myColor}
+      names={names}
+      roomCode={roomCode}
+      lastRoll={lastRoll}
+      rollKey={rollKey}
+      timer={timer}
+      hop={hop}
+      onHopDone={() => setHop(null)}
+      onRoll={isRolling ? undefined : handleRoll}
+      onMove={handleMove}
+      onMenu={handleLeave}
+      onProfile={() => router.push('/profile')}
+      voice={{ on: micEnabled, onToggle: toggleMic }}
+      chat={{ unread: unreadCount, onToggle: toggleChat }}
+      call={
+        shouldMountLiveKit(videoSession)
+          ? {
+              liveCount,
+              micOn: micEnabled,
+              cameraOn: cameraEnabled,
+              onMic: toggleMic,
+              onCamera: toggleCamera,
+              onFlip: flipCamera,
+              onLeave: leaveCall,
+            }
+          : undefined
+      }
+      seats={seats}
+      notice={videoNotice(videoSession)}
+    >
+      {overlays}
+    </BoardScreen>
+  );
 
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
-      <BoardScreen
-        state={gameState}
-        moves={isMyTurn && !isMoving ? legalMoves : []}
-        me={myColor}
-        names={names}
-        roomCode={roomCode}
-        lastRoll={lastRoll}
-        rollKey={rollKey}
-        timer={timer}
-        hop={hop}
-        onHopDone={() => setHop(null)}
-        onRoll={isRolling ? undefined : handleRoll}
-        onMove={handleMove}
-        onMenu={handleLeave}
-        onProfile={() => router.push('/profile')}
-        voice={{ on: micEnabled, onToggle: toggleMic }}
-        chat={{ unread: unreadCount, onToggle: toggleChat }}
+      <LiveKitSession
+        token={videoSession.status === 'live' ? videoSession.token : undefined}
+        url={videoSession.status === 'live' ? videoSession.url : undefined}
+        audio={micEnabled}
+        video={cameraEnabled}
+        facingUser={facingUser}
+        onConnected={() => setVideoConnected(true)}
+        onDisconnected={() => setVideoConnected(false)}
+        onError={(error) => setVideoError(error.message)}
       >
-        {isReconnecting ? (
-          <View style={styles.reconnecting} pointerEvents="none">
-            <Text style={styles.reconnectingText}>RECONNECTING…</Text>
-          </View>
-        ) : null}
-        <ChatPanel hideToggle roomCode={roomCode} myPlayerId={myPlayerId || ''} roomPlayers={roomState.players} />
-        {results ? null : toast}
-        {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
-        {results ? (
-          <WinScreen
-            view={results}
-            onRematch={myPlayer ? handleRematch : undefined}
-            rematchBusy={isRematching}
-            onLobby={handleLeave}
+        {shouldMountLiveKit(videoSession) ? (
+          <LiveCallBoard
+            players={roomState.players}
+            myPlayerId={myPlayerId || ''}
+            local={{ cameraOn: cameraEnabled, micOn: micEnabled, speaking: false }}
           >
-            {toast}
-          </WinScreen>
-        ) : null}
-      </BoardScreen>
+            {board}
+          </LiveCallBoard>
+        ) : (
+          board()
+        )}
+      </LiveKitSession>
     </>
   );
 }

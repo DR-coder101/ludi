@@ -22,7 +22,9 @@ export type IconName =
   | 'lock'
   | 'crown'
   | 'refresh'
-  | 'home';
+  | 'home'
+  | 'flip'
+  | 'leave';
 
 /** Stroke icons from the design pack (24×24, round caps). */
 function glyph(name: IconName) {
@@ -137,6 +139,14 @@ function glyph(name: IconName) {
       return <Path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4.5v4.2h-4.2" />;
     case 'home':
       return <Path d="M4 11l8-7 8 7M6 9.5V20h12V9.5" />;
+    case 'flip':
+      return <Path d="M7 8l-3 3 3 3M17 16l3-3-3-3M4 11h10M20 13H10" />;
+    case 'leave':
+      return <Path d="M15 4l5 8-5 8M4 12h15" />;
+    default: {
+      const _never: never = name;
+      return _never;
+    }
   }
 }
 

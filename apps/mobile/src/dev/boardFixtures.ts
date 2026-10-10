@@ -1,6 +1,8 @@
 import { createGame, type Color, type GameState, type TokenPos } from '@ludi/rules';
+import type { SeatVideo } from '../components/video/seatVideo';
+import type { CallBarProps } from '../components/video/CallBar';
 
-export type FixtureName = 'start' | 'mid';
+export type FixtureName = 'start' | 'mid' | 'video';
 
 /** Players from the approved mockups, by engine colour. */
 export const MOCKUP_NAMES: Record<Color, string> = {
@@ -29,6 +31,27 @@ const MID_POSITIONS: Record<Color, TokenPos[]> = {
 /** The mid fixture's throw: a 6 (bonus roll earned) and a 3, both still to play. */
 export const MID_ROLL: [number, number] = [6, 3];
 
+/** Approved 2026-10-09 video mockup: a 6 and a 2, pieces still in the yards. */
+export const VIDEO_ROLL: [number, number] = [6, 2];
+
+/** Four tile states from the 2026-10-09 board video mockup. */
+export const VIDEO_FIXTURE_SEATS: Record<Color, SeatVideo> = {
+  yellow: { kind: 'live', name: 'Marcus', you: false, muted: false, speaking: true },
+  green: { kind: 'live', name: 'Shanice', you: false, muted: false, speaking: false },
+  blue: { kind: 'camOff', name: 'Andre', you: false, muted: true, speaking: false, initial: 'A' },
+  red: { kind: 'live', name: 'Dean', you: true, muted: false, speaking: false },
+};
+
+export const VIDEO_FIXTURE_CALL: CallBarProps = {
+  liveCount: 4,
+  micOn: true,
+  cameraOn: true,
+  onMic: () => {},
+  onCamera: () => {},
+  onFlip: () => {},
+  onLeave: () => {},
+};
+
 export function boardFixture(name: FixtureName): GameState {
   const base = createGame({
     playerColors: ['red', 'green', 'yellow', 'blue'],
@@ -41,6 +64,16 @@ export function boardFixture(name: FixtureName): GameState {
     },
   });
   if (name === 'start') return base;
+  if (name === 'video') {
+    return {
+      ...base,
+      phase: 'awaiting_move',
+      dice: [
+        { value: VIDEO_ROLL[0], used: false },
+        { value: VIDEO_ROLL[1], used: false },
+      ],
+    };
+  }
   return {
     ...base,
     tokens: base.tokens.map((t) => ({ ...t, pos: MID_POSITIONS[t.color][t.index] })),

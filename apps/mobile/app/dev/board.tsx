@@ -4,10 +4,22 @@ import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { applyMove, legalMoves, rollDice, type GameState } from '@ludi/rules';
 import { BoardScreen } from '../../src/components/game/BoardScreen';
 import { makeHop, type HopAnimation } from '../../src/components/board/BoardView';
-import { boardFixture, MID_ROLL, MOCKUP_NAMES, type FixtureName } from '../../src/dev/boardFixtures';
+import {
+  boardFixture,
+  MID_ROLL,
+  MOCKUP_NAMES,
+  VIDEO_FIXTURE_CALL,
+  VIDEO_FIXTURE_SEATS,
+  VIDEO_ROLL,
+  type FixtureName,
+} from '../../src/dev/boardFixtures';
 
 /** Ring fill in the mockups: dash 140 (start) and 110 (mid) of a 150.8 circumference. */
-const MOCKUP_TIMER: Record<FixtureName, number> = { start: 140 / 150.8, mid: 110 / 150.8 };
+const MOCKUP_TIMER: Record<FixtureName, number> = {
+  start: 140 / 150.8,
+  mid: 110 / 150.8,
+  video: 140 / 150.8,
+};
 /** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
 const PHONE_INSETS = { top: 47, bottom: 34 };
 const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
@@ -16,15 +28,18 @@ const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 export default function BoardPreview() {
   const router = useRouter();
   const params = useLocalSearchParams<{ state?: string }>();
-  const fixture: FixtureName = params.state === 'mid' ? 'mid' : 'start';
+  const fixture: FixtureName =
+    params.state === 'mid' ? 'mid' : params.state === 'video' ? 'video' : 'start';
   const [state, setState] = useState<GameState>(() => boardFixture(fixture));
-  const [lastRoll, setLastRoll] = useState<[number, number] | null>(fixture === 'mid' ? MID_ROLL : null);
+  const [lastRoll, setLastRoll] = useState<[number, number] | null>(
+    fixture === 'mid' ? MID_ROLL : fixture === 'video' ? VIDEO_ROLL : null,
+  );
   const [rollKey, setRollKey] = useState(0);
   const [hop, setHop] = useState<{ anim: HopAnimation; next: GameState } | null>(null);
 
   useEffect(() => {
     setState(boardFixture(fixture));
-    setLastRoll(fixture === 'mid' ? MID_ROLL : null);
+    setLastRoll(fixture === 'mid' ? MID_ROLL : fixture === 'video' ? VIDEO_ROLL : null);
     setHop(null);
   }, [fixture]);
 
@@ -66,6 +81,8 @@ export default function BoardPreview() {
         onMenu={() => router.back()}
         voice={{ on: true, onToggle: () => {} }}
         chat={{ unread: 3, onToggle: () => {} }}
+        call={fixture === 'video' ? VIDEO_FIXTURE_CALL : undefined}
+        seats={fixture === 'video' ? VIDEO_FIXTURE_SEATS : undefined}
         insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
       />
     </>
