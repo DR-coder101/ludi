@@ -5,7 +5,7 @@ import { BADGE_WINNER_CAN_STAY, TOWN } from '../theme.js';
 import type { OverlayView, PieceView } from '../view/types.js';
 import { applyMovedToPieces, lastMoved } from '../view/movePath.js';
 import { BoardSvg } from '../board/BoardSvg.js';
-import { BoltIcon, ClockIcon, CrownIcon, GiftIcon, UserPlusIcon } from '../icons.js';
+import { BoltIcon, ClockIcon, CrownIcon, DieFiveAltIcon, GiftIcon, UserPlusIcon } from '../icons.js';
 
 type Props = {
   view: Extract<OverlayView, { kind: 'game' }>;
@@ -68,7 +68,7 @@ export function GameScreen({ view, events, settle }: Props) {
     <div className={`screen game town-${view.turn.town}`} data-screen="game">
       <div className="game-top">
         <div className="game-title" data-safe="game-title">
-          <CrownIcon size={60} color="#fed100" />
+          <CrownIcon size={52} color="#fed100" className="game-crown" />
           <div>
             <h1>LUDI LIVE</h1>
             <div className="game-by">
@@ -128,25 +128,26 @@ export function GameScreen({ view, events, settle }: Props) {
         ))}
       </div>
       <div className="board-wrap" data-safe="board-wrap">
-        <div className={`board-holder${view.showTurnCard ? ' dim' : ''}`}>
+        <div className="board-holder">
           <BoardSvg active={view.turn.color} pieces={pieces} />
         </div>
+        {view.showTurnCard ? <div className="board-scrim" /> : null}
         {view.showTurnCard ? (
           <motion.div
-            className="turn-card"
-            data-safe="turn-card"
-            style={{ background: view.turn.hex }}
+            className="turn-card-pop"
             initial={instant ? false : { scale: 0.6 }}
             animate={instant ? { scale: 1 } : { scale: [0.6, 1.05, 1] }}
             transition={{ duration: instant ? 0 : 1.2, times: [0, 0.7, 1] }}
           >
-            <div className="turn-card-top">
-              <span className="turn-card-dot" style={{ background: turnTown.pieceLo }} />
-              <span className="turn-card-name">{view.turn.possessive}</span>
-              <CrownIcon size={63} color="#fff" />
+            <div className="turn-card" data-safe="turn-card" style={{ background: view.turn.hex }}>
+              <div className="turn-card-top">
+                <span className="turn-card-dot" style={{ background: turnTown.pieceLo }} />
+                <span className="turn-card-name">{view.turn.possessive}</span>
+                <DieFiveAltIcon size={56} color="#fff" className="turn-card-die" />
+              </div>
+              <h1 className="turn-card-word">TURN!</h1>
+              <div className="turn-card-hint">type !roll</div>
             </div>
-            <h1 className="turn-card-word">TURN!</h1>
-            <div className="turn-card-hint">type !roll</div>
           </motion.div>
         ) : null}
       </div>

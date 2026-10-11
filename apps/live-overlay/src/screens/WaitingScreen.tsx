@@ -91,7 +91,7 @@ export function WaitingScreen({ view, settle }: Props) {
       <div className="seat-panel" data-safe="seat-panel">
         <div className="seat-head">
           <div className="players-title">
-            <UsersIcon size={32} color="#fff" />
+            <UsersIcon size={32} color="#fed100" />
             PLAYERS
           </div>
           <motion.div

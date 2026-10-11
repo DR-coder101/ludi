@@ -72,6 +72,94 @@ function cy(c: readonly [number, number]): number {
   return gpos(c[0]) + cellSize(c[0]) / 2;
 }
 
+function cellKey(color: Color, pos: PieceView['pos']): string {
+  switch (pos.zone) {
+    case 'track':
+      return `t:${pos.cell}`;
+    case 'homeColumn':
+      return `h:${color}:${pos.step}`;
+    case 'home':
+      return `home:${color}`;
+    case 'yard':
+      return `yard:${color}`;
+    default: {
+      const _n: never = pos;
+      return _n;
+    }
+  }
+}
+
+function stackedTrackPieces(pieces: readonly PieceView[]): { piece: PieceView; x: number; y: number; stack: number }[] {
+  const groups = new Map<string, PieceView[]>();
+  for (const piece of pieces) {
+    if (piece.pos.zone === 'yard') continue;
+    const key = cellKey(piece.color, piece.pos);
+    const list = groups.get(key) ?? [];
+    list.push(piece);
+    groups.set(key, list);
+  }
+  const out: { piece: PieceView; x: number; y: number; stack: number }[] = [];
+  for (const group of groups.values()) {
+    const byColor = new Map<Color, PieceView[]>();
+    for (const piece of group) {
+      const list = byColor.get(piece.color) ?? [];
+      list.push(piece);
+      byColor.set(piece.color, list);
+    }
+    const colors = [...byColor.keys()];
+    colors.forEach((color, n) => {
+      const list = byColor.get(color) ?? [];
+      const lead = list[0];
+      if (!lead) return;
+      const pt = posToPoint(lead.color, lead.pos, lead.tokenIndex);
+      const dx = colors.length > 1 ? (n - (colors.length - 1) / 2) * 0.36 * cellSize(0) : 0;
+      out.push({ piece: lead, x: pt.x + dx, y: pt.y, stack: list.length });
+    });
+  }
+  return out;
+}
+
+function PieceGlyph({
+  pieceKey,
+  x,
+  y,
+  r,
+  stack = 1,
+}: {
+  pieceKey: keyof typeof PIECE;
+  x: number;
+  y: number;
+  r: number;
+  stack?: number;
+}) {
+  const p = PIECE[pieceKey];
+  return (
+    <g>
+      <ellipse cx={x} cy={y + r * 0.62} rx={r * 1.02} ry={r * 0.5} fill="#000" opacity="0.55" />
+      <circle cx={x} cy={y + r * 0.28} r={r} fill={p.lo} />
+      <circle cx={x} cy={y} r={r} fill={`url(#pg-${pieceKey})`} stroke={p.rim} strokeOpacity="0.9" strokeWidth={Math.max(0.8, r * 0.1)} />
+      <circle cx={x} cy={y} r={r * 0.62} fill="none" stroke={p.lo} strokeOpacity="0.55" strokeWidth={r * 0.12} />
+      <circle cx={x} cy={y} r={r * 0.52} fill="none" stroke="#fff" strokeOpacity="0.28" strokeWidth={r * 0.06} />
+      <ellipse cx={x - r * 0.18} cy={y - r * 0.42} rx={r * 0.55} ry={r * 0.3} fill="url(#spec)" opacity="0.8" />
+      {stack > 1 ? (
+        <>
+          <circle cx={x + r * 0.85} cy={y - r * 0.85} r={r * 0.52} fill="#FF3B7F" stroke="#fff" strokeWidth="0.9" />
+          <text
+            x={x + r * 0.85}
+            y={y - r * 0.85 + r * 0.2}
+            fontFamily="Baloo 2, sans-serif"
+            fontSize={r * 0.62}
+            fill="#fff"
+            textAnchor="middle"
+          >
+            {stack}
+          </text>
+        </>
+      ) : null}
+    </g>
+  );
+}
+
 type Props = {
   active: Color;
   pieces: readonly PieceView[];
@@ -134,6 +222,7 @@ export function BoardSvg({ active, pieces }: Props) {
         strokeOpacity="0.25"
         strokeWidth="1"
       />
+      <rect x="4" y="-3" width={BOARD_VIEW - 16} height="1" fill="#fff" opacity="0.12" />
       <rect width={BOARD_ART} height={BOARD_ART} fill="#0B0B0C" />
       {TRACK.map(([r, c], i) => {
         const fill = STRIPE[outer(r, c) % 4];
@@ -168,6 +257,16 @@ export function BoardSvg({ active, pieces }: Props) {
           <g key={`home-${e}`}>
             <rect x={x} y={y} width={w} height={h} fill={pl.piece === 'black' ? '#232428' : fill} />
             <rect x={x} y={y} width={w} height={h} fill="url(#halftone-s)" opacity="0.13" />
+            <rect
+              x={x + 1.6}
+              y={y + 1.6}
+              width={w - 3.2}
+              height={h - 3.2}
+              fill="none"
+              stroke={pl.piece === 'gold' ? '#0B0B0C' : '#F6EFD9'}
+              strokeOpacity="0.55"
+              strokeWidth="1"
+            />
             {cells.map((c, i) => (
               <path
                 key={i}
@@ -191,8 +290,10 @@ export function BoardSvg({ active, pieces }: Props) {
         <polygon points="160,160 160,220 190,190" fill="#0B0B0C" />
         <polygon points="220,160 220,220 190,190" fill="#0B0B0C" />
         <path d="M160 160L220 220M220 160L160 220" stroke="#FED100" strokeWidth="4.5" />
+        <rect x="160" y="160" width="60" height="60" fill="url(#halftone-s)" opacity="0.08" />
         <g transform={isle(164, 180, 52, 20.5, [0, 0, 1000, 394])}>
-          <path d={JAMAICA_PATH} fill="#0B0B0C" stroke="#FED100" strokeWidth="24" strokeLinejoin="round" />
+          <path d={JAMAICA_PATH} fill="none" stroke="#FED100" strokeWidth="34" strokeLinejoin="round" />
+          <path d={JAMAICA_PATH} fill="#0B0B0C" stroke="#0B0B0C" strokeWidth="10" strokeLinejoin="round" />
         </g>
       </g>
       {TURN.map((e) => {
@@ -246,21 +347,93 @@ export function BoardSvg({ active, pieces }: Props) {
         const mw = two ? 80 : 96;
         const mapY = y + ty0 + (pl.lines.length - 1) * (fs - 1) + 8;
         const pin = JAMAICA_PINS[pl.pin];
+        const ox = pl.corner === 'TR' || pl.corner === 'BR' ? x + 160 : x;
+        const oy = pl.corner === 'BL' || pl.corner === 'BR' ? y + 160 : y;
+        const yardTokens = pieces.filter((p) => p.color === e && p.pos.zone === 'yard');
         return (
           <g key={`yard-${e}`} transform={`translate(${gpos(c0)} ${gpos(r0)}) scale(${yk}) translate(${-x} ${-y})`}>
+            <defs>
+              <radialGradient
+                id={`hg-${pl.pin}`}
+                gradientUnits="userSpaceOnUse"
+                cx={ox}
+                cy={oy}
+                r="190"
+                fx={ox}
+                fy={oy}
+              >
+                <stop offset="0" stopColor="#fff" stopOpacity="0.9" />
+                <stop offset="1" stopColor="#fff" stopOpacity="0" />
+              </radialGradient>
+              <mask id={`hm-${pl.pin}`} x={x} y={y} width="160" height="160" maskUnits="userSpaceOnUse">
+                <rect x={x} y={y} width="160" height="160" fill={`url(#hg-${pl.pin})`} />
+              </mask>
+              <pattern id={`ht-${pl.pin}`} width="5" height="5" patternUnits="userSpaceOnUse">
+                <circle cx="2.5" cy="2.5" r="1.05" fill={pl.acc} />
+              </pattern>
+              <clipPath id={`yc-${pl.pin}`}>
+                <rect x={x} y={y} width="160" height="160" />
+              </clipPath>
+            </defs>
             <rect x={x} y={y} width={160} height={160} fill="#0E0E10" />
+            {Array.from({ length: 7 }, (_, i) => {
+              const p = x + (i + 1) * 20;
+              const q = y + (i + 1) * 20;
+              return (
+                <g key={`yg-${i}`}>
+                  <line x1={p} y1={y} x2={p} y2={y + 160} stroke="#fff" strokeOpacity="0.05" strokeWidth="0.6" />
+                  <line x1={x} y1={q} x2={x + 160} y2={q} stroke="#fff" strokeOpacity="0.05" strokeWidth="0.6" />
+                </g>
+              );
+            })}
+            <rect
+              x={x}
+              y={y}
+              width={160}
+              height={160}
+              fill={`url(#ht-${pl.pin})`}
+              mask={`url(#hm-${pl.pin})`}
+              opacity={pl.piece === 'black' ? 0.2 : 0.3}
+            />
+            <g clipPath={`url(#yc-${pl.pin})`}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <circle
+                  key={i}
+                  cx={ox}
+                  cy={oy}
+                  r={i * 14}
+                  fill="none"
+                  stroke={pl.acc}
+                  strokeOpacity={0.16 - i * 0.02}
+                  strokeWidth="1"
+                />
+              ))}
+            </g>
             {isActive ? (
-              <rect
-                x={x + 5}
-                y={y + 5}
-                width={150}
-                height={150}
-                rx={9}
-                fill="none"
-                stroke={pl.acc}
-                strokeOpacity="0.22"
-                strokeWidth="10"
-              />
+              <>
+                <rect
+                  x={x + 5}
+                  y={y + 5}
+                  width={150}
+                  height={150}
+                  rx={9}
+                  fill="none"
+                  stroke={pl.acc}
+                  strokeOpacity="0.12"
+                  strokeWidth="10"
+                />
+                <rect
+                  x={x + 5}
+                  y={y + 5}
+                  width={150}
+                  height={150}
+                  rx={9}
+                  fill="none"
+                  stroke={pl.acc}
+                  strokeOpacity="0.22"
+                  strokeWidth="6"
+                />
+              </>
             ) : null}
             <rect
               x={x + 5}
@@ -272,6 +445,18 @@ export function BoardSvg({ active, pieces }: Props) {
               stroke={pl.acc}
               strokeWidth={isActive ? 2.6 : 1.6}
             />
+            <rect
+              x={x + 8.5}
+              y={y + 8.5}
+              width={143}
+              height={143}
+              rx={6.5}
+              fill="none"
+              stroke={pl.acc}
+              strokeOpacity="0.35"
+              strokeWidth="0.7"
+              strokeDasharray="1.5 2.5"
+            />
             {pl.lines.map((ln, i) => (
               <text
                 key={ln}
@@ -281,43 +466,50 @@ export function BoardSvg({ active, pieces }: Props) {
                 fontWeight={800}
                 fontSize={fs}
                 fill={pl.acc}
+                letterSpacing="0.3"
               >
                 {ln}
               </text>
             ))}
             <g transform={isle(x + 14, mapY, mw, mw * 0.394, [-40, -40, 1080, 474])}>
               <path d={JAMAICA_PATH} fill="#45464c" stroke="#45464c" strokeWidth="6" strokeLinejoin="round" />
+              <circle cx={pin[0]} cy={pin[1]} r="120" fill={pl.acc} opacity="0.25" />
               <circle cx={pin[0]} cy={pin[1]} r="62" fill={pl.acc} stroke="#0E0E10" strokeWidth="22" />
             </g>
+            {[0, 1, 2, 3].map((i) => {
+              const sx = x + 26 + i * 36;
+              const sy = y + 131;
+              const occupant = yardTokens.find((p) => p.tokenIndex === i);
+              return (
+                <g key={`slot-${e}-${i}`} data-piece={occupant?.key} data-yard-slot={i}>
+                  <circle
+                    cx={sx}
+                    cy={sy}
+                    r="15"
+                    fill="#000"
+                    fillOpacity="0.45"
+                    stroke={pl.acc}
+                    strokeOpacity="0.55"
+                    strokeWidth="1"
+                  />
+                  {occupant ? (
+                    <PieceGlyph pieceKey={pl.piece} x={sx} y={sy - 1} r={12} />
+                  ) : (
+                    <polygon points={star(sx, sy, 6.5)} fill={pl.acc} opacity="0.35" />
+                  )}
+                </g>
+              );
+            })}
           </g>
         );
       })}
-      {pieces.map((piece) => {
-        const pt = posToPoint(piece.color, piece.pos, piece.tokenIndex);
-        if (piece.pos.zone === 'yard') return null;
+      {stackedTrackPieces(pieces).map(({ piece, x, y, stack }) => {
         const town = COLOR_TOWN[piece.color];
-        const p = PIECE[PLACE[piece.color].piece];
-        const r = mn * 0.47;
         return (
           <g key={piece.key} data-piece={piece.key} data-town={town}>
-            <ellipse cx={pt.x} cy={pt.y + r * 0.62} rx={r * 1.02} ry={r * 0.5} fill="#000" opacity="0.55" />
-            <circle cx={pt.x} cy={pt.y} r={r} fill={p.mid} stroke={p.rim} strokeWidth={r * 0.1} />
-            <circle cx={pt.x - r * 0.18} cy={pt.y - r * 0.42} r={r * 0.28} fill="#fff" opacity="0.35" />
+            <PieceGlyph pieceKey={PLACE[piece.color].piece} x={x} y={y} r={mn * 0.47} stack={stack} />
           </g>
         );
-      })}
-      {TURN.map((e) => {
-        const yardPieces = pieces.filter((p) => p.color === e && p.pos.zone === 'yard');
-        return yardPieces.map((piece, i) => {
-          const pt = posToPoint(e, { zone: 'yard' }, i);
-          const p = PIECE[PLACE[e].piece];
-          const r = mn * 0.42;
-          return (
-            <g key={piece.key} data-piece={piece.key}>
-              <circle cx={pt.x} cy={pt.y} r={r} fill={p.mid} stroke={p.rim} strokeWidth="1.1" />
-            </g>
-          );
-        });
       })}
     </svg>
   );

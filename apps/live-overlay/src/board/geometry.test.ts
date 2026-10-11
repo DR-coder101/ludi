@@ -28,4 +28,11 @@ describe('wide-track geometry', () => {
     expect(a).not.toEqual(b);
     expect(a.y).not.toBe(b.y);
   });
+
+  it('places four yard slots in a row inside each yard', () => {
+    const a = posToPoint('yellow', { zone: 'yard' }, 0);
+    const b = posToPoint('yellow', { zone: 'yard' }, 3);
+    expect(b.x).toBeGreaterThan(a.x);
+    expect(b.y).toBe(a.y);
+  });
 });
