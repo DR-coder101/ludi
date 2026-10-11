@@ -1,9 +1,4 @@
-export {
-  createCyclingDiceRng,
-  createFakeClock,
-  createLiveGame,
-  createSequenceRng,
-} from './liveGame.js';
+export { createFakeClock, createLiveGame, createSequenceRng } from './liveGame.js';
 export { createLiveServer } from './server.js';
 export type {
   AdminAction,
