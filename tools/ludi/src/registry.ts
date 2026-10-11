@@ -612,7 +612,14 @@ const liveTikTokWatch: Command = {
   name: 'tiktok-watch',
   summary: 'Stream TikTok chat commands, measure lag, serve the local latency page. PASS is p95 under 2s.',
   args: [
-    { name: 'user', type: 'string', summary: 'TikTok unique id (@name from the live URL)' },
+    {
+      name: 'source',
+      type: 'enum',
+      summary: 'TikTok chat source. tikfinity is the default local Event API',
+      values: ['tikfinity', 'connector'],
+      default: 'tikfinity',
+    },
+    { name: 'user', type: 'string', summary: 'TikTok unique id. Required for --source connector' },
     { name: 'replay', type: 'string', summary: 'Offline JSONL fixture instead of a live user' },
     { name: 'port', type: 'int', summary: 'Latency page port (0 = ephemeral)', default: 8787 },
     { name: 'duration-s', type: 'int', summary: 'Stop after N seconds (0 = until Ctrl+C)', default: 0 },
@@ -624,11 +631,11 @@ const liveTikTokWatch: Command = {
     { name: 'page', type: 'bool', summary: 'Serve the local latency page', default: true },
   ],
   mutates: true,
-  dryRun(args) {
-    return planTikTokWatch(args);
+  dryRun(args, ctx) {
+    return planTikTokWatch(args, ctx.url);
   },
   async run(args, ctx) {
-    return runTikTokWatchCommand(args, ctx.output);
+    return runTikTokWatchCommand(args, ctx.output, ctx.url);
   },
 };
 

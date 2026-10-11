@@ -103,7 +103,7 @@ Ludi Live TikTok check (no game server, no screens):
 pnpm -s ludi -- live tiktok-watch --replay packages/live-connector/testdata/pass.jsonl --page false --output json
 ```
 
-PASS is the line `PASS p95=100ms threshold=2000ms samples=4`. Dean's real-stream gate is `ludi live tiktok-watch --user <tiktokUsername> --json` with `!join` in chat and p95 under 2s.
+PASS is the line `PASS p95=100ms threshold=2000ms samples=4`. Dean's real-stream gate is `ludi live tiktok-watch --json` with TikFinity Desktop running, `!join` in chat, and p95 under 2s. The Euler connector stays available as `--source connector --user <tiktokUsername>`.
 
 Prefer deep flows from the feature map:
 

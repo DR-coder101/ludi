@@ -89,7 +89,8 @@ export function renderHelp(cmd: Command, path: string[]): string {
     lines.push('  ludi doctor --output json');
     lines.push('  ludi introspect');
   } else if (path[0] === 'live' || cmd.name === 'tiktok-watch') {
-    lines.push('  ludi live tiktok-watch --user <tiktokUsername> --json');
+    lines.push('  ludi live tiktok-watch --json');
+    lines.push('  ludi live tiktok-watch --source connector --user <tiktokUsername> --json');
     lines.push('  ludi live tiktok-watch --replay packages/live-connector/testdata/pass.jsonl --json');
     lines.push("  ludi live inject '!join' --user a --name A");
     lines.push('  ludi live state --output json');

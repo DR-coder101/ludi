@@ -1,0 +1,13 @@
+{
+  "event": "gift",
+  "data": {
+    "userId": "6941810482429199365",
+    "uniqueId": "american_made77",
+    "nickname": "AmericanMade76",
+    "giftName": "Rose",
+    "giftId": 5655,
+    "repeatCount": 5,
+    "repeatEnd": true,
+    "msgId": "7458059140230269740"
+  }
+}
