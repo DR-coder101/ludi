@@ -194,14 +194,10 @@ export function createLiveServer(options: LiveServerOptions): {
       rl.on('line', (line) => {
         const trimmed = line.trim();
         if (!trimmed) return;
-        try {
-          const raw = JSON.parse(trimmed) as unknown;
-          if (!isChat(raw)) return;
-          const events = live.handleChat(raw);
-          broadcast(events);
-        } catch {
-          /* ignore malformed stdin */
-        }
+        const raw = parseJson(trimmed);
+        if (!isChat(raw)) return;
+        const events = live.handleChat(raw);
+        broadcast(events);
       });
     }
     return base;
