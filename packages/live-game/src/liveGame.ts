@@ -516,7 +516,7 @@ function kick(s: Internal, rt: Runtime, events: LiveEvent[], userId: string, now
     seat.occupant = null;
   }
   events.push({ type: 'kicked', userId });
-  fillSeats(s, events);
+  if (s.phase !== 'PLAYING') fillSeats(s, events);
   if (s.phase === 'COUNTDOWN' && seatedCount(s.seats) < 4) {
     s.countdownBeat = null;
     s.phaseEndsAt = null;
