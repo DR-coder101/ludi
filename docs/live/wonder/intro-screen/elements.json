@@ -1,0 +1,311 @@
+{
+ "artboard": "Ludi Live TikTok Overlay - Intro Screen",
+ "dataNodeId": "ape",
+ "wonderFileId": "01a1280f-1b74-77f2-96d4-e2a6357d0791",
+ "pageId": "01a1280f-1b76-78f9-a694-c24ae2ca8fa8",
+ "canvas": {
+  "width": 1080,
+  "height": 1920,
+  "x": 9380,
+  "y": 0
+ },
+ "note": "tree = raw get_element_tree output (depth 50); nodes = same tree parsed, with box = rendered position/size in artboard px (from rendering code.jsx at 1080x1920)",
+ "tree": "<div data-node-id=\"ape\" data-node-label=\"Ludi Live TikTok Overlay - Intro Screen\" data-component-x=\"9380\" data-component-y=\"0\">\n  <div data-node-id=\"ape.are\" data-node-label=\"Background Photo Layer - Swap For Jamaica Photo\">\n    <div data-node-id=\"ape.fra\" data-node-label=\"Backdrop Photo - Dean Beach Sunset\"></div>\n    <div data-node-id=\"ape.wed\" data-node-label=\"Cinematic Light Tint\"></div>\n    <div data-node-id=\"ape.zax\" data-node-label=\"Cinematic Edge Vignette\"></div>\n  </div>\n  <div data-node-id=\"ape.nav\" data-node-label=\"Intro Logo Skeleton\">\n    <div data-node-id=\"ape.ova\" data-node-label=\"Intro Cinematic Logo\">\n      <div data-node-id=\"ape.aly\" data-node-label=\"Logo Soft Dark Halo\"></div>\n      <div data-node-id=\"ape.roy\" data-node-label=\"SVG\">\n        <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n      </div>\n      <div data-node-id=\"ape.ups\" data-node-label=\"Intro Wordmark Ludi\">LUDI</div>\n      <div data-node-id=\"ape.ayu\" data-node-label=\"Intro Wordmark Live\">LIVE</div>\n      <div data-node-id=\"ape.str\" data-node-label=\"Intro Jamaica Flag Stripe\">\n        <div data-node-id=\"ape.its\" data-node-label=\"Intro Stripe Green\"></div>\n        <div data-node-id=\"ape.say\" data-node-label=\"Intro Stripe Gold\"></div>\n        <div data-node-id=\"ape.per\" data-node-label=\"Intro Stripe Black\"></div>\n        <div data-node-id=\"ape.one\" data-node-label=\"Intro Stripe Gold Two\"></div>\n        <div data-node-id=\"ape.can\" data-node-label=\"Intro Stripe Green Two\"></div>\n      </div>\n      <div data-node-id=\"ape.sis\" data-node-label=\"Intro By StreamArchitect\">by StreamArchitect</div>\n      <div data-node-id=\"ape.cab\" data-node-label=\"Intro Tagline Pill\">Jamaican Ludi \u2022 Live on TikTok</div>\n    </div>\n  </div>\n  <div data-node-id=\"ape.pdf\" data-node-label=\"Intro Sun Window\"></div>\n  <div data-node-id=\"ape.god\" data-node-label=\"Intro Starting Soon Skeleton\">\n    <div data-node-id=\"ape.usd\" data-node-label=\"Starting Soon Pill\">\n      <div data-node-id=\"ape.her\" data-node-label=\"Starting Soon Live Dot\"></div>\n      <div data-node-id=\"ape.con\" data-node-label=\"Starting Soon Text\">STARTING SOON</div>\n    </div>\n  </div>\n</div>",
+ "nodes": [
+  {
+   "tag": "div",
+   "id": "ape",
+   "label": "Ludi Live TikTok Overlay - Intro Screen",
+   "children": [
+    {
+     "tag": "div",
+     "id": "ape.are",
+     "label": "Background Photo Layer - Swap For Jamaica Photo",
+     "children": [
+      {
+       "tag": "div",
+       "id": "ape.fra",
+       "label": "Backdrop Photo - Dean Beach Sunset",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      },
+      {
+       "tag": "div",
+       "id": "ape.wed",
+       "label": "Cinematic Light Tint",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      },
+      {
+       "tag": "div",
+       "id": "ape.zax",
+       "label": "Cinematic Edge Vignette",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      }
+     ],
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 1080,
+      "h": 1920
+     }
+    },
+    {
+     "tag": "div",
+     "id": "ape.nav",
+     "label": "Intro Logo Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "ape.ova",
+       "label": "Intro Cinematic Logo",
+       "children": [
+        {
+         "tag": "div",
+         "id": "ape.aly",
+         "label": "Logo Soft Dark Halo",
+         "children": [],
+         "box": {
+          "x": 140,
+          "y": 200,
+          "w": 800,
+          "h": 560
+         }
+        },
+        {
+         "tag": "div",
+         "id": "ape.roy",
+         "label": "SVG",
+         "children": [],
+         "box": {
+          "x": 455,
+          "y": 220,
+          "w": 169,
+          "h": 169
+         }
+        },
+        {
+         "tag": "div",
+         "id": "ape.ups",
+         "label": "Intro Wordmark Ludi",
+         "children": [],
+         "box": {
+          "x": 286,
+          "y": 386,
+          "w": 508,
+          "h": 189
+         }
+        },
+        {
+         "tag": "div",
+         "id": "ape.ayu",
+         "label": "Intro Wordmark Live",
+         "children": [],
+         "box": {
+          "x": 354,
+          "y": 581,
+          "w": 372,
+          "h": 135
+         }
+        },
+        {
+         "tag": "div",
+         "id": "ape.str",
+         "label": "Intro Jamaica Flag Stripe",
+         "children": [
+          {
+           "tag": "div",
+           "id": "ape.its",
+           "label": "Intro Stripe Green",
+           "children": [],
+           "box": {
+            "x": 283,
+            "y": 739,
+            "w": 103,
+            "h": 10
+           }
+          },
+          {
+           "tag": "div",
+           "id": "ape.say",
+           "label": "Intro Stripe Gold",
+           "children": [],
+           "box": {
+            "x": 386,
+            "y": 739,
+            "w": 103,
+            "h": 10
+           }
+          },
+          {
+           "tag": "div",
+           "id": "ape.per",
+           "label": "Intro Stripe Black",
+           "children": [],
+           "box": {
+            "x": 489,
+            "y": 739,
+            "w": 103,
+            "h": 10
+           }
+          },
+          {
+           "tag": "div",
+           "id": "ape.one",
+           "label": "Intro Stripe Gold Two",
+           "children": [],
+           "box": {
+            "x": 591,
+            "y": 739,
+            "w": 103,
+            "h": 10
+           }
+          },
+          {
+           "tag": "div",
+           "id": "ape.can",
+           "label": "Intro Stripe Green Two",
+           "children": [],
+           "box": {
+            "x": 694,
+            "y": 739,
+            "w": 103,
+            "h": 10
+           }
+          }
+         ],
+         "box": {
+          "x": 280,
+          "y": 736,
+          "w": 520,
+          "h": 16
+         }
+        },
+        {
+         "tag": "div",
+         "id": "ape.sis",
+         "label": "Intro By StreamArchitect",
+         "children": [],
+         "box": {
+          "x": 384,
+          "y": 770,
+          "w": 313,
+          "h": 54
+         }
+        },
+        {
+         "tag": "div",
+         "id": "ape.cab",
+         "label": "Intro Tagline Pill",
+         "children": [],
+         "box": {
+          "x": 279,
+          "y": 840,
+          "w": 521,
+          "h": 71
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 200,
+        "w": 880,
+        "h": 741
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 200,
+      "w": 880,
+      "h": 741
+     }
+    },
+    {
+     "tag": "div",
+     "id": "ape.pdf",
+     "label": "Intro Sun Window",
+     "children": [],
+     "box": {
+      "x": 100,
+      "y": 941,
+      "w": 880,
+      "h": 260
+     }
+    },
+    {
+     "tag": "div",
+     "id": "ape.god",
+     "label": "Intro Starting Soon Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "ape.usd",
+       "label": "Starting Soon Pill",
+       "children": [
+        {
+         "tag": "div",
+         "id": "ape.her",
+         "label": "Starting Soon Live Dot",
+         "children": [],
+         "box": {
+          "x": 336,
+          "y": 1237,
+          "w": 22,
+          "h": 22
+         }
+        },
+        {
+         "tag": "div",
+         "id": "ape.con",
+         "label": "Starting Soon Text",
+         "children": [],
+         "box": {
+          "x": 374,
+          "y": 1218,
+          "w": 371,
+          "h": 60
+         }
+        }
+       ],
+       "box": {
+        "x": 299,
+        "y": 1201,
+        "w": 483,
+        "h": 94
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 1201,
+      "w": 880,
+      "h": 94
+     }
+    }
+   ],
+   "box": {
+    "x": 0,
+    "y": 0,
+    "w": 1080,
+    "h": 1920
+   }
+  }
+ ]
+}

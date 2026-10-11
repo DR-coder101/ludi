@@ -1,0 +1,921 @@
+{
+ "artboard": "Ludi Live TikTok Overlay - Winner Screen",
+ "dataNodeId": "auk",
+ "wonderFileId": "01a1280f-1b74-77f2-96d4-e2a6357d0791",
+ "pageId": "01a1280f-1b76-78f9-a694-c24ae2ca8fa8",
+ "canvas": {
+  "width": 1080,
+  "height": 1920,
+  "x": 10620,
+  "y": 0
+ },
+ "note": "tree = raw get_element_tree output (depth 50); nodes = same tree parsed, with box = rendered position/size in artboard px (from rendering code.jsx at 1080x1920)",
+ "tree": "<div data-node-id=\"auk\" data-node-label=\"Ludi Live TikTok Overlay - Winner Screen\" data-component-x=\"10620\" data-component-y=\"0\">\n  <div data-node-id=\"auk.rab\" data-node-label=\"Background Photo Layer - Swap For Jamaica Photo\">\n    <div data-node-id=\"auk.few\" data-node-label=\"Backdrop Photo - Dean Beach Sunset\"></div>\n    <div data-node-id=\"auk.buy\" data-node-label=\"Backdrop Moderate Tint\"></div>\n    <div data-node-id=\"auk.dpi\" data-node-label=\"Winner Red Spotlight Glow\"></div>\n  </div>\n  <div data-node-id=\"auk.pot\" data-node-label=\"Confetti Streamers Layer\">\n    <div data-node-id=\"auk.deg\" data-node-label=\"SVG\">\n      <svg viewBox=\"0 0 1080 1500\" xmlns=\"http://www.w3.org/2000/svg\" width=\"100%\" height=\"100%\"><circle cx=\"1068\" cy=\"193\" r=\"11\" fill=\"rgb(0, 155, 58)\" opacity=\"0.9\"></circle><path d=\"M865 310 q 27 -22 45 0 t 45 0\" transform=\"rotate(-8 865 310)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(0, 155, 58)\"></path><rect x=\"133\" y=\"657\" width=\"14\" height=\"39\" rx=\"3\" transform=\"rotate(33 133 657)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><circle cx=\"100\" cy=\"1065\" r=\"11\" fill=\"rgb(228, 32, 46)\" opacity=\"0.9\"></circle><path d=\"M89 874 q 19 -16 31 0 t 31 0\" transform=\"rotate(55 89 874)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(0, 155, 58)\"></path><circle cx=\"958\" cy=\"54\" r=\"7\" fill=\"rgb(0, 155, 58)\" opacity=\"0.9\"></circle><circle cx=\"909\" cy=\"614\" r=\"11\" fill=\"rgb(17, 17, 17)\" opacity=\"0.9\"></circle><rect x=\"109\" y=\"622\" width=\"12\" height=\"33\" rx=\"3\" transform=\"rotate(21 109 622)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><circle cx=\"549\" cy=\"233\" r=\"7\" fill=\"rgb(228, 32, 46)\" opacity=\"0.9\"></circle><path d=\"M892 266 q 19 -16 32 0 t 32 0\" transform=\"rotate(34 892 266)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(254, 209, 0)\"></path><rect x=\"949\" y=\"1324\" width=\"14\" height=\"30\" rx=\"3\" transform=\"rotate(-62 949 1324)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><path d=\"M820 25 q 21 -18 36 0 t 36 0\" transform=\"rotate(30 820 25)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(17, 17, 17)\"></path><path d=\"M366 1328 q 26 -22 43 0 t 43 0\" transform=\"rotate(11 366 1328)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(228, 32, 46)\"></path><circle cx=\"990\" cy=\"8\" r=\"11\" fill=\"rgb(0, 155, 58)\" opacity=\"0.9\"></circle><rect x=\"294\" y=\"451\" width=\"21\" height=\"31\" rx=\"3\" transform=\"rotate(52 294 451)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><rect x=\"850\" y=\"162\" width=\"21\" height=\"26\" rx=\"3\" transform=\"rotate(48 850 162)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><rect x=\"482\" y=\"171\" width=\"13\" height=\"22\" rx=\"3\" transform=\"rotate(-54 482 171)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><circle cx=\"1036\" cy=\"613\" r=\"7\" fill=\"rgb(254, 209, 0)\" opacity=\"0.9\"></circle><circle cx=\"204\" cy=\"129\" r=\"9\" fill=\"rgb(254, 209, 0)\" opacity=\"0.9\"></circle><path d=\"M984 569 q 25 -21 42 0 t 42 0\" transform=\"rotate(-12 984 569)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(228, 32, 46)\"></path><path d=\"M173 119 q 18 -15 30 0 t 30 0\" transform=\"rotate(-31 173 119)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(17, 17, 17)\"></path><circle cx=\"667\" cy=\"264\" r=\"9\" fill=\"rgb(17, 17, 17)\" opacity=\"0.9\"></circle><rect x=\"960\" y=\"1350\" width=\"22\" height=\"32\" rx=\"3\" transform=\"rotate(-61 960 1350)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><path d=\"M514 391 q 26 -22 44 0 t 44 0\" transform=\"rotate(52 514 391)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(0, 155, 58)\"></path><rect x=\"189\" y=\"188\" width=\"14\" height=\"34\" rx=\"3\" transform=\"rotate(-38 189 188)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><rect x=\"803\" y=\"250\" width=\"16\" height=\"27\" rx=\"3\" transform=\"rotate(-33 803 250)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><path d=\"M41 396 q 19 -16 32 0 t 32 0\" transform=\"rotate(10 41 396)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(254, 209, 0)\"></path><rect x=\"252\" y=\"1166\" width=\"14\" height=\"37\" rx=\"3\" transform=\"rotate(-15 252 1166)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><rect x=\"489\" y=\"1427\" width=\"11\" height=\"31\" rx=\"3\" transform=\"rotate(9 489 1427)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><rect x=\"1035\" y=\"1264\" width=\"11\" height=\"34\" rx=\"3\" transform=\"rotate(19 1035 1264)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><rect x=\"1048\" y=\"1334\" width=\"12\" height=\"24\" rx=\"3\" transform=\"rotate(26 1048 1334)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><circle cx=\"561\" cy=\"550\" r=\"8\" fill=\"rgb(254, 209, 0)\" opacity=\"0.9\"></circle><rect x=\"27\" y=\"1216\" width=\"16\" height=\"31\" rx=\"3\" transform=\"rotate(-2 27 1216)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><path d=\"M1027 609 q 19 -16 32 0 t 32 0\" transform=\"rotate(32 1027 609)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(254, 209, 0)\"></path><circle cx=\"111\" cy=\"854\" r=\"9\" fill=\"rgb(0, 155, 58)\" opacity=\"0.9\"></circle><rect x=\"1053\" y=\"237\" width=\"15\" height=\"40\" rx=\"3\" transform=\"rotate(-42 1053 237)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><path d=\"M76 693 q 24 -20 41 0 t 41 0\" transform=\"rotate(-42 76 693)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(17, 17, 17)\"></path><circle cx=\"792\" cy=\"1474\" r=\"6\" fill=\"rgb(254, 209, 0)\" opacity=\"0.9\"></circle><rect x=\"790\" y=\"1197\" width=\"14\" height=\"38\" rx=\"3\" transform=\"rotate(11 790 1197)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><path d=\"M209 1445 q 19 -15 31 0 t 31 0\" transform=\"rotate(-9 209 1445)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(254, 209, 0)\"></path><path d=\"M1012 983 q 20 -17 34 0 t 34 0\" transform=\"rotate(-38 1012 983)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(228, 32, 46)\"></path><rect x=\"775\" y=\"113\" width=\"16\" height=\"28\" rx=\"3\" transform=\"rotate(10 775 113)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><rect x=\"674\" y=\"493\" width=\"11\" height=\"37\" rx=\"3\" transform=\"rotate(-51 674 493)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><rect x=\"353\" y=\"82\" width=\"13\" height=\"25\" rx=\"3\" transform=\"rotate(-37 353 82)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><rect x=\"111\" y=\"1322\" width=\"16\" height=\"38\" rx=\"3\" transform=\"rotate(67 111 1322)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><rect x=\"165\" y=\"329\" width=\"19\" height=\"25\" rx=\"3\" transform=\"rotate(45 165 329)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><path d=\"M621 1352 q 23 -19 38 0 t 38 0\" transform=\"rotate(54 621 1352)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(0, 155, 58)\"></path><rect x=\"43\" y=\"270\" width=\"15\" height=\"29\" rx=\"3\" transform=\"rotate(-45 43 270)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><rect x=\"139\" y=\"1094\" width=\"16\" height=\"36\" rx=\"3\" transform=\"rotate(-53 139 1094)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><rect x=\"384\" y=\"383\" width=\"12\" height=\"25\" rx=\"3\" transform=\"rotate(67 384 383)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><rect x=\"926\" y=\"90\" width=\"21\" height=\"40\" rx=\"3\" transform=\"rotate(-14 926 90)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><path d=\"M411 1401 q 25 -21 42 0 t 42 0\" transform=\"rotate(-43 411 1401)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(254, 209, 0)\"></path><circle cx=\"241\" cy=\"166\" r=\"6\" fill=\"rgb(17, 17, 17)\" opacity=\"0.9\"></circle><rect x=\"945\" y=\"1072\" width=\"19\" height=\"39\" rx=\"3\" transform=\"rotate(-38 945 1072)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><path d=\"M613 256 q 25 -21 42 0 t 42 0\" transform=\"rotate(37 613 256)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(228, 32, 46)\"></path><rect x=\"321\" y=\"765\" width=\"10\" height=\"34\" rx=\"3\" transform=\"rotate(53 321 765)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><rect x=\"354\" y=\"114\" width=\"13\" height=\"40\" rx=\"3\" transform=\"rotate(-14 354 114)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><rect x=\"96\" y=\"119\" width=\"15\" height=\"36\" rx=\"3\" transform=\"rotate(-13 96 119)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><circle cx=\"343\" cy=\"1392\" r=\"6\" fill=\"rgb(254, 209, 0)\" opacity=\"0.9\"></circle><rect x=\"85\" y=\"1165\" width=\"17\" height=\"27\" rx=\"3\" transform=\"rotate(-11 85 1165)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><rect x=\"970\" y=\"93\" width=\"10\" height=\"26\" rx=\"3\" transform=\"rotate(70 970 93)\" fill=\"rgb(254, 209, 0)\" opacity=\"0.92\"></rect><circle cx=\"525\" cy=\"68\" r=\"10\" fill=\"rgb(0, 155, 58)\" opacity=\"0.9\"></circle><rect x=\"1031\" y=\"1228\" width=\"19\" height=\"24\" rx=\"3\" transform=\"rotate(-32 1031 1228)\" fill=\"rgb(0, 155, 58)\" opacity=\"0.92\"></rect><circle cx=\"167\" cy=\"439\" r=\"10\" fill=\"rgb(254, 209, 0)\" opacity=\"0.9\"></circle><rect x=\"133\" y=\"1451\" width=\"14\" height=\"38\" rx=\"3\" transform=\"rotate(-65 133 1451)\" fill=\"rgb(17, 17, 17)\" opacity=\"0.92\"></rect><rect x=\"1012\" y=\"802\" width=\"10\" height=\"35\" rx=\"3\" transform=\"rotate(64 1012 802)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><path d=\"M91 580 q 23 -19 38 0 t 38 0\" transform=\"rotate(-44 91 580)\" strokeWidth=\"7\" strokeLinecap=\"round\" fill=\"none\" opacity=\"0.9\" stroke=\"rgb(228, 32, 46)\"></path><rect x=\"740\" y=\"243\" width=\"19\" height=\"30\" rx=\"3\" transform=\"rotate(-51 740 243)\" fill=\"rgb(228, 32, 46)\" opacity=\"0.92\"></rect><circle cx=\"104\" cy=\"964\" r=\"6\" fill=\"rgb(254, 209, 0)\" opacity=\"0.9\"></circle><circle cx=\"172\" cy=\"6\" r=\"6\" fill=\"rgb(0, 155, 58)\" opacity=\"0.9\"></circle></svg>\n    </div>\n  </div>\n  <div data-node-id=\"auk.mal\" data-node-label=\"Winner Header Skeleton\">\n    <div data-node-id=\"auk.wok\" data-node-label=\"Winner Header\">\n      <div data-node-id=\"auk.leg\" data-node-label=\"SVG\">\n        <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n      </div>\n      <div data-node-id=\"auk.saw\" data-node-label=\"Winner Headline\">WINNER!</div>\n    </div>\n  </div>\n  <div data-node-id=\"auk.you\" data-node-label=\"Winner Card Skeleton\">\n    <div data-node-id=\"auk.eye\" data-node-label=\"Winner Name Card\">\n      <div data-node-id=\"auk.toy\" data-node-label=\"Winner Name Row\">\n        <div data-node-id=\"auk.bam\" data-node-label=\"Winner Kingston Piece\"></div>\n        <div data-node-id=\"auk.law\" data-node-label=\"Winner Player Name\">@DAVE</div>\n      </div>\n      <div data-node-id=\"auk.lao\" data-node-label=\"Winner Town Line Row\">\n        <div data-node-id=\"auk.des\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M400 0L176 0c-26.5 0-48.1 21.8-47.1 48.2c.2 5.3 .4 10.6 .7 15.8L24 64C10.7 64 0 74.7 0 88c0 92.6 33.5 157 78.5 200.7c44.3 43.1 98.3 64.8 138.1 75.8c23.4 6.5 39.4 26 39.4 45.6c0 20.9-17 37.9-37.9 37.9L192 448c-17.7 0-32 14.3-32 32s14.3 32 32 32l192 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-26.1 0C337 448 320 431 320 410.1c0-19.6 15.9-39.2 39.4-45.6c39.9-11 93.9-32.7 138.2-75.8C542.5 245 576 180.6 576 88c0-13.3-10.7-24-24-24L446.4 64c.3-5.2 .5-10.4 .7-15.8C448.1 21.8 426.5 0 400 0zM48.9 112l84.4 0c9.1 90.1 29.2 150.3 51.9 190.6c-24.9-11-50.8-26.5-73.2-48.3c-32-31.1-58-76-63-142.3zM464.1 254.3c-22.4 21.8-48.3 37.3-73.2 48.3c22.7-40.3 42.8-100.5 51.9-190.6l84.4 0c-5.1 66.3-31.1 111.2-63 142.3z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n        <div data-node-id=\"auk.aix\" data-node-label=\"Winner Town Line\">Kingston takes it!</div>\n      </div>\n      <div data-node-id=\"auk.sql\" data-node-label=\"Winner Pieces Home Note\">All 4 pieces home</div>\n      <div data-node-id=\"auk.are\" data-node-label=\"Winner Stays Badge\">\n        <div data-node-id=\"auk.dec\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(17, 17, 17)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" stroke=\"rgb(17, 17, 17)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n        <div data-node-id=\"auk.sea\" data-node-label=\"Winner Stays Badge Text\">WINNER CAN STAY</div>\n      </div>\n    </div>\n    <div data-node-id=\"auk.lee\" data-node-label=\"Winner Stay Or Leave Choice\">\n      <div data-node-id=\"auk.sui\" data-node-label=\"Choice Countdown Ring\">\n        <div data-node-id=\"auk.zoa\" data-node-label=\"Choice Countdown Seconds\">15s</div>\n      </div>\n      <div data-node-id=\"auk.aro\" data-node-label=\"Choice Prompt Stack\">\n        <div data-node-id=\"auk.own\" data-node-label=\"Choice Prompt Line\">@DAVE: type !stay to keep your seat</div>\n        <div data-node-id=\"auk.dib\" data-node-label=\"Choice Default Note\">No reply in 15s = seat opens</div>\n      </div>\n      <div data-node-id=\"auk.has\" data-node-label=\"Stay Choice Pill\">\n        <div data-node-id=\"auk.cue\" data-node-label=\"Stay Choice Text\">STAY</div>\n        <div data-node-id=\"auk.fit\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(17, 17, 17)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" stroke=\"rgb(17, 17, 17)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n      </div>\n      <div data-node-id=\"auk.bis\" data-node-label=\"Leave Choice Pill\">\n        <div data-node-id=\"auk.jan\" data-node-label=\"Leave Choice Text\">LEAVE</div>\n        <div data-node-id=\"auk.sum\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 24 24\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path fill=\"none\" d=\"M0 0h24v24H0z\" color=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path><path d=\"M23 17c0 3.31-2.69 6-6 6v-1.5c2.48 0 4.5-2.02 4.5-4.5zM1 7c0-3.31 2.69-6 6-6v1.5C4.52 2.5 2.5 4.52 2.5 7zm7.01-2.68-4.6 4.6c-3.22 3.22-3.22 8.45 0 11.67s8.45 3.22 11.67 0l7.07-7.07c.49-.49.49-1.28 0-1.77a1.25 1.25 0 0 0-1.77 0l-4.42 4.42-.71-.71 6.54-6.54c.49-.49.49-1.28 0-1.77s-1.28-.49-1.77 0l-5.83 5.83-.71-.71 6.89-6.89c.49-.49.49-1.28 0-1.77s-1.28-.49-1.77 0l-6.89 6.89-.69-.7 5.48-5.48c.49-.49.49-1.28 0-1.77s-1.28-.49-1.77 0l-7.62 7.62a4 4 0 0 1-.33 5.28l-.71-.71a3 3 0 0 0 0-4.24l-.35-.35 4.07-4.07c.49-.49.49-1.28 0-1.77a1.27 1.27 0 0 0-1.78.01\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n      </div>\n    </div>\n  </div>\n  <div data-node-id=\"auk.dis\" data-node-label=\"Results Strip Skeleton\">\n    <div data-node-id=\"auk.gob\" data-node-label=\"Results Panel\">\n      <div data-node-id=\"auk.gmt\" data-node-label=\"Results Header\">\n        <div data-node-id=\"auk.ibm\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 512 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M24 56c0-13.3 10.7-24 24-24l32 0c13.3 0 24 10.7 24 24l0 120 16 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-80 0c-13.3 0-24-10.7-24-24s10.7-24 24-24l16 0 0-96-8 0C34.7 80 24 69.3 24 56zM86.7 341.2c-6.5-7.4-18.3-6.9-24 1.2L51.5 357.9c-7.7 10.8-22.7 13.3-33.5 5.6s-13.3-22.7-5.6-33.5l11.1-15.6c23.7-33.2 72.3-35.6 99.2-4.9c21.3 24.4 20.8 60.9-1.1 84.7L86.8 432l33.2 0c13.3 0 24 10.7 24 24s-10.7 24-24 24l-88 0c-9.5 0-18.2-5.6-22-14.4s-2.1-18.9 4.3-25.9l72-78c5.3-5.8 5.4-14.6 .3-20.5zM224 64l256 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32s14.3-32 32-32zm0 160l256 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32s14.3-32 32-32zm0 160l256 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-256 0c-17.7 0-32-14.3-32-32s14.3-32 32-32z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n        <div data-node-id=\"auk.vhs\" data-node-label=\"Results Title\">RESULTS</div>\n        <div data-node-id=\"auk.hyp\" data-node-label=\"Results Pieces Home Label\">pieces home</div>\n      </div>\n      <div data-node-id=\"auk.wun\" data-node-label=\"Ocho Rios Result Row\">\n        <div data-node-id=\"auk.bob\" data-node-label=\"Ocho Rios Rank\">2nd</div>\n        <div data-node-id=\"auk.gie\" data-node-label=\"Ocho Rios Result Piece\"></div>\n        <div data-node-id=\"auk.til\" data-node-label=\"Ocho Rios Result Names\">\n          <div data-node-id=\"auk.hem\" data-node-label=\"Ocho Rios Result Player\">@Mike</div>\n          <div data-node-id=\"auk.bbc\" data-node-label=\"Ocho Rios Result Town\">Ocho Rios \u00b7 sitting out next game</div>\n        </div>\n        <div data-node-id=\"auk.eat\" data-node-label=\"Ocho Rios Home Count\">3 home</div>\n      </div>\n      <div data-node-id=\"auk.sue\" data-node-label=\"Montego Bay Result Row\">\n        <div data-node-id=\"auk.sia\" data-node-label=\"Montego Bay Rank\">3rd</div>\n        <div data-node-id=\"auk.jay\" data-node-label=\"Montego Bay Result Piece\"></div>\n        <div data-node-id=\"auk.low\" data-node-label=\"Montego Bay Result Names\">\n          <div data-node-id=\"auk.out\" data-node-label=\"Montego Bay Result Player\">@Sarah</div>\n          <div data-node-id=\"auk.pst\" data-node-label=\"Montego Bay Result Town\">Montego Bay \u00b7 sitting out next game</div>\n        </div>\n        <div data-node-id=\"auk.dum\" data-node-label=\"Montego Bay Home Count\">2 home</div>\n      </div>\n      <div data-node-id=\"auk.cir\" data-node-label=\"Negril Result Row\">\n        <div data-node-id=\"auk.her\" data-node-label=\"Negril Rank\">4th</div>\n        <div data-node-id=\"auk.rap\" data-node-label=\"Negril Result Piece\"></div>\n        <div data-node-id=\"auk.was\" data-node-label=\"Negril Result Names\">\n          <div data-node-id=\"auk.can\" data-node-label=\"Negril Result Player\">@John</div>\n          <div data-node-id=\"auk.jar\" data-node-label=\"Negril Result Town\">Negril \u00b7 sitting out next game</div>\n        </div>\n        <div data-node-id=\"auk.isp\" data-node-label=\"Negril Home Count\">1 home</div>\n      </div>\n    </div>\n  </div>\n  <div data-node-id=\"auk.res\" data-node-label=\"Next Game Skeleton\">\n    <div data-node-id=\"auk.pep\" data-node-label=\"Next Game Cta Pill\">\n      <div data-node-id=\"auk.toe\" data-node-label=\"Next Game Cta Main Row\">\n        <div data-node-id=\"auk.lam\" data-node-label=\"Next Game Seats Text\">NEXT GAME: 3 SEATS OPEN \u00b7 TYPE</div>\n        <div data-node-id=\"auk.zan\" data-node-label=\"Next Game Join Chip\">!join</div>\n      </div>\n      <div data-node-id=\"auk.did\" data-node-label=\"Next Game Leave Variant Note\">4 seats open if @Dave leaves or doesn\u2019t reply</div>\n    </div>\n    <div data-node-id=\"auk.ccd\" data-node-label=\"Next Up And Credit Row\">\n      <div data-node-id=\"auk.cad\" data-node-label=\"Next Up Chip\">\n        <div data-node-id=\"auk.nov\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(25, 196, 90)\" fill=\"rgb(25, 196, 90)\" strokeWidth=\"0\" viewBox=\"0 0 640 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(25, 196, 90)\" width=\"100%\" height=\"100%\"><path d=\"M224 0a128 128 0 1 1 0 256A128 128 0 1 1 224 0zM178.3 304l91.4 0c20.6 0 40.4 3.5 58.8 9.9C323 331 320 349.1 320 368c0 59.5 29.5 112.1 74.8 144L29.7 512C13.3 512 0 498.7 0 482.3C0 383.8 79.8 304 178.3 304zM352 368a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-80c-8.8 0-16 7.2-16 16l0 64c0 8.8 7.2 16 16 16l48 0c8.8 0 16-7.2 16-16s-7.2-16-16-16l-32 0 0-48c0-8.8-7.2-16-16-16z\" color=\"rgb(25, 196, 90)\" fill=\"rgb(25, 196, 90)\" stroke=\"rgb(25, 196, 90)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n        <div data-node-id=\"auk.but\" data-node-label=\"Next Up Text\">Next up: @Tom, @Lucy</div>\n      </div>\n      <div data-node-id=\"auk.reb\" data-node-label=\"Game Credit Line\">Game #24 \u00b7 by StreamArchitect</div>\n    </div>\n  </div>\n</div>",
+ "nodes": [
+  {
+   "tag": "div",
+   "id": "auk",
+   "label": "Ludi Live TikTok Overlay - Winner Screen",
+   "children": [
+    {
+     "tag": "div",
+     "id": "auk.rab",
+     "label": "Background Photo Layer - Swap For Jamaica Photo",
+     "children": [
+      {
+       "tag": "div",
+       "id": "auk.few",
+       "label": "Backdrop Photo - Dean Beach Sunset",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      },
+      {
+       "tag": "div",
+       "id": "auk.buy",
+       "label": "Backdrop Moderate Tint",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      },
+      {
+       "tag": "div",
+       "id": "auk.dpi",
+       "label": "Winner Red Spotlight Glow",
+       "children": [],
+       "box": {
+        "x": 90,
+        "y": 180,
+        "w": 900,
+        "h": 700
+       }
+      }
+     ],
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 1080,
+      "h": 1920
+     }
+    },
+    {
+     "tag": "div",
+     "id": "auk.pot",
+     "label": "Confetti Streamers Layer",
+     "children": [
+      {
+       "tag": "div",
+       "id": "auk.deg",
+       "label": "SVG",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1500
+       }
+      }
+     ],
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 1080,
+      "h": 1500
+     }
+    },
+    {
+     "tag": "div",
+     "id": "auk.mal",
+     "label": "Winner Header Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "auk.wok",
+       "label": "Winner Header",
+       "children": [
+        {
+         "tag": "div",
+         "id": "auk.leg",
+         "label": "SVG",
+         "children": [],
+         "box": {
+          "x": 474,
+          "y": 34,
+          "w": 132,
+          "h": 132
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.saw",
+         "label": "Winner Headline",
+         "children": [],
+         "box": {
+          "x": 188,
+          "y": 160,
+          "w": 705,
+          "h": 153
+         }
+        }
+       ],
+       "box": {
+        "x": 188,
+        "y": 40,
+        "w": 705,
+        "h": 273
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 40,
+      "w": 880,
+      "h": 273
+     }
+    },
+    {
+     "tag": "div",
+     "id": "auk.you",
+     "label": "Winner Card Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "auk.eye",
+       "label": "Winner Name Card",
+       "children": [
+        {
+         "tag": "div",
+         "id": "auk.toy",
+         "label": "Winner Name Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.bam",
+           "label": "Winner Kingston Piece",
+           "children": [],
+           "box": {
+            "x": 215,
+            "y": 395,
+            "w": 99,
+            "h": 99
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.law",
+           "label": "Winner Player Name",
+           "children": [],
+           "box": {
+            "x": 332,
+            "y": 353,
+            "w": 529,
+            "h": 161
+           }
+          }
+         ],
+         "box": {
+          "x": 214,
+          "y": 353,
+          "w": 647,
+          "h": 165
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.lao",
+         "label": "Winner Town Line Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.des",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 288,
+            "y": 530,
+            "w": 46,
+            "h": 46
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.aix",
+           "label": "Winner Town Line",
+           "children": [],
+           "box": {
+            "x": 346,
+            "y": 508,
+            "w": 449,
+            "h": 72
+           }
+          }
+         ],
+         "box": {
+          "x": 288,
+          "y": 508,
+          "w": 507,
+          "h": 74
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.sql",
+         "label": "Winner Pieces Home Note",
+         "children": [],
+         "box": {
+          "x": 434,
+          "y": 579,
+          "w": 219,
+          "h": 50
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.are",
+         "label": "Winner Stays Badge",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.dec",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 633,
+            "y": 299,
+            "w": 32,
+            "h": 32
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.sea",
+           "label": "Winner Stays Badge Text",
+           "children": [],
+           "box": {
+            "x": 672,
+            "y": 295,
+            "w": 248,
+            "h": 62
+           }
+          }
+         ],
+         "box": {
+          "x": 605,
+          "y": 276,
+          "w": 342,
+          "h": 96
+         }
+        }
+       ],
+       "box": {
+        "x": 124,
+        "y": 313,
+        "w": 831,
+        "h": 367
+       }
+      },
+      {
+       "tag": "div",
+       "id": "auk.lee",
+       "label": "Winner Stay Or Leave Choice",
+       "children": [
+        {
+         "tag": "div",
+         "id": "auk.sui",
+         "label": "Choice Countdown Ring",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.zoa",
+           "label": "Choice Countdown Seconds",
+           "children": [],
+           "box": {
+            "x": 146,
+            "y": 724,
+            "w": 45,
+            "h": 32
+           }
+          }
+         ],
+         "box": {
+          "x": 133,
+          "y": 701,
+          "w": 78,
+          "h": 78
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.aro",
+         "label": "Choice Prompt Stack",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.own",
+           "label": "Choice Prompt Line",
+           "children": [],
+           "box": {
+            "x": 227,
+            "y": 713,
+            "w": 415,
+            "h": 28
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.dib",
+           "label": "Choice Default Note",
+           "children": [],
+           "box": {
+            "x": 227,
+            "y": 741,
+            "w": 244,
+            "h": 25
+           }
+          }
+         ],
+         "box": {
+          "x": 227,
+          "y": 713,
+          "w": 415,
+          "h": 53
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.has",
+         "label": "Stay Choice Pill",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.cue",
+           "label": "Stay Choice Text",
+           "children": [],
+           "box": {
+            "x": 679,
+            "y": 726,
+            "w": 62,
+            "h": 28
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.fit",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 749,
+            "y": 727,
+            "w": 26,
+            "h": 26
+           }
+          }
+         ],
+         "box": {
+          "x": 658,
+          "y": 713,
+          "w": 138,
+          "h": 54
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.bis",
+         "label": "Leave Choice Pill",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.jan",
+           "label": "Leave Choice Text",
+           "children": [],
+           "box": {
+            "x": 833,
+            "y": 726,
+            "w": 80,
+            "h": 28
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.sum",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 921,
+            "y": 726,
+            "w": 28,
+            "h": 28
+           }
+          }
+         ],
+         "box": {
+          "x": 812,
+          "y": 713,
+          "w": 158,
+          "h": 54
+         }
+        }
+       ],
+       "box": {
+        "x": 110,
+        "y": 684,
+        "w": 860,
+        "h": 112
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 327,
+      "w": 880,
+      "h": 469
+     }
+    },
+    {
+     "tag": "div",
+     "id": "auk.dis",
+     "label": "Results Strip Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "auk.gob",
+       "label": "Results Panel",
+       "children": [
+        {
+         "tag": "div",
+         "id": "auk.gmt",
+         "label": "Results Header",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.ibm",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 123,
+            "y": 839,
+            "w": 28,
+            "h": 28
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.vhs",
+           "label": "Results Title",
+           "children": [],
+           "box": {
+            "x": 163,
+            "y": 829,
+            "w": 126,
+            "h": 48
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.hyp",
+           "label": "Results Pieces Home Label",
+           "children": [],
+           "box": {
+            "x": 833,
+            "y": 836,
+            "w": 124,
+            "h": 33
+           }
+          }
+         ],
+         "box": {
+          "x": 123,
+          "y": 829,
+          "w": 834,
+          "h": 48
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.wun",
+         "label": "Ocho Rios Result Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.bob",
+           "label": "Ocho Rios Rank",
+           "children": [],
+           "box": {
+            "x": 140,
+            "y": 907,
+            "w": 60,
+            "h": 42
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.gie",
+           "label": "Ocho Rios Result Piece",
+           "children": [],
+           "box": {
+            "x": 214,
+            "y": 908,
+            "w": 40,
+            "h": 40
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.til",
+           "label": "Ocho Rios Result Names",
+           "children": [
+            {
+             "tag": "div",
+             "id": "auk.hem",
+             "label": "Ocho Rios Result Player",
+             "children": [],
+             "box": {
+              "x": 268,
+              "y": 900,
+              "w": 97,
+              "h": 32
+             }
+            },
+            {
+             "tag": "div",
+             "id": "auk.bbc",
+             "label": "Ocho Rios Result Town",
+             "children": [],
+             "box": {
+              "x": 268,
+              "y": 931,
+              "w": 293,
+              "h": 25
+             }
+            }
+           ],
+           "box": {
+            "x": 268,
+            "y": 900,
+            "w": 527,
+            "h": 57
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.eat",
+           "label": "Ocho Rios Home Count",
+           "children": [],
+           "box": {
+            "x": 809,
+            "y": 903,
+            "w": 131,
+            "h": 49
+           }
+          }
+         ],
+         "box": {
+          "x": 123,
+          "y": 887,
+          "w": 834,
+          "h": 83
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.sue",
+         "label": "Montego Bay Result Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.sia",
+           "label": "Montego Bay Rank",
+           "children": [],
+           "box": {
+            "x": 140,
+            "y": 999,
+            "w": 60,
+            "h": 42
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.jay",
+           "label": "Montego Bay Result Piece",
+           "children": [],
+           "box": {
+            "x": 214,
+            "y": 1000,
+            "w": 40,
+            "h": 40
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.low",
+           "label": "Montego Bay Result Names",
+           "children": [
+            {
+             "tag": "div",
+             "id": "auk.out",
+             "label": "Montego Bay Result Player",
+             "children": [],
+             "box": {
+              "x": 268,
+              "y": 992,
+              "w": 111,
+              "h": 32
+             }
+            },
+            {
+             "tag": "div",
+             "id": "auk.pst",
+             "label": "Montego Bay Result Town",
+             "children": [],
+             "box": {
+              "x": 268,
+              "y": 1024,
+              "w": 321,
+              "h": 25
+             }
+            }
+           ],
+           "box": {
+            "x": 268,
+            "y": 992,
+            "w": 527,
+            "h": 57
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.dum",
+           "label": "Montego Bay Home Count",
+           "children": [],
+           "box": {
+            "x": 809,
+            "y": 996,
+            "w": 131,
+            "h": 49
+           }
+          }
+         ],
+         "box": {
+          "x": 123,
+          "y": 979,
+          "w": 834,
+          "h": 83
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.cir",
+         "label": "Negril Result Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.her",
+           "label": "Negril Rank",
+           "children": [],
+           "box": {
+            "x": 140,
+            "y": 1092,
+            "w": 60,
+            "h": 42
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.rap",
+           "label": "Negril Result Piece",
+           "children": [],
+           "box": {
+            "x": 214,
+            "y": 1093,
+            "w": 40,
+            "h": 40
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.was",
+           "label": "Negril Result Names",
+           "children": [
+            {
+             "tag": "div",
+             "id": "auk.can",
+             "label": "Negril Result Player",
+             "children": [],
+             "box": {
+              "x": 268,
+              "y": 1085,
+              "w": 97,
+              "h": 32
+             }
+            },
+            {
+             "tag": "div",
+             "id": "auk.jar",
+             "label": "Negril Result Town",
+             "children": [],
+             "box": {
+              "x": 268,
+              "y": 1116,
+              "w": 258,
+              "h": 25
+             }
+            }
+           ],
+           "box": {
+            "x": 268,
+            "y": 1085,
+            "w": 531,
+            "h": 57
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.isp",
+           "label": "Negril Home Count",
+           "children": [],
+           "box": {
+            "x": 813,
+            "y": 1088,
+            "w": 127,
+            "h": 49
+           }
+          }
+         ],
+         "box": {
+          "x": 123,
+          "y": 1072,
+          "w": 834,
+          "h": 83
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 810,
+        "w": 880,
+        "h": 366
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 810,
+      "w": 880,
+      "h": 366
+     }
+    },
+    {
+     "tag": "div",
+     "id": "auk.res",
+     "label": "Next Game Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "auk.pep",
+       "label": "Next Game Cta Pill",
+       "children": [
+        {
+         "tag": "div",
+         "id": "auk.toe",
+         "label": "Next Game Cta Main Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.lam",
+           "label": "Next Game Seats Text",
+           "children": [],
+           "box": {
+            "x": 160,
+            "y": 1211,
+            "w": 625,
+            "h": 53
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.zan",
+           "label": "Next Game Join Chip",
+           "children": [],
+           "box": {
+            "x": 797,
+            "y": 1201,
+            "w": 123,
+            "h": 58
+           }
+          }
+         ],
+         "box": {
+          "x": 160,
+          "y": 1201,
+          "w": 760,
+          "h": 69
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.did",
+         "label": "Next Game Leave Variant Note",
+         "children": [],
+         "box": {
+          "x": 316,
+          "y": 1262,
+          "w": 450,
+          "h": 35
+         }
+        }
+       ],
+       "box": {
+        "x": 109,
+        "y": 1182,
+        "w": 862,
+        "h": 138
+       }
+      },
+      {
+       "tag": "div",
+       "id": "auk.ccd",
+       "label": "Next Up And Credit Row",
+       "children": [
+        {
+         "tag": "div",
+         "id": "auk.cad",
+         "label": "Next Up Chip",
+         "children": [
+          {
+           "tag": "div",
+           "id": "auk.nov",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 120,
+            "y": 1341,
+            "w": 24,
+            "h": 24
+           }
+          },
+          {
+           "tag": "div",
+           "id": "auk.but",
+           "label": "Next Up Text",
+           "children": [],
+           "box": {
+            "x": 154,
+            "y": 1335,
+            "w": 254,
+            "h": 36
+           }
+          }
+         ],
+         "box": {
+          "x": 100,
+          "y": 1325,
+          "w": 328,
+          "h": 56
+         }
+        },
+        {
+         "tag": "div",
+         "id": "auk.reb",
+         "label": "Game Credit Line",
+         "children": [],
+         "box": {
+          "x": 643,
+          "y": 1330,
+          "w": 337,
+          "h": 45
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 1325,
+        "w": 880,
+        "h": 56
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 1189,
+      "w": 880,
+      "h": 192
+     }
+    }
+   ],
+   "box": {
+    "x": 0,
+    "y": 0,
+    "w": 1080,
+    "h": 1920
+   }
+  }
+ ]
+}

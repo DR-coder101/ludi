@@ -1,0 +1,858 @@
+{
+ "artboard": "Ludi Live TikTok Overlay - Waiting Screen",
+ "dataNodeId": "are",
+ "wonderFileId": "01a1280f-1b74-77f2-96d4-e2a6357d0791",
+ "pageId": "01a1280f-1b76-78f9-a694-c24ae2ca8fa8",
+ "canvas": {
+  "width": 1080,
+  "height": 1920,
+  "x": 8140,
+  "y": 0
+ },
+ "note": "tree = raw get_element_tree output (depth 50); nodes = same tree parsed, with box = rendered position/size in artboard px (from rendering code.jsx at 1080x1920)",
+ "tree": "<div data-node-id=\"are\" data-node-label=\"Ludi Live TikTok Overlay - Waiting Screen\" data-component-x=\"8140\" data-component-y=\"0\">\n  <div data-node-id=\"are.hox\" data-node-label=\"Background Photo Layer - Swap For Jamaica Photo\">\n    <div data-node-id=\"are.ess\" data-node-label=\"Backdrop Photo - Dean Beach Sunset\"></div>\n    <div data-node-id=\"are.jun\" data-node-label=\"Backdrop Light Tint\"></div>\n  </div>\n  <div data-node-id=\"are.emm\" data-node-label=\"Top Chips Row Skeleton\">\n    <div data-node-id=\"are.avg\" data-node-label=\"Last Winner Chip\">\n      <div data-node-id=\"are.she\" data-node-label=\"SVG\">\n        <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n      </div>\n      <div data-node-id=\"are.had\" data-node-label=\"Last Winner Label\">Last winner:</div>\n      <div data-node-id=\"are.gun\" data-node-label=\"Last Winner Name\">@Dave</div>\n    </div>\n    <div data-node-id=\"are.non\" data-node-label=\"Winner Stays Badge\">\n      <div data-node-id=\"are.zag\" data-node-label=\"SVG\">\n        <svg stroke=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(17, 17, 17)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" stroke=\"rgb(17, 17, 17)\" strokeWidth=\"0px\"></path></svg>\n      </div>\n      <div data-node-id=\"are.now\" data-node-label=\"Winner Stays Text\">WINNER STAYS</div>\n    </div>\n  </div>\n  <div data-node-id=\"are.big\" data-node-label=\"Title Card Skeleton\">\n    <div data-node-id=\"are.nip\" data-node-label=\"Ludi Live Title Card\">\n      <div data-node-id=\"are.one\" data-node-label=\"Title Logo Row\">\n        <div data-node-id=\"are.you\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n        <div data-node-id=\"are.who\" data-node-label=\"Ludi Live Wordmark\">LUDI LIVE</div>\n      </div>\n      <div data-node-id=\"are.has\" data-node-label=\"Jamaica Flag Stripe\">\n        <div data-node-id=\"are.ady\" data-node-label=\"Flag Stripe Green\"></div>\n        <div data-node-id=\"are.pre\" data-node-label=\"Flag Stripe Gold\"></div>\n        <div data-node-id=\"are.app\" data-node-label=\"Flag Stripe Black\"></div>\n      </div>\n      <div data-node-id=\"are.but\" data-node-label=\"Title Byline Row\">\n        <div data-node-id=\"are.ing\" data-node-label=\"By StreamArchitect\">by StreamArchitect</div>\n        <div data-node-id=\"are.day\" data-node-label=\"Byline Dot\">\u00b7</div>\n        <div data-node-id=\"are.ers\" data-node-label=\"Jamaican Rules Chip\">Jamaican rules</div>\n      </div>\n    </div>\n  </div>\n  <div data-node-id=\"are.obe\" data-node-label=\"Sky Window Skeleton\">\n    <div data-node-id=\"are.baw\" data-node-label=\"Dice Peek Pair\">\n      <div data-node-id=\"are.taj\" data-node-label=\"SVG\">\n        <svg stroke=\"rgb(255, 246, 227)\" fill=\"rgb(255, 246, 227)\" strokeWidth=\"0\" viewBox=\"0 0 448 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 246, 227)\" width=\"100%\" height=\"100%\"><path d=\"M0 96C0 60.7 28.7 32 64 32l320 0c35.3 0 64 28.7 64 64l0 320c0 35.3-28.7 64-64 64L64 480c-35.3 0-64-28.7-64-64L0 96zm160 64a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM128 288a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm32 64a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM320 192a32 32 0 1 0 0-64 32 32 0 1 0 0 64zm32 64a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM320 384a32 32 0 1 0 0-64 32 32 0 1 0 0 64z\" color=\"rgb(255, 246, 227)\" fill=\"rgb(255, 246, 227)\" stroke=\"rgb(255, 246, 227)\" strokeWidth=\"0px\"></path></svg>\n      </div>\n      <div data-node-id=\"are.lek\" data-node-label=\"SVG\">\n        <svg stroke=\"rgb(255, 246, 227)\" fill=\"rgb(255, 246, 227)\" strokeWidth=\"0\" viewBox=\"0 0 448 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 246, 227)\" width=\"100%\" height=\"100%\"><path d=\"M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm64 96a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM96 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM224 224a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm64-64a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32 160a32 32 0 1 1 0 64 32 32 0 1 1 0-64z\" color=\"rgb(255, 246, 227)\" fill=\"rgb(255, 246, 227)\" stroke=\"rgb(255, 246, 227)\" strokeWidth=\"0px\"></path></svg>\n      </div>\n    </div>\n  </div>\n  <div data-node-id=\"are.wat\" data-node-label=\"Join Cta Skeleton\">\n    <div data-node-id=\"are.deg\" data-node-label=\"Join Cta Pill\">\n      <div data-node-id=\"are.may\" data-node-label=\"Join Cta Type Word\">TYPE</div>\n      <div data-node-id=\"are.zen\" data-node-label=\"Join Cta Command Chip\">!join</div>\n      <div data-node-id=\"are.hau\" data-node-label=\"Join Cta To Play\">TO PLAY</div>\n    </div>\n  </div>\n  <div data-node-id=\"are.cos\" data-node-label=\"Seat Tracker Panel\">\n    <div data-node-id=\"are.aal\" data-node-label=\"Seat Tracker Header\">\n      <div data-node-id=\"are.web\" data-node-label=\"Seat Tracker Title Group\">\n        <div data-node-id=\"are.jem\" data-node-label=\"SVG\">\n          <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 640 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192l42.7 0c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96c-.2 0-.4 0-.7 0L21.3 320C9.6 320 0 310.4 0 298.7zM405.3 320c-.2 0-.4 0-.7 0c26.6-23.5 43.3-57.8 43.3-96c0-7.6-.7-15-1.9-22.3c13.6-6.3 28.7-9.7 44.6-9.7l42.7 0C592.2 192 640 239.8 640 298.7c0 11.8-9.6 21.3-21.3 21.3l-213.3 0zM224 224a96 96 0 1 1 192 0 96 96 0 1 1 -192 0zM128 485.3C128 411.7 187.7 352 261.3 352l117.3 0C452.3 352 512 411.7 512 485.3c0 14.7-11.9 26.7-26.7 26.7l-330.7 0c-14.7 0-26.7-11.9-26.7-26.7z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n        </div>\n        <div data-node-id=\"are.pep\" data-node-label=\"Seat Tracker Title\">PLAYERS</div>\n      </div>\n      <div data-node-id=\"are.mir\" data-node-label=\"Joined Count Chip\">2/4 JOINED</div>\n    </div>\n    <div data-node-id=\"are.eng\" data-node-label=\"Seat Cards Grid\">\n      <div data-node-id=\"are.sea\" data-node-label=\"Kingston Seat Filled\">\n        <div data-node-id=\"are.qua\" data-node-label=\"Kingston Seat Town\">KINGSTON</div>\n        <div data-node-id=\"are.dir\" data-node-label=\"Kingston Piece Disc\"></div>\n        <div data-node-id=\"are.did\" data-node-label=\"Kingston Seat Player Name\">@Dave</div>\n        <div data-node-id=\"are.ten\" data-node-label=\"Kingston Joined Chip\">\n          <div data-node-id=\"are.our\" data-node-label=\"SVG\">\n            <svg stroke=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" strokeWidth=\"0\" viewBox=\"0 0 448 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 255, 255)\" width=\"100%\" height=\"100%\"><path d=\"M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z\" color=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" stroke=\"rgb(255, 255, 255)\" strokeWidth=\"0px\"></path></svg>\n          </div>\n          <div data-node-id=\"are.eva\" data-node-label=\"Kingston Joined Text\">JOINED</div>\n        </div>\n      </div>\n      <div data-node-id=\"are.col\" data-node-label=\"Ocho Rios Seat Filled\">\n        <div data-node-id=\"are.lin\" data-node-label=\"Ocho Rios Seat Town\">OCHO RIOS</div>\n        <div data-node-id=\"are.her\" data-node-label=\"Ocho Rios Piece Disc\"></div>\n        <div data-node-id=\"are.mix\" data-node-label=\"Ocho Rios Seat Player Name\">@Mike</div>\n        <div data-node-id=\"are.fed\" data-node-label=\"Ocho Rios Joined Chip\">\n          <div data-node-id=\"are.spy\" data-node-label=\"SVG\">\n            <svg stroke=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" strokeWidth=\"0\" viewBox=\"0 0 448 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 255, 255)\" width=\"100%\" height=\"100%\"><path d=\"M438.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L160 338.7 393.4 105.4c12.5-12.5 32.8-12.5 45.3 0z\" color=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" stroke=\"rgb(255, 255, 255)\" strokeWidth=\"0px\"></path></svg>\n          </div>\n          <div data-node-id=\"are.cha\" data-node-label=\"Ocho Rios Joined Text\">JOINED</div>\n        </div>\n      </div>\n      <div data-node-id=\"are.eft\" data-node-label=\"Montego Bay Seat Empty\">\n        <div data-node-id=\"are.alb\" data-node-label=\"Montego Bay Seat Town\">MONTEGO BAY</div>\n        <div data-node-id=\"are.nim\" data-node-label=\"Montego Bay Empty Slot\">\n          <div data-node-id=\"are.elf\" data-node-label=\"Montego Bay Question Mark\">?</div>\n        </div>\n        <div data-node-id=\"are.yoy\" data-node-label=\"Montego Bay Open Seat Text\">Open seat</div>\n        <div data-node-id=\"are.baa\" data-node-label=\"Montego Bay Join Hint\">!join</div>\n      </div>\n      <div data-node-id=\"are.per\" data-node-label=\"Negril Seat Empty\">\n        <div data-node-id=\"are.zan\" data-node-label=\"Negril Seat Town\">NEGRIL</div>\n        <div data-node-id=\"are.lbs\" data-node-label=\"Negril Empty Slot\">\n          <div data-node-id=\"are.hap\" data-node-label=\"Negril Question Mark\">?</div>\n        </div>\n        <div data-node-id=\"are.cap\" data-node-label=\"Negril Open Seat Text\">Open seat</div>\n        <div data-node-id=\"are.ave\" data-node-label=\"Negril Join Hint\">!join</div>\n      </div>\n    </div>\n    <div data-node-id=\"are.ail\" data-node-label=\"Game Start Note\">Game starts when 4 players join \u00b7 next in line plays the winner</div>\n  </div>\n</div>",
+ "nodes": [
+  {
+   "tag": "div",
+   "id": "are",
+   "label": "Ludi Live TikTok Overlay - Waiting Screen",
+   "children": [
+    {
+     "tag": "div",
+     "id": "are.hox",
+     "label": "Background Photo Layer - Swap For Jamaica Photo",
+     "children": [
+      {
+       "tag": "div",
+       "id": "are.ess",
+       "label": "Backdrop Photo - Dean Beach Sunset",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      },
+      {
+       "tag": "div",
+       "id": "are.jun",
+       "label": "Backdrop Light Tint",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      }
+     ],
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 1080,
+      "h": 1920
+     }
+    },
+    {
+     "tag": "div",
+     "id": "are.emm",
+     "label": "Top Chips Row Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "are.avg",
+       "label": "Last Winner Chip",
+       "children": [
+        {
+         "tag": "div",
+         "id": "are.she",
+         "label": "SVG",
+         "children": [],
+         "box": {
+          "x": 121,
+          "y": 74,
+          "w": 26,
+          "h": 26
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.had",
+         "label": "Last Winner Label",
+         "children": [],
+         "box": {
+          "x": 157,
+          "y": 71,
+          "w": 121,
+          "h": 33
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.gun",
+         "label": "Last Winner Name",
+         "children": [],
+         "box": {
+          "x": 288,
+          "y": 69,
+          "w": 81,
+          "h": 36
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 56,
+        "w": 290,
+        "h": 62
+       }
+      },
+      {
+       "tag": "div",
+       "id": "are.non",
+       "label": "Winner Stays Badge",
+       "children": [
+        {
+         "tag": "div",
+         "id": "are.zag",
+         "label": "SVG",
+         "children": [],
+         "box": {
+          "x": 763,
+          "y": 70,
+          "w": 25,
+          "h": 25
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.now",
+         "label": "Winner Stays Text",
+         "children": [],
+         "box": {
+          "x": 797,
+          "y": 66,
+          "w": 161,
+          "h": 44
+         }
+        }
+       ],
+       "box": {
+        "x": 739,
+        "y": 50,
+        "w": 242,
+        "h": 74
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 56,
+      "w": 880,
+      "h": 62
+     }
+    },
+    {
+     "tag": "div",
+     "id": "are.big",
+     "label": "Title Card Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "are.nip",
+       "label": "Ludi Live Title Card",
+       "children": [
+        {
+         "tag": "div",
+         "id": "are.one",
+         "label": "Title Logo Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.you",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 189,
+            "y": 178,
+            "w": 111,
+            "h": 111
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.who",
+           "label": "Ludi Live Wordmark",
+           "children": [],
+           "box": {
+            "x": 311,
+            "y": 171,
+            "w": 573,
+            "h": 125
+           }
+          }
+         ],
+         "box": {
+          "x": 197,
+          "y": 171,
+          "w": 687,
+          "h": 125
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.has",
+         "label": "Jamaica Flag Stripe",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.ady",
+           "label": "Flag Stripe Green",
+           "children": [],
+           "box": {
+            "x": 260,
+            "y": 306,
+            "w": 187,
+            "h": 14
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.pre",
+           "label": "Flag Stripe Gold",
+           "children": [],
+           "box": {
+            "x": 447,
+            "y": 306,
+            "w": 187,
+            "h": 14
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.app",
+           "label": "Flag Stripe Black",
+           "children": [],
+           "box": {
+            "x": 633,
+            "y": 306,
+            "w": 187,
+            "h": 14
+           }
+          }
+         ],
+         "box": {
+          "x": 260,
+          "y": 306,
+          "w": 560,
+          "h": 14
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.but",
+         "label": "Title Byline Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.ing",
+           "label": "By StreamArchitect",
+           "children": [],
+           "box": {
+            "x": 285,
+            "y": 331,
+            "w": 261,
+            "h": 45
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.day",
+           "label": "Byline Dot",
+           "children": [],
+           "box": {
+            "x": 562,
+            "y": 331,
+            "w": 9,
+            "h": 45
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.ers",
+           "label": "Jamaican Rules Chip",
+           "children": [],
+           "box": {
+            "x": 587,
+            "y": 330,
+            "w": 208,
+            "h": 47
+           }
+          }
+         ],
+         "box": {
+          "x": 285,
+          "y": 330,
+          "w": 509,
+          "h": 47
+         }
+        }
+       ],
+       "box": {
+        "x": 140,
+        "y": 140,
+        "w": 800,
+        "h": 270
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 140,
+      "w": 880,
+      "h": 270
+     }
+    },
+    {
+     "tag": "div",
+     "id": "are.obe",
+     "label": "Sky Window Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "are.baw",
+       "label": "Dice Peek Pair",
+       "children": [
+        {
+         "tag": "div",
+         "id": "are.taj",
+         "label": "SVG",
+         "children": [],
+         "box": {
+          "x": 814,
+          "y": 670,
+          "w": 95,
+          "h": 95
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.lek",
+         "label": "SVG",
+         "children": [],
+         "box": {
+          "x": 900,
+          "y": 686,
+          "w": 78,
+          "h": 78
+         }
+        }
+       ],
+       "box": {
+        "x": 822,
+        "y": 678,
+        "w": 148,
+        "h": 78
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 432,
+      "w": 880,
+      "h": 330
+     }
+    },
+    {
+     "tag": "div",
+     "id": "are.wat",
+     "label": "Join Cta Skeleton",
+     "children": [
+      {
+       "tag": "div",
+       "id": "are.deg",
+       "label": "Join Cta Pill",
+       "children": [
+        {
+         "tag": "div",
+         "id": "are.may",
+         "label": "Join Cta Type Word",
+         "children": [],
+         "box": {
+          "x": 237,
+          "y": 829,
+          "w": 148,
+          "h": 69
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.zen",
+         "label": "Join Cta Command Chip",
+         "children": [],
+         "box": {
+          "x": 400,
+          "y": 811,
+          "w": 189,
+          "h": 92
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.hau",
+         "label": "Join Cta To Play",
+         "children": [],
+         "box": {
+          "x": 605,
+          "y": 813,
+          "w": 238,
+          "h": 72
+         }
+        }
+       ],
+       "box": {
+        "x": 128,
+        "y": 770,
+        "w": 824,
+        "h": 171
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 784,
+      "w": 880,
+      "h": 142
+     }
+    },
+    {
+     "tag": "div",
+     "id": "are.cos",
+     "label": "Seat Tracker Panel",
+     "children": [
+      {
+       "tag": "div",
+       "id": "are.aal",
+       "label": "Seat Tracker Header",
+       "children": [
+        {
+         "tag": "div",
+         "id": "are.web",
+         "label": "Seat Tracker Title Group",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.jem",
+           "label": "SVG",
+           "children": [],
+           "box": {
+            "x": 125,
+            "y": 979,
+            "w": 32,
+            "h": 32
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.pep",
+           "label": "Seat Tracker Title",
+           "children": [],
+           "box": {
+            "x": 169,
+            "y": 970,
+            "w": 135,
+            "h": 51
+           }
+          }
+         ],
+         "box": {
+          "x": 125,
+          "y": 970,
+          "w": 179,
+          "h": 51
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.mir",
+         "label": "Joined Count Chip",
+         "children": [],
+         "box": {
+          "x": 756,
+          "y": 969,
+          "w": 199,
+          "h": 52
+         }
+        }
+       ],
+       "box": {
+        "x": 125,
+        "y": 969,
+        "w": 830,
+        "h": 52
+       }
+      },
+      {
+       "tag": "div",
+       "id": "are.eng",
+       "label": "Seat Cards Grid",
+       "children": [
+        {
+         "tag": "div",
+         "id": "are.sea",
+         "label": "Kingston Seat Filled",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.qua",
+           "label": "Kingston Seat Town",
+           "children": [],
+           "box": {
+            "x": 167,
+            "y": 1057,
+            "w": 113,
+            "h": 36
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.dir",
+           "label": "Kingston Piece Disc",
+           "children": [],
+           "box": {
+            "x": 192,
+            "y": 1101,
+            "w": 64,
+            "h": 64
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.did",
+           "label": "Kingston Seat Player Name",
+           "children": [],
+           "box": {
+            "x": 173,
+            "y": 1173,
+            "w": 101,
+            "h": 45
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.ten",
+           "label": "Kingston Joined Chip",
+           "children": [
+            {
+             "tag": "div",
+             "id": "are.our",
+             "label": "SVG",
+             "children": [],
+             "box": {
+              "x": 183,
+              "y": 1234,
+              "w": 16,
+              "h": 16
+             }
+            },
+            {
+             "tag": "div",
+             "id": "are.eva",
+             "label": "Kingston Joined Text",
+             "children": [],
+             "box": {
+              "x": 205,
+              "y": 1228,
+              "w": 60,
+              "h": 27
+             }
+            }
+           ],
+           "box": {
+            "x": 171,
+            "y": 1226,
+            "w": 106,
+            "h": 31
+           }
+          }
+         ],
+         "box": {
+          "x": 125,
+          "y": 1037,
+          "w": 197,
+          "h": 240
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.col",
+         "label": "Ocho Rios Seat Filled",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.lin",
+           "label": "Ocho Rios Seat Town",
+           "children": [],
+           "box": {
+            "x": 374,
+            "y": 1057,
+            "w": 120,
+            "h": 36
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.her",
+           "label": "Ocho Rios Piece Disc",
+           "children": [],
+           "box": {
+            "x": 403,
+            "y": 1101,
+            "w": 64,
+            "h": 64
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.mix",
+           "label": "Ocho Rios Seat Player Name",
+           "children": [],
+           "box": {
+            "x": 386,
+            "y": 1173,
+            "w": 97,
+            "h": 45
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.fed",
+           "label": "Ocho Rios Joined Chip",
+           "children": [
+            {
+             "tag": "div",
+             "id": "are.spy",
+             "label": "SVG",
+             "children": [],
+             "box": {
+              "x": 394,
+              "y": 1234,
+              "w": 16,
+              "h": 16
+             }
+            },
+            {
+             "tag": "div",
+             "id": "are.cha",
+             "label": "Ocho Rios Joined Text",
+             "children": [],
+             "box": {
+              "x": 416,
+              "y": 1228,
+              "w": 60,
+              "h": 27
+             }
+            }
+           ],
+           "box": {
+            "x": 382,
+            "y": 1226,
+            "w": 106,
+            "h": 31
+           }
+          }
+         ],
+         "box": {
+          "x": 336,
+          "y": 1037,
+          "w": 197,
+          "h": 240
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.eft",
+         "label": "Montego Bay Seat Empty",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.alb",
+           "label": "Montego Bay Seat Town",
+           "children": [],
+           "box": {
+            "x": 566,
+            "y": 1057,
+            "w": 159,
+            "h": 36
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.nim",
+           "label": "Montego Bay Empty Slot",
+           "children": [
+            {
+             "tag": "div",
+             "id": "are.elf",
+             "label": "Montego Bay Question Mark",
+             "children": [],
+             "box": {
+              "x": 636,
+              "y": 1113,
+              "w": 20,
+              "h": 40
+             }
+            }
+           ],
+           "box": {
+            "x": 614,
+            "y": 1101,
+            "w": 64,
+            "h": 64
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.yoy",
+           "label": "Montego Bay Open Seat Text",
+           "children": [],
+           "box": {
+            "x": 581,
+            "y": 1173,
+            "w": 129,
+            "h": 42
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.baa",
+           "label": "Montego Bay Join Hint",
+           "children": [],
+           "box": {
+            "x": 613,
+            "y": 1223,
+            "w": 65,
+            "h": 35
+           }
+          }
+         ],
+         "box": {
+          "x": 547,
+          "y": 1037,
+          "w": 197,
+          "h": 241
+         }
+        },
+        {
+         "tag": "div",
+         "id": "are.per",
+         "label": "Negril Seat Empty",
+         "children": [
+          {
+           "tag": "div",
+           "id": "are.zan",
+           "label": "Negril Seat Town",
+           "children": [],
+           "box": {
+            "x": 817,
+            "y": 1057,
+            "w": 80,
+            "h": 36
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.lbs",
+           "label": "Negril Empty Slot",
+           "children": [
+            {
+             "tag": "div",
+             "id": "are.hap",
+             "label": "Negril Question Mark",
+             "children": [],
+             "box": {
+              "x": 847,
+              "y": 1113,
+              "w": 20,
+              "h": 40
+             }
+            }
+           ],
+           "box": {
+            "x": 825,
+            "y": 1101,
+            "w": 64,
+            "h": 64
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.cap",
+           "label": "Negril Open Seat Text",
+           "children": [],
+           "box": {
+            "x": 792,
+            "y": 1173,
+            "w": 129,
+            "h": 42
+           }
+          },
+          {
+           "tag": "div",
+           "id": "are.ave",
+           "label": "Negril Join Hint",
+           "children": [],
+           "box": {
+            "x": 824,
+            "y": 1223,
+            "w": 65,
+            "h": 35
+           }
+          }
+         ],
+         "box": {
+          "x": 758,
+          "y": 1037,
+          "w": 197,
+          "h": 241
+         }
+        }
+       ],
+       "box": {
+        "x": 125,
+        "y": 1037,
+        "w": 830,
+        "h": 241
+       }
+      },
+      {
+       "tag": "div",
+       "id": "are.ail",
+       "label": "Game Start Note",
+       "children": [],
+       "box": {
+        "x": 125,
+        "y": 1294,
+        "w": 830,
+        "h": 36
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 948,
+      "w": 880,
+      "h": 405
+     }
+    }
+   ],
+   "box": {
+    "x": 0,
+    "y": 0,
+    "w": 1080,
+    "h": 1920
+   }
+  }
+ ]
+}
