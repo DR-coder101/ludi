@@ -66,6 +66,18 @@ describe('TikFinity adapter', () => {
     await server.stop();
   });
 
+  it('can disconnect while a socket is still connecting', async () => {
+    const statuses: ConnectionStatus[] = [];
+    const adapter = createTikFinityAdapter({
+      url: 'ws://127.0.0.1:1/',
+      backoff: { initialMs: 5_000, maxMs: 5_000, jitter: 0 },
+    });
+    adapter.onStatus((status) => statuses.push(status));
+    await adapter.connect();
+    await adapter.disconnect();
+    expect(statuses.some((row) => row.phase === 'disconnected')).toBe(true);
+  });
+
   it('says TikFinity is not running when the local server is down', async () => {
     const statuses: ConnectionStatus[] = [];
     const adapter = createTikFinityAdapter({

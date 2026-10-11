@@ -105,7 +105,12 @@ export function createTikFinityAdapter(options: TikFinityAdapterOptions = {}): P
     socket = undefined;
     if (!current) return;
     current.removeAllListeners();
-    if (current.readyState === WebSocket.OPEN || current.readyState === WebSocket.CONNECTING) {
+    current.on('error', () => undefined);
+    if (current.readyState === WebSocket.CONNECTING) {
+      current.terminate();
+      return;
+    }
+    if (current.readyState === WebSocket.OPEN) {
       current.close();
     }
   };
