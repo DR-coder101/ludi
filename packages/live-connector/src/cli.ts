@@ -1,11 +1,21 @@
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { runWatch, type WatchResult } from './harness.js';
-import { DEFAULT_PREFIXES, P95_PASS_MS, STATUS_REASON } from './types.js';
+import {
+  DEFAULT_PREFIXES,
+  DEFAULT_TIKFINITY_URL,
+  DEFAULT_TIKTOK_SOURCE,
+  P95_PASS_MS,
+  STATUS_REASON,
+  TIKTOK_SOURCES,
+  type TikTokSource,
+} from './types.js';
 
 export type LiveWatchArgs = {
   user?: string;
   replay?: string;
+  source: TikTokSource;
+  url?: string;
   port: number;
   durationS: number;
   joinPrefix: string;
@@ -20,27 +30,36 @@ export type LiveWatchArgs = {
 export const LIVE_WATCH_HELP = `Watch TikTok LIVE chat (or a replay file) and measure command lag.
 
 USAGE:
-  ludi live tiktok-watch --user <tiktokUsername> [--json]
+  ludi live tiktok-watch [--source tikfinity] [--url ws://127.0.0.1:21213/] [--json]
+  ludi live tiktok-watch --source connector --user <tiktokUsername> [--json]
   ludi live tiktok-watch --replay <file.jsonl> [--json]
 
-Dean types !join in TikTok chat on his phone. This process prints each matching
-command with its lag and serves a local page that shows rolling p50/p95.
+Default source is TikFinity Desktop's local Event API. Open TikFinity, sign in,
+enable the local Event API / WebSocket if that setting exists, go LIVE, then
+type !join in TikTok chat. This process prints each matching command with its
+lag and serves a local page that shows rolling p50/p95.
 PASS is p95 under ${P95_PASS_MS}ms.
 
-OPTIONS:
-  --user <name>           TikTok unique id (the @name, with or without @)
-  --replay <file.jsonl>   Offline fixture. One JSON object per line
-  --port <int>            Local page port (default 8787, 0 for ephemeral)
-  --duration-s <int>      Stop after N seconds (default 0 = until Ctrl+C)
-  --join-prefix <text>    Join command (default ${DEFAULT_PREFIXES.join})
-  --roll-prefix <text>    Roll command (default ${DEFAULT_PREFIXES.roll})
-  --move-prefix <text>    Move command (default ${DEFAULT_PREFIXES.move})
-  --stay-prefix <text>    Stay command (default ${DEFAULT_PREFIXES.stay})
-  --leave-prefix <text>   Leave command (default ${DEFAULT_PREFIXES.leave})
-  --page <bool>           Serve the latency page (default true)
-  --json                  Stream one JSON object per line
+When a TikFinity event has createTime, lag is receive minus that timestamp.
+When it does not, the page reports receive-time spread and labels it
+local receive lag. That is not end-to-end delay.
 
-ENV (optional, never commit these):
+OPTIONS:
+  --source tikfinity|connector  TikTok source (default ${DEFAULT_TIKTOK_SOURCE})
+  --url <ws://...>              TikFinity WebSocket (default ${DEFAULT_TIKFINITY_URL})
+  --user <name>                 TikTok unique id. Required for --source connector
+  --replay <file.jsonl>         Offline fixture. One JSON object per line
+  --port <int>                  Local page port (default 8787, 0 for ephemeral)
+  --duration-s <int>            Stop after N seconds (default 0 = until Ctrl+C)
+  --join-prefix <text>          Join command (default ${DEFAULT_PREFIXES.join})
+  --roll-prefix <text>          Roll command (default ${DEFAULT_PREFIXES.roll})
+  --move-prefix <text>          Move command (default ${DEFAULT_PREFIXES.move})
+  --stay-prefix <text>          Stay command (default ${DEFAULT_PREFIXES.stay})
+  --leave-prefix <text>         Leave command (default ${DEFAULT_PREFIXES.leave})
+  --page <bool>                 Serve the latency page (default true)
+  --json                        Stream one JSON object per line
+
+ENV (optional, never commit these). Only --source connector reads these:
   TIKTOK_SIGN_API_KEY     Euler Stream sign key, if the library asks for one
   EULER_API_KEY           Alias of TIKTOK_SIGN_API_KEY
   TIKTOK_SESSION_COOKIE   sessionid cookie, only if you need an authenticated socket
@@ -49,10 +68,13 @@ ENV (optional, never commit these):
 ERRORS:
   user is not live: start a TikTok LIVE then rerun
   TikTok chat signing needs TIKTOK_SIGN_API_KEY from Euler Stream
+  TikFinity not running: Open TikFinity Desktop, sign in, enable the local Event API / WebSocket if that setting exists, start your LIVE, then rerun
+  TikFinity running but not connected to a LIVE: Open TikFinity, sign in, start your LIVE, then rerun
   Missing --user or --replay: ludi live tiktok-watch --help
 
 EXAMPLES:
-  ludi live tiktok-watch --user deanplays --json
+  ludi live tiktok-watch --json
+  ludi live tiktok-watch --source connector --user deanplays --json
   ludi live tiktok-watch --replay packages/live-connector/testdata/pass.jsonl --json
 `;
 
@@ -63,12 +85,23 @@ function asBool(value: unknown, fallback: boolean): boolean {
   return text !== 'false' && text !== '0';
 }
 
+function parseWatchUrl(raw: unknown): string | undefined {
+  if (raw === undefined) return undefined;
+  const value = String(raw).trim();
+  if (!value) return undefined;
+  if (/^wss?:\/\//i.test(value)) return value;
+  return undefined;
+}
+
 export function parseLiveWatchArgs(raw: Readonly<Record<string, unknown>>): LiveWatchArgs {
   const user = raw.user !== undefined ? String(raw.user).replace(/^@/, '').trim() : undefined;
   const replay = raw.replay !== undefined ? resolve(String(raw.replay)) : undefined;
+  const sourceRaw = raw.source === undefined ? DEFAULT_TIKTOK_SOURCE : String(raw.source).trim().toLowerCase();
   return {
     user: user || undefined,
     replay,
+    source: sourceRaw as TikTokSource,
+    url: parseWatchUrl(raw.url),
     port: raw.port !== undefined ? Number(raw.port) : 8787,
     durationS: raw['duration-s'] !== undefined ? Number(raw['duration-s']) : 0,
     joinPrefix: raw['join-prefix'] !== undefined ? String(raw['join-prefix']) : DEFAULT_PREFIXES.join,
@@ -82,7 +115,14 @@ export function parseLiveWatchArgs(raw: Readonly<Record<string, unknown>>): Live
 }
 
 export function validateLiveWatchArgs(args: LiveWatchArgs): { ok: true } | { ok: false; message: string; hint: string } {
-  if (!args.user && !args.replay) {
+  if (args.source !== 'tikfinity' && args.source !== 'connector') {
+    return {
+      ok: false,
+      message: `--source must be ${TIKTOK_SOURCES.join('|')}`,
+      hint: 'ludi live tiktok-watch --help',
+    };
+  }
+  if (!args.replay && args.source === 'connector' && !args.user) {
     return {
       ok: false,
       message: 'Missing --user <tiktokUsername> or --replay <file.jsonl>',
@@ -117,6 +157,8 @@ export async function runTikTokWatch(args: LiveWatchArgs): Promise<WatchResult> 
   return runWatch({
     user: args.user,
     replay: args.replay,
+    source: args.source,
+    url: args.url,
     port: args.port,
     servePage: args.page,
     durationMs: args.durationS > 0 ? args.durationS * 1000 : 0,

@@ -18,17 +18,33 @@ describe('tiktok-watch CLI', () => {
   it('prints rich help', () => {
     const res = run(['tiktok-watch', '--help']);
     expect(res.status).toBe(0);
-    expect(res.stdout).toContain('ludi live tiktok-watch --user');
+    expect(res.stdout).toContain('ludi live tiktok-watch --source connector --user');
+    expect(res.stdout).toContain('--user <name>');
     expect(res.stdout).toContain('user is not live: start a TikTok LIVE then rerun');
     expect(res.stdout).toContain('TIKTOK_SIGN_API_KEY');
+    expect(res.stdout).toContain('--source tikfinity|connector');
+    expect(res.stdout).toContain('TikFinity not running');
   });
 
-  it('tells the caller what to do when --user and --replay are missing', () => {
-    const valid = validateLiveWatchArgs(parseLiveWatchArgs({}));
+  it('defaults to tikfinity and does not require --user', () => {
+    const args = parseLiveWatchArgs({});
+    expect(args.source).toBe('tikfinity');
+    expect(validateLiveWatchArgs(args)).toEqual({ ok: true });
+  });
+
+  it('requires --user when the source is the connector', () => {
+    const valid = validateLiveWatchArgs(parseLiveWatchArgs({ source: 'connector' }));
     expect(valid.ok).toBe(false);
     if (valid.ok) throw new Error('expected invalid args');
     expect(valid.message).toContain('Missing --user');
     expect(valid.hint).toBe('ludi live tiktok-watch --help');
+  });
+
+  it('rejects an unknown source', () => {
+    const valid = validateLiveWatchArgs(parseLiveWatchArgs({ source: 'euler' }));
+    expect(valid.ok).toBe(false);
+    if (valid.ok) throw new Error('expected invalid args');
+    expect(valid.message).toContain('--source must be tikfinity|connector');
   });
 
   it('replays pass.jsonl and prints the PASS line', () => {

@@ -71,6 +71,11 @@ export const DEFAULT_PREFIXES: CommandPrefixes = {
 
 export const P95_PASS_MS = 2000;
 
+export const TIKTOK_SOURCES = ['tikfinity', 'connector'] as const;
+export type TikTokSource = (typeof TIKTOK_SOURCES)[number];
+export const DEFAULT_TIKTOK_SOURCE: TikTokSource = 'tikfinity';
+export const DEFAULT_TIKFINITY_URL = 'ws://127.0.0.1:21213/';
+
 export const STATUS_REASON = {
   STREAM_OFFLINE: 'user is not live: start a TikTok LIVE then rerun',
   SIGN_REQUIRED:
@@ -79,6 +84,10 @@ export const STATUS_REASON = {
   DISCONNECT: 'disconnect requested',
   CONNECT_FAILED: 'connect failed; reconnecting with backoff',
   DROPPED: 'live socket dropped; reconnecting with backoff',
+  TIKFINITY_NOT_RUNNING:
+    'TikFinity not running: Open TikFinity Desktop, sign in, enable the local Event API / WebSocket if that setting exists, start your LIVE, then rerun',
+  TIKFINITY_NOT_LIVE:
+    'TikFinity running but not connected to a LIVE: Open TikFinity, sign in, start your LIVE, then rerun',
 } as const;
 
 export type Clock = {

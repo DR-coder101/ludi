@@ -10,7 +10,7 @@ Agent-friendly control surface for the **Ludi server** (HTTP + Socket.IO) and **
 | Socket.IO lobby (`room:*`) and match (`game:*`) | LiveKit video |
 | Solo host → vs bots (`room:ready` alone fills AI seats) | Native iOS/Android pixels |
 | Expo web `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/win` at 390×844 | `baselines/emulator/` (human context only) |
-| Ludi Live TikTok chat check (`ludi live tiktok-watch`) | Twitch / YouTube adapters |
+| Ludi Live TikTok chat check (`ludi live tiktok-watch`, TikFinity default) | Twitch / YouTube adapters |
 
 Dean drives the Expo app against this server. Agents prove server behavior with `ludi play` / `ludi room`. Agents prove the four rebuilt screens with `ludi screens check` against `baselines/web/`.
 

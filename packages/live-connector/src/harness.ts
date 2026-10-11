@@ -2,10 +2,13 @@ import { createReadStream } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { lagMs, verdict, type LagVerdict } from './lag.js';
+import { lagMs, receiveSpreadMs, verdict, type LagVerdict } from './lag.js';
 import { createReplayAdapter, readReplayFile } from './replayAdapter.js';
+import { createTikFinityAdapter } from './tikfinityAdapter.js';
 import { createTikTokAdapter, readTikTokSecrets } from './tiktokAdapter.js';
 import {
+  DEFAULT_TIKFINITY_URL,
+  DEFAULT_TIKTOK_SOURCE,
   P95_PASS_MS,
   type ChatCommand,
   type Clock,
@@ -13,6 +16,7 @@ import {
   type ConnectionStatus,
   type GiftEvent,
   type PlatformAdapter,
+  type TikTokSource,
   systemClock,
 } from './types.js';
 
@@ -26,6 +30,8 @@ export type HarnessEvent =
 export type WatchOptions = {
   user?: string;
   replay?: string;
+  source?: TikTokSource;
+  url?: string;
   prefixes?: Partial<CommandPrefixes>;
   port?: number;
   servePage?: boolean;
@@ -93,6 +99,7 @@ async function servePage(port: number): Promise<{ server: Server; pageUrl: strin
 export async function runWatch(options: WatchOptions): Promise<WatchResult> {
   const clock = options.clock ?? systemClock;
   const prefixes = options.prefixes;
+  const source = options.source ?? DEFAULT_TIKTOK_SOURCE;
   const adapter =
     options.adapter ??
     (options.replay
@@ -101,14 +108,19 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
           prefixes,
           clock,
         })
-      : createTikTokAdapter({
-          uniqueId: options.user ?? '',
-          prefixes,
-          secrets: readTikTokSecrets(),
-          clock,
-        }));
+      : source === 'connector'
+        ? createTikTokAdapter({
+            uniqueId: options.user ?? '',
+            prefixes,
+            secrets: readTikTokSecrets(),
+            clock,
+          })
+        : createTikFinityAdapter({
+            url: options.url ?? DEFAULT_TIKFINITY_URL,
+            prefixes,
+            clock,
+          }));
 
-  const lags: number[] = [];
   const commands: Array<ChatCommand & { lagMs: number | null }> = [];
   let lastStatus: ConnectionStatus | undefined;
   let terminalStatus: ConnectionStatus | undefined;
@@ -120,6 +132,19 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
     if (page) writeSse(page.clients, event);
   };
 
+  const currentVerdict = (): LagVerdict => {
+    const platformLags = commands
+      .map((row) => lagMs(row.receivedAt, row.platformTimestamp))
+      .filter((value): value is number => value !== null);
+    if (platformLags.length > 0) return verdict(platformLags, P95_PASS_MS, 'platform');
+    if (commands.length === 0) return verdict([], P95_PASS_MS, 'platform');
+    return verdict(
+      receiveSpreadMs(commands.map((row) => row.receivedAt)),
+      P95_PASS_MS,
+      'local_receive',
+    );
+  };
+
   const stop = async () => {
     await adapter.disconnect();
     if (page) {
@@ -129,12 +154,17 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
   };
 
   adapter.onCommand((command) => {
-    const lag = lagMs(command.receivedAt, command.platformTimestamp);
-    if (lag !== null) lags.push(lag);
-    const row = { ...command, lagMs: lag };
-    commands.push(row);
+    commands.push({ ...command, lagMs: lagMs(command.receivedAt, command.platformTimestamp) });
+    const stats = currentVerdict();
+    if (stats.lagKind === 'local_receive') {
+      const spreads = receiveSpreadMs(commands.map((row) => row.receivedAt));
+      commands.forEach((row, index) => {
+        row.lagMs = spreads[index] ?? null;
+      });
+    }
+    const row = commands[commands.length - 1]!;
     emit({ kind: 'command', ...row });
-    emit({ kind: 'stats', ...verdict(lags) });
+    emit({ kind: 'stats', ...stats });
   });
   const controller = new AbortController();
   const onAbort = () => controller.abort();
@@ -158,7 +188,7 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
 
   if (options.replay) {
     await stop();
-    const result = verdict(lags);
+    const result = currentVerdict();
     emit({ kind: 'verdict', ...result });
     options.signal?.removeEventListener('abort', onAbort);
     process.removeListener('SIGINT', onAbort);
@@ -186,7 +216,7 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
     process.removeListener('SIGTERM', onAbort);
   }
 
-  const result = verdict(lags, P95_PASS_MS);
+  const result = currentVerdict();
   emit({ kind: 'verdict', ...result });
   return { verdict: result, commands, pageUrl: page?.pageUrl, lastStatus: terminalStatus ?? lastStatus };
 }

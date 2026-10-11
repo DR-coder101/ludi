@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lagMs, percentile, verdict } from './lag.js';
+import { lagMs, percentile, receiveSpreadMs, verdict } from './lag.js';
 
 describe('lagMs', () => {
   it('subtracts the platform timestamp from receivedAt', () => {
@@ -46,5 +46,19 @@ describe('verdict', () => {
     const result = verdict([]);
     expect(result.pass).toBe(false);
     expect(result.line).toBe('FAIL p95=n/a threshold=2000ms samples=0');
+    expect(result.lagKind).toBe('platform');
+  });
+
+  it('labels receive-time spread as local receive lag', () => {
+    const result = verdict(receiveSpreadMs([1000, 1100, 1300]), 2000, 'local_receive');
+    expect(result.pass).toBe(true);
+    expect(result.line).toBe('PASS p95=280ms threshold=2000ms samples=3 (local receive lag)');
+    expect(result.lagKind).toBe('local_receive');
+  });
+});
+
+describe('receiveSpreadMs', () => {
+  it('measures each receive against the earliest receive', () => {
+    expect(receiveSpreadMs([5000, 5080, 5200])).toEqual([0, 80, 200]);
   });
 });

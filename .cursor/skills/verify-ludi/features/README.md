@@ -52,4 +52,4 @@ Each feature file: H1, one paragraph, then exactly `Sub-features`, `How to get t
 - [Lobby screen](./lobby-screen.md) covers `/dev/lobby` screenshot vs `baselines/web/lobby.png`.
 - [Board screen](./board-screen.md) covers `/dev/board?state=start`, `/dev/board?state=video`, 68-cell track, 7-cell home columns, empty unused yards in 2-player, two dice, single-6 come-out, and the yard video tiles plus call bar.
 - [Win screen](./win-screen.md) covers `/dev/win` screenshot vs `baselines/web/win.png`.
-- [TikTok watch](./tiktok-watch.md) covers `ludi live tiktok-watch` replay PASS/FAIL and Dean's live p95 < 2s gate.
+- [TikTok watch](./tiktok-watch.md) covers `ludi live tiktok-watch` replay PASS/FAIL, the TikFinity default, and Dean's live p95 < 2s gate.

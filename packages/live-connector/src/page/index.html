@@ -91,7 +91,8 @@
           document.getElementById('p95').textContent = ms(row.p95Ms);
           document.getElementById('samples').textContent = String(row.sampleCount);
           const verdict = document.getElementById('verdict');
-          verdict.textContent = row.sampleCount === 0 ? 'WAIT' : row.pass ? 'PASS' : 'FAIL';
+          const label = row.sampleCount === 0 ? 'WAIT' : row.pass ? 'PASS' : 'FAIL';
+          verdict.textContent = row.lagKind === 'local_receive' ? label + ' local receive lag' : label;
           verdict.className = row.pass ? 'pass' : 'fail';
         }
         if (row.kind === 'command') {

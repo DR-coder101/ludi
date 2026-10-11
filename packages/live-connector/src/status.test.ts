@@ -7,6 +7,23 @@ describe('status machine', () => {
     expect(initialStatus(10)).toEqual({ phase: 'disconnected', at: 10 });
   });
 
+  it('keeps connecting with a not-live reason until a live event', () => {
+    let status = initialStatus(0);
+    status = reduceStatus(status, { type: 'connect_requested' }, 1);
+    status = reduceStatus(
+      status,
+      { type: 'awaiting_live', reason: STATUS_REASON.TIKFINITY_NOT_LIVE },
+      2,
+    );
+    expect(status).toEqual({
+      phase: 'connecting',
+      reason: STATUS_REASON.TIKFINITY_NOT_LIVE,
+      at: 2,
+    });
+    status = reduceStatus(status, { type: 'connected' }, 3);
+    expect(status).toEqual({ phase: 'connected', at: 3 });
+  });
+
   it('moves disconnected to connecting to connected', () => {
     let status = initialStatus(0);
     status = reduceStatus(status, { type: 'connect_requested' }, 1);

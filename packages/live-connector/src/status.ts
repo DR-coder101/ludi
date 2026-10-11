@@ -2,6 +2,7 @@ import type { ConnectionStatus, StatusPhase } from './types.js';
 
 export type StatusEvent =
   | { type: 'connect_requested' }
+  | { type: 'awaiting_live'; reason: string }
   | { type: 'connected' }
   | { type: 'offline'; reason: string }
   | { type: 'connect_failed'; reason: string }
@@ -25,6 +26,8 @@ function applyStatus(
     case 'connect_requested':
       if (phase === 'connected' || phase === 'connecting') return { phase };
       return { phase: 'connecting' };
+    case 'awaiting_live':
+      return { phase: 'connecting', reason: event.reason };
     case 'connected':
       return { phase: 'connected' };
     case 'offline':
