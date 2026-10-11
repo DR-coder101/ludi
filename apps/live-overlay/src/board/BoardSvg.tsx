@@ -34,7 +34,7 @@ const PLACE: Record<Color, { lines: string[]; piece: keyof typeof PIECE; corner:
   red: { lines: ['KINGSTON'], piece: 'red', corner: 'BR', pin: 'kingston', acc: '#FF3340' },
 };
 
-const STRIPE = ['#009B3A', '#0B0B0C', '#FED100', '#0B0B0C'] as const;
+const STRIPE = ['#0A7A32', '#0B0B0C', '#C9A40A', '#0B0B0C'] as const;
 const ROT = { right: 0, down: 90, left: 180, up: 270 } as const;
 const TURN: Color[] = ['red', 'green', 'yellow', 'blue'];
 
@@ -230,14 +230,24 @@ export function BoardSvg({ active, pieces }: Props) {
           <g key={`t-${i}`}>
             <rect x={gpos(c)} y={gpos(r)} width={cellSize(c)} height={cellSize(r)} fill={fill} />
             {fill !== '#0B0B0C' ? (
-              <rect
-                x={gpos(c)}
-                y={gpos(r)}
-                width={cellSize(c)}
-                height={cellSize(r)}
-                fill="url(#halftone-s)"
-                opacity="0.1"
-              />
+              <>
+                <rect
+                  x={gpos(c)}
+                  y={gpos(r)}
+                  width={cellSize(c)}
+                  height={cellSize(r)}
+                  fill="#000"
+                  opacity="0.22"
+                />
+                <rect
+                  x={gpos(c)}
+                  y={gpos(r)}
+                  width={cellSize(c)}
+                  height={cellSize(r)}
+                  fill="url(#halftone-s)"
+                  opacity="0.1"
+                />
+              </>
             ) : null}
           </g>
         );
@@ -256,7 +266,8 @@ export function BoardSvg({ active, pieces }: Props) {
         return (
           <g key={`home-${e}`}>
             <rect x={x} y={y} width={w} height={h} fill={pl.piece === 'black' ? '#232428' : fill} />
-            <rect x={x} y={y} width={w} height={h} fill="url(#halftone-s)" opacity="0.13" />
+            {pl.piece !== 'black' ? <rect x={x} y={y} width={w} height={h} fill="#000" opacity="0.2" /> : null}
+            <rect x={x} y={y} width={w} height={h} fill="url(#halftone-s)" opacity="0.1" />
             <rect
               x={x + 1.6}
               y={y + 1.6}
@@ -375,7 +386,7 @@ export function BoardSvg({ active, pieces }: Props) {
                 <rect x={x} y={y} width="160" height="160" />
               </clipPath>
             </defs>
-            <rect x={x} y={y} width={160} height={160} fill="#0E0E10" />
+            <rect x={x} y={y} width={160} height={160} fill="#0A0A0C" />
             {Array.from({ length: 7 }, (_, i) => {
               const p = x + (i + 1) * 20;
               const q = y + (i + 1) * 20;

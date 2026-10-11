@@ -77,7 +77,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 }
 .waiting { padding-top: 56px; gap: 22px; }
 .game { padding-top: 60px; gap: 14px; }
-.winner { padding-top: 40px; gap: 14px; }
+.winner { padding-top: 40px; gap: 12px; }
 
 .safe-zone {
   position: absolute;
@@ -229,7 +229,9 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   box-shadow: 0 5px 0 var(--ink);
   transform: rotate(3deg);
   transform-origin: 100% 50%;
+  contain: layout;
   white-space: nowrap;
+  margin-right: 8px;
 }
 .stay-badge.small {
   font-size: 22px;
@@ -237,6 +239,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   gap: 6px;
   transform: rotate(-4deg);
   box-shadow: 0 4px 0 var(--ink);
+  margin-right: 0;
 }
 .stay-badge.float {
   position: absolute;
@@ -289,8 +292,10 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 }
 .sky-window { width: 880px; height: 330px; position: relative; }
 .dice-peek { position: absolute; right: 10px; bottom: 6px; display: flex; align-items: flex-end; gap: 8px; opacity: 0.92; }
-.dice-peek svg:first-child { transform: rotate(-14deg); filter: drop-shadow(0 6px 0 #111); }
-.dice-peek svg:last-child { transform: rotate(18deg); filter: drop-shadow(0 5px 0 #111); }
+.die-peek { display: block; contain: layout; line-height: 0; }
+.die-peek svg { width: 100%; height: 100%; }
+.die-peek.a { width: 78px; height: 78px; transform: rotate(-14deg); filter: drop-shadow(rgb(17, 17, 17) 0px 6px 0px); }
+.die-peek.b { width: 62px; height: 62px; transform: rotate(18deg); filter: drop-shadow(rgb(17, 17, 17) 0px 5px 0px); }
 
 .join-pill {
   width: 820px;
@@ -309,6 +314,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   padding: 22px 36px;
   box-shadow: 0 0 48px rgba(254, 209, 0, 0.75), 0 10px 0 var(--ink);
   transform: rotate(-2deg);
+  contain: layout;
 }
 .join-pill .cmd {
   background: var(--ink);
@@ -329,7 +335,10 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   background: #0a0f0bd6;
   border: 3px solid #fed10099;
   border-radius: 30px;
-  padding: 18px 25px 20px;
+  padding: 18px 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 .seat-head { display: flex; justify-content: space-between; align-items: center; }
 .players-title { display: flex; align-items: center; gap: 12px; font-size: 34px; }
@@ -337,18 +346,18 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   background: var(--gold);
   color: var(--ink);
   border-radius: 999px;
-  padding: 6px 18px;
+  padding: 2px 20px;
   font-size: 32px;
   font-weight: 800;
 }
-.seat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px; }
+.seat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
 .seat-card {
   min-height: 240px;
   border-radius: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 8px;
+  padding: 16px 10px;
   gap: 8px;
 }
 .seat-card.filled.town-kingston { background: #16090b; border: 4px solid #ff3340; box-shadow: 0 0 26px rgba(228, 32, 46, 0.75); }
@@ -416,7 +425,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   padding: 2px 10px;
   border: 2px solid currentColor;
 }
-.start-note { margin-top: 14px; text-align: center; font-size: 24px; font-weight: 700; color: var(--cream); }
+.start-note { text-align: center; font-size: 24px; font-weight: 700; color: var(--cream); }
 .join-toast {
   position: absolute;
   bottom: 560px;
@@ -445,6 +454,8 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 .game-crown { transform: rotate(-10deg); }
 .game-title {
   width: 644px;
+  min-width: 644px;
+  flex-shrink: 0;
   min-height: 123px;
   background: #0a0f0be0;
   border: 3px solid var(--gold);
@@ -462,7 +473,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 .mini-flag .g { background: var(--green); }
 .mini-flag .y { background: var(--gold); }
 .mini-flag .k { background: var(--ink); }
-.game-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.game-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-right: 8px; }
 .queue-badge {
   background: var(--green);
   border: 2px solid var(--ink);
@@ -476,14 +487,18 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 
 .turn-bar {
   width: 880px;
+  flex-shrink: 0;
+  height: 139px;
   min-height: 139px;
+  max-height: 139px;
   border: 4px solid #ffe0e2;
   border-radius: 22px;
   box-shadow: 0 0 36px rgba(228, 32, 46, 0.95), 0 6px 0 #111;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 18px;
+  padding: 12px 20px;
+  gap: 18px;
 }
 .town-ochoRios .turn-bar { border-color: #d8ffe6; box-shadow: 0 0 36px rgba(15, 174, 71, 0.95), 0 6px 0 #111; }
 .town-montegoBay .turn-bar { border-color: #fff8d0; box-shadow: 0 0 36px rgba(254, 209, 0, 0.95), 0 6px 0 #111; }
@@ -499,22 +514,29 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 .chip { display: inline-block; border-radius: 10px; padding: 2px 10px; font-size: 26px; font-weight: 800; color: #111; }
 .chip.gold { background: var(--gold); }
 .chip.white { background: #fff; }
-.die-face {
+.die-slot {
   width: 104px;
   height: 104px;
   flex: 0 0 104px;
+  contain: layout;
+}
+.die-face {
+  width: 104px;
+  height: 104px;
   background: var(--cream-warm);
   border: 4px solid #111;
   border-radius: 20px;
   box-shadow: 0 6px 0 #111;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
   padding: 14px;
   transform: rotate(8deg);
+  contain: layout;
 }
-.die-face .pip { width: 18px; height: 18px; border-radius: 50%; background: #111; }
+.die-row { display: flex; justify-content: space-between; align-items: center; height: 18px; }
+.die-row.mid { justify-content: center; }
+.die-face .pip { width: 18px; height: 18px; border-radius: 50%; background: #111; flex: 0 0 18px; }
 .die-face .pip.off { visibility: hidden; }
 .die-face .pip.hot { background: var(--kingston); }
 
@@ -577,6 +599,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   padding: 26px 28px;
   gap: 10px;
   transform: rotate(-4deg);
+  contain: layout;
 }
 .turn-card-top { display: flex; align-items: center; gap: 16px; }
 .turn-card-dot { width: 44px; height: 44px; border-radius: 50%; border: 6px solid #fff; box-shadow: 0 0 0 3px #111; background: #7a0710; }
@@ -606,6 +629,8 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   font-size: 24px;
   box-shadow: 0 4px 0 #111;
   transform: rotate(2deg);
+  contain: layout;
+  margin-right: 8px;
 }
 
 .confetti-scatter {
@@ -627,8 +652,8 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   pointer-events: none;
 }
 .winner-block { width: 880px; display: flex; flex-direction: column; align-items: center; position: relative; z-index: 3; }
-.winner-header { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 3; }
-.winner-crown { transform: rotate(-6deg); filter: drop-shadow(rgb(17, 17, 17) 0px 8px 0px); }
+.winner-header { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 3; line-height: 0.9; }
+.winner-crown { display: block; transform: rotate(-6deg); contain: layout; filter: drop-shadow(rgb(17, 17, 17) 0px 8px 0px); }
 .winner-header h1 {
   font-size: 170px;
   line-height: 0.9;
@@ -650,6 +675,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   flex-direction: column;
   align-items: center;
   transform: rotate(-2deg);
+  contain: layout;
 }
 .winner.town-ochoRios .winner-card { box-shadow: 0 0 80px rgba(15, 174, 71, 0.95), 0 12px 0 #111; }
 .winner.town-montegoBay .winner-card { box-shadow: 0 0 80px rgba(254, 209, 0, 0.95), 0 12px 0 #111; }
@@ -806,6 +832,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   align-items: center;
   gap: 2px;
   transform: rotate(-1deg);
+  contain: layout;
 }
 .next-pill-row { display: flex; align-items: center; gap: 14px; }
 .next-pill .cmd { background: #111; color: var(--gold); border-radius: 16px; padding: 4px 16px 8px; font-size: 44px; line-height: 1; }

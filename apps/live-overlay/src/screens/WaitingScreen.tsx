@@ -79,8 +79,12 @@ export function WaitingScreen({ view, settle }: Props) {
       </div>
       <div className="sky-window">
         <div className="dice-peek">
-          <DieFiveIcon size={78} />
-          <DieFiveAltIcon size={62} />
+          <span className="die-peek a">
+            <DieFiveIcon size={78} />
+          </span>
+          <span className="die-peek b">
+            <DieFiveAltIcon size={62} />
+          </span>
         </div>
       </div>
       <div className={`join-pill${pulse ? ' pulse' : ''}`} data-safe="join-pill">

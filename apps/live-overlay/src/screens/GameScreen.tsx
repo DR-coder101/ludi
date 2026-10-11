@@ -13,23 +13,39 @@ type Props = {
   settle: boolean;
 };
 
-const DIE_SLOTS: Record<number, number[]> = {
-  1: [4],
-  2: [0, 8],
-  3: [0, 4, 8],
-  4: [0, 2, 6, 8],
-  5: [0, 2, 4, 6, 8],
-  6: [0, 2, 3, 5, 6, 8],
-};
-
 function DieFace({ value }: { value: number }) {
   const n = Math.min(6, Math.max(1, value));
-  const on = new Set(DIE_SLOTS[n] ?? DIE_SLOTS[5]);
+  const pip = (kind: 'ink' | 'hot' | 'off', key: string) => (
+    <span key={key} className={`pip${kind === 'off' ? ' off' : kind === 'hot' ? ' hot' : ''}`} />
+  );
+  const row = (
+    left: 'ink' | 'off',
+    mid: 'ink' | 'hot' | 'off',
+    right: 'ink' | 'off',
+    id: string,
+    center = false,
+  ) => (
+    <div key={id} className={`die-row${center ? ' mid' : ''}`}>
+      {center
+        ? pip(mid, `${id}-m`)
+        : [pip(left, `${id}-l`), pip(mid, `${id}-m`), pip(right, `${id}-r`)]}
+    </div>
+  );
   return (
-    <div className="die-face" data-pips={n} aria-label={`die ${n}`}>
-      {Array.from({ length: 9 }, (_, i) => (
-        <span key={i} className={`pip${on.has(i) ? (i === 4 && n === 5 ? ' hot' : '') : ' off'}`} />
-      ))}
+    <div className="die-slot">
+      <div className="die-face" data-pips={n} aria-label={`die ${n}`}>
+        {n === 1
+          ? [row('off', 'off', 'off', 't'), row('off', 'ink', 'off', 'm', true), row('off', 'off', 'off', 'b')]
+          : n === 2
+            ? [row('ink', 'off', 'off', 't'), row('off', 'off', 'off', 'm'), row('off', 'off', 'ink', 'b')]
+            : n === 3
+              ? [row('ink', 'off', 'off', 't'), row('off', 'ink', 'off', 'm', true), row('off', 'off', 'ink', 'b')]
+              : n === 4
+                ? [row('ink', 'off', 'ink', 't'), row('off', 'off', 'off', 'm'), row('ink', 'off', 'ink', 'b')]
+                : n === 6
+                  ? [row('ink', 'off', 'ink', 't'), row('ink', 'off', 'ink', 'm'), row('ink', 'off', 'ink', 'b')]
+                  : [row('ink', 'off', 'ink', 't'), row('off', 'hot', 'off', 'm', true), row('ink', 'off', 'ink', 'b')]}
+      </div>
     </div>
   );
 }
@@ -162,7 +178,7 @@ export function GameScreen({ view, events, settle }: Props) {
         )}
         {view.giftText ? (
           <div className="gift-line" data-safe="gift">
-            <GiftIcon size={27} color="#fff" />
+            <GiftIcon size={26} color="#fff" />
             {view.giftText}
           </div>
         ) : null}

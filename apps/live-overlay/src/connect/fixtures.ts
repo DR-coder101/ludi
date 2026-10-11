@@ -167,7 +167,7 @@ export function demoFrame(id: DemoId): DemoFrame {
         snapshot: {
           phase: 'PLAYING',
           seats: FOUR,
-          queue: [occupant('Tom')],
+          queue: [occupant('Tom'), occupant('Lucy')],
           sitOut: [],
           paused: false,
           phaseEndsAt: null,
