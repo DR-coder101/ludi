@@ -19,6 +19,8 @@ export function normalizePrefixes(raw?: Partial<CommandPrefixes>): CommandPrefix
     join: (raw?.join ?? DEFAULT_PREFIXES.join).trim() || DEFAULT_PREFIXES.join,
     roll: (raw?.roll ?? DEFAULT_PREFIXES.roll).trim() || DEFAULT_PREFIXES.roll,
     move: (raw?.move ?? DEFAULT_PREFIXES.move).trim() || DEFAULT_PREFIXES.move,
+    stay: (raw?.stay ?? DEFAULT_PREFIXES.stay).trim() || DEFAULT_PREFIXES.stay,
+    leave: (raw?.leave ?? DEFAULT_PREFIXES.leave).trim() || DEFAULT_PREFIXES.leave,
   };
 }
 
@@ -29,6 +31,8 @@ export function parseCommand(text: string, prefixes?: Partial<CommandPrefixes>):
 
   if (normalized === configured.join.toLowerCase()) return { kind: 'join' };
   if (normalized === configured.roll.toLowerCase()) return { kind: 'roll' };
+  if (normalized === configured.stay.toLowerCase()) return { kind: 'stay' };
+  if (normalized === configured.leave.toLowerCase()) return { kind: 'leave' };
 
   const moveMatch = normalized.match(
     new RegExp(`^${escapeRegExp(configured.move.toLowerCase())} (\\d+)$`),

@@ -14,7 +14,7 @@ export function buildIntrospectFromRegistry(root: Command): {
     version: CLI_VERSION,
     acli_version: ACLI_VERSION,
     surface:
-      'Ludi server over HTTP + Socket.IO, plus Expo web screen checks at /dev/* fixture routes.',
+      'Ludi server over HTTP + Socket.IO, live-game over HTTP + Socket.IO, plus Expo web screen checks at /dev/* fixture routes.',
     commands: (root.children ?? []).map(serialize),
   };
 }
@@ -51,7 +51,10 @@ export function renderHelp(cmd: Command, path: string[]): string {
     }
   } else {
     const argBits = cmd.args
-      .map((a) => (a.required ? `--${a.name} <${a.type}>` : `[--${a.name} <${a.type}>]`))
+      .map((a) => {
+        if (a.positional) return a.required ? `<${a.name}>` : `[${a.name}]`;
+        return a.required ? `--${a.name} <${a.type}>` : `[--${a.name} <${a.type}>]`;
+      })
       .join(' ');
     lines.push(`  ${full}${argBits ? ` ${argBits}` : ''}${cmd.mutates ? ' [--dry-run]' : ''}`);
     if (cmd.args.length) {
@@ -88,6 +91,8 @@ export function renderHelp(cmd: Command, path: string[]): string {
   } else if (path[0] === 'live' || cmd.name === 'tiktok-watch') {
     lines.push('  ludi live tiktok-watch --user <tiktokUsername> --json');
     lines.push('  ludi live tiktok-watch --replay packages/live-connector/testdata/pass.jsonl --json');
+    lines.push("  ludi live inject '!join' --user a --name A");
+    lines.push('  ludi live state --output json');
   } else if (path[0] === 'play' || cmd.name === 'solo-vs-bots') {
     lines.push('  ludi play solo-vs-bots --run-dir /tmp/ludi-v1 --turns 1');
     lines.push('  ludi play solo-vs-bots --dry-run --output json');

@@ -38,6 +38,8 @@ export async function runTikTokWatchCommand(
         join: parsed.joinPrefix,
         roll: parsed.rollPrefix,
         move: parsed.movePrefix,
+        stay: parsed.stayPrefix,
+        leave: parsed.leavePrefix,
       },
       onEvent: (event) => {
         if (output !== 'json') return;

@@ -46,4 +46,4 @@ If the user is not live, the harness exits with `user is not live: start a TikTo
 
 ## Prefixes
 
-Default chat prefixes are `!join`, `!roll`, and `!move N` with N in 1-4. Override with `--join-prefix`, `--roll-prefix`, and `--move-prefix`.
+Default chat prefixes are `!join`, `!roll`, `!move N` with N in 1-4, `!stay`, and `!leave`. Override with `--join-prefix`, `--roll-prefix`, `--move-prefix`, `--stay-prefix`, and `--leave-prefix`.

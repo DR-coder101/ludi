@@ -49,18 +49,24 @@ export type ParsedCommand =
   | { kind: 'join' }
   | { kind: 'roll' }
   | { kind: 'move'; piece: MovePiece }
+  | { kind: 'stay' }
+  | { kind: 'leave' }
   | { kind: 'ignore' };
 
 export type CommandPrefixes = {
   join: string;
   roll: string;
   move: string;
+  stay: string;
+  leave: string;
 };
 
 export const DEFAULT_PREFIXES: CommandPrefixes = {
   join: '!join',
   roll: '!roll',
   move: '!move',
+  stay: '!stay',
+  leave: '!leave',
 };
 
 export const P95_PASS_MS = 2000;

@@ -31,16 +31,23 @@ describe('parseCommand', () => {
   it('ignores non-commands', () => {
     expect(parseCommand('hello')).toEqual({ kind: 'ignore' });
     expect(parseCommand('join')).toEqual({ kind: 'ignore' });
-    expect(parseCommand('!stay')).toEqual({ kind: 'ignore' });
+    expect(parseCommand('!stay please')).toEqual({ kind: 'ignore' });
     expect(parseCommand('')).toEqual({ kind: 'ignore' });
     expect(parseCommand('   ')).toEqual({ kind: 'ignore' });
   });
 
+  it('accepts !stay and !leave', () => {
+    expect(parseCommand('  !Stay  ')).toEqual({ kind: 'stay' });
+    expect(parseCommand('!LEAVE')).toEqual({ kind: 'leave' });
+  });
+
   it('uses configured prefixes', () => {
-    const prefixes = { join: '!play', roll: '!dice', move: '!pick' };
+    const prefixes = { join: '!play', roll: '!dice', move: '!pick', stay: '!keep', leave: '!out' };
     expect(parseCommand('!play', prefixes)).toEqual({ kind: 'join' });
     expect(parseCommand('!dice', prefixes)).toEqual({ kind: 'roll' });
     expect(parseCommand('!pick 2', prefixes)).toEqual({ kind: 'move', piece: 2 });
+    expect(parseCommand('!keep', prefixes)).toEqual({ kind: 'stay' });
+    expect(parseCommand('!out', prefixes)).toEqual({ kind: 'leave' });
     expect(parseCommand('!join', prefixes)).toEqual({ kind: 'ignore' });
   });
 

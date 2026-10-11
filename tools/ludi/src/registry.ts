@@ -14,14 +14,19 @@ import { planScreensCheck, runScreensCheck, runScreensDoctor } from './screens/r
 import {
   bridgeRpc,
   isPidAlive,
+  liveStatus,
   serverStatus,
   startBridgeProcess,
+  startLiveProcess,
   startServerProcess,
   stopBridgeProcess,
+  stopLiveProcess,
   stopServerProcess,
 } from './process.js';
 import {
   readBridge,
+  readLive,
+  resolveLiveUrl,
   resolveRunDir,
   resolveServerUrl,
 } from './runDir.js';
@@ -614,6 +619,8 @@ const liveTikTokWatch: Command = {
     { name: 'join-prefix', type: 'string', summary: 'Join command prefix', default: '!join' },
     { name: 'roll-prefix', type: 'string', summary: 'Roll command prefix', default: '!roll' },
     { name: 'move-prefix', type: 'string', summary: 'Move command prefix', default: '!move' },
+    { name: 'stay-prefix', type: 'string', summary: 'Stay command prefix', default: '!stay' },
+    { name: 'leave-prefix', type: 'string', summary: 'Leave command prefix', default: '!leave' },
     { name: 'page', type: 'bool', summary: 'Serve the local latency page', default: true },
   ],
   mutates: true,
@@ -625,18 +632,215 @@ const liveTikTokWatch: Command = {
   },
 };
 
-const live: Command = {
-  name: 'live',
-  summary: 'Ludi Live connector: TikTok chat check and latency harness',
+const liveStart: Command = {
+  name: 'start',
+  summary: 'Start a detached live-game server into the run dir',
+  args: [{ name: 'port', type: 'int', summary: 'Listen port', default: 3200 }],
+  mutates: true,
+  dryRun(args, ctx) {
+    const run = resolveRunDir(ctx.runDir);
+    return planned([
+      { action: 'spawn_live', port: num(args, 'port'), run_dir: run.root },
+      { action: 'write', path: run.livePath },
+      { action: 'wait', url: `http://127.0.0.1:${num(args, 'port')}/health` },
+    ]);
+  },
+  async run(args, ctx) {
+    try {
+      const { meta } = await startLiveProcess({
+        runDir: ctx.runDir,
+        port: num(args, 'port'),
+      });
+      const { admin_token: _token, ...publicMeta } = meta ?? {};
+      return ok(publicMeta);
+    } catch (e) {
+      const ex = e as Error & { code?: string; hint?: string };
+      return err(ex.code ?? 'UPSTREAM_ERROR', ex.message, ex.hint ?? `ludi live start --run-dir ${ctx.runDir}`);
+    }
+  },
+};
+
+const liveStop: Command = {
+  name: 'stop',
+  summary: 'Stop the live-game server recorded in the run dir',
+  args: [],
+  mutates: true,
+  dryRun(_args, ctx) {
+    const run = resolveRunDir(ctx.runDir);
+    const status = liveStatus(ctx.runDir);
+    return planned([
+      { action: 'signal', target: 'SIGTERM', pid: 'pid' in status ? status.pid : null },
+      { action: 'remove', path: run.livePath },
+    ]);
+  },
+  async run(_args, ctx) {
+    return ok(await stopLiveProcess(ctx.runDir));
+  },
+};
+
+const liveStatusCmd: Command = {
+  name: 'status',
+  summary: 'Show whether the run-dir live server is alive',
   args: [],
   mutates: false,
-  children: [liveTikTokWatch],
+  async run(_args, ctx) {
+    return ok(liveStatus(ctx.runDir));
+  },
+};
+
+const liveInject: Command = {
+  name: 'inject',
+  summary: 'POST a chat command into the live server',
+  args: [
+    { name: 'text', type: 'string', summary: 'Chat text such as !join', required: true, positional: true },
+    { name: 'user', type: 'string', summary: 'User id', required: true },
+    { name: 'name', type: 'string', summary: 'Display name', default: 'Player' },
+    { name: 'platform', type: 'string', summary: 'Platform label', default: 'dev' },
+  ],
+  mutates: true,
+  dryRun(args, ctx) {
+    return planned([
+      {
+        action: 'POST /dev/chat',
+        url: resolveLiveUrl(resolveRunDir(ctx.runDir), ctx.url),
+        body: {
+          platform: str(args, 'platform'),
+          userId: str(args, 'user'),
+          displayName: str(args, 'name'),
+          text: str(args, 'text'),
+        },
+      },
+    ]);
+  },
+  async run(args, ctx) {
+    const run = resolveRunDir(ctx.runDir);
+    const url = resolveLiveUrl(run, ctx.url);
+    const body = {
+      platform: str(args, 'platform'),
+      userId: str(args, 'user'),
+      displayName: str(args, 'name'),
+      text: str(args, 'text'),
+      receivedAt: Date.now(),
+    };
+    try {
+      const res = await fetch(`${url}/dev/chat`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        return err('UPSTREAM_ERROR', `HTTP ${res.status} from ${url}/dev/chat`, `ludi live start --run-dir ${run.root}`);
+      }
+      return ok(json);
+    } catch (e) {
+      return err(
+        'UPSTREAM_ERROR',
+        (e as Error).message,
+        `ludi live start --run-dir ${run.root}`,
+      );
+    }
+  },
+};
+
+const liveState: Command = {
+  name: 'state',
+  summary: 'GET the live-game snapshot',
+  args: [],
+  mutates: false,
+  async run(_args, ctx) {
+    const run = resolveRunDir(ctx.runDir);
+    const url = resolveLiveUrl(run, ctx.url);
+    try {
+      const res = await fetch(`${url}/state`);
+      const json = await res.json();
+      if (!res.ok) {
+        return err('UPSTREAM_ERROR', `HTTP ${res.status} from ${url}/state`, `ludi live start --run-dir ${run.root}`);
+      }
+      return ok(json);
+    } catch (e) {
+      return err('UPSTREAM_ERROR', (e as Error).message, `ludi live start --run-dir ${run.root}`);
+    }
+  },
+};
+
+function liveAdminLeaf(
+  name: string,
+  summary: string,
+  build: (a: Readonly<Record<string, unknown>>) => Record<string, unknown>,
+  extra: Command['args'] = [],
+): Command {
+  return {
+    name,
+    summary,
+    args: extra,
+    mutates: true,
+    dryRun(a, ctx) {
+      return planned([
+        {
+          action: 'POST /admin',
+          url: resolveLiveUrl(resolveRunDir(ctx.runDir), ctx.url),
+          body: build(a),
+        },
+      ]);
+    },
+    async run(a, ctx) {
+      const run = resolveRunDir(ctx.runDir);
+      const url = resolveLiveUrl(run, ctx.url);
+      const live = readLive(run);
+      const token = process.env.LUDI_LIVE_ADMIN_TOKEN || live?.admin_token || '';
+      try {
+        const res = await fetch(`${url}/admin`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(build(a)),
+        });
+        const json = await res.json();
+        if (!res.ok) {
+          return err('UPSTREAM_ERROR', `HTTP ${res.status} from ${url}/admin`, `ludi live start --run-dir ${run.root}`);
+        }
+        return ok(json);
+      } catch (e) {
+        return err('UPSTREAM_ERROR', (e as Error).message, `ludi live start --run-dir ${run.root}`);
+      }
+    },
+  };
+}
+
+const liveAdmin: Command = {
+  name: 'admin',
+  summary: 'Admin actions behind the live admin token',
+  args: [],
+  mutates: false,
+  children: [
+    liveAdminLeaf('pause', 'Pause the live game', () => ({ type: 'pause' })),
+    liveAdminLeaf('resume', 'Resume the live game', () => ({ type: 'resume' })),
+    liveAdminLeaf('skip-turn', 'Play the current turn as a timeout', () => ({ type: 'skipTurn' })),
+    liveAdminLeaf('new-game', 'Reset to WAITING', () => ({ type: 'newGame' })),
+    liveAdminLeaf(
+      'kick',
+      'Remove a user from a seat or the queue',
+      (a) => ({ type: 'kick', userId: str(a, 'user') }),
+      [{ name: 'user', type: 'string', summary: 'User id', required: true }],
+    ),
+  ],
+};
+
+const live: Command = {
+  name: 'live',
+  summary: 'Ludi Live chat connector and chat-controlled game server',
+  args: [],
+  mutates: false,
+  children: [liveTikTokWatch, liveStart, liveStop, liveStatusCmd, liveInject, liveState, liveAdmin],
 };
 
 export const registry: Command = {
   name: 'ludi',
-  summary: 'Drive the Ludi server (HTTP + Socket.IO), Expo web screens, and Ludi Live chat checks',
+  summary: 'Drive the Ludi server, Ludi Live, and Expo web screens for verification',
   args: [],
   mutates: false,
-  children: [doctor, auth, server, session, room, match, play, http, screens, live, introspect],
+  children: [doctor, auth, server, session, room, match, play, http, live, screens, introspect],
 };

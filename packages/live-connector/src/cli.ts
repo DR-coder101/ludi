@@ -11,6 +11,8 @@ export type LiveWatchArgs = {
   joinPrefix: string;
   rollPrefix: string;
   movePrefix: string;
+  stayPrefix: string;
+  leavePrefix: string;
   page: boolean;
   json: boolean;
 };
@@ -33,6 +35,8 @@ OPTIONS:
   --join-prefix <text>    Join command (default ${DEFAULT_PREFIXES.join})
   --roll-prefix <text>    Roll command (default ${DEFAULT_PREFIXES.roll})
   --move-prefix <text>    Move command (default ${DEFAULT_PREFIXES.move})
+  --stay-prefix <text>    Stay command (default ${DEFAULT_PREFIXES.stay})
+  --leave-prefix <text>   Leave command (default ${DEFAULT_PREFIXES.leave})
   --page <bool>           Serve the latency page (default true)
   --json                  Stream one JSON object per line
 
@@ -70,6 +74,8 @@ export function parseLiveWatchArgs(raw: Readonly<Record<string, unknown>>): Live
     joinPrefix: raw['join-prefix'] !== undefined ? String(raw['join-prefix']) : DEFAULT_PREFIXES.join,
     rollPrefix: raw['roll-prefix'] !== undefined ? String(raw['roll-prefix']) : DEFAULT_PREFIXES.roll,
     movePrefix: raw['move-prefix'] !== undefined ? String(raw['move-prefix']) : DEFAULT_PREFIXES.move,
+    stayPrefix: raw['stay-prefix'] !== undefined ? String(raw['stay-prefix']) : DEFAULT_PREFIXES.stay,
+    leavePrefix: raw['leave-prefix'] !== undefined ? String(raw['leave-prefix']) : DEFAULT_PREFIXES.leave,
     page: asBool(raw.page, true),
     json: raw.json === true || raw.output === 'json' || raw.json === 'true',
   };
@@ -118,6 +124,8 @@ export async function runTikTokWatch(args: LiveWatchArgs): Promise<WatchResult> 
       join: args.joinPrefix,
       roll: args.rollPrefix,
       move: args.movePrefix,
+      stay: args.stayPrefix,
+      leave: args.leavePrefix,
     },
     onEvent: (event) => {
       if (args.json) {

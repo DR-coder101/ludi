@@ -1,14 +1,19 @@
 import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { writeFileSync, openSync, closeSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import {
   clearBridge,
+  clearLive,
   clearServer,
+  ensureRunDir,
   readBridge,
+  readLive,
   readServer,
   resolveRunDir,
   writeBridge,
+  writeLive,
   writeServer,
   type RunDir,
 } from './runDir.js';
@@ -283,4 +288,120 @@ export function writeServerMetaForTest(run: RunDir, meta: Parameters<typeof writ
 
 export function ensureDirExists(path: string): boolean {
   return existsSync(path);
+}
+
+export async function startLiveProcess(opts: {
+  runDir?: string;
+  port: number;
+}): Promise<{ run: RunDir; meta: ReturnType<typeof readLive> }> {
+  const run = resolveRunDir(opts.runDir);
+  const existing = readLive(run);
+  if (existing && isPidAlive(existing.pid)) {
+    throw Object.assign(
+      new Error(`A Ludi live server is already running (pid ${existing.pid} on ${existing.url})`),
+      {
+        code: 'CONFLICT',
+        hint: `Run \`ludi live stop --run-dir ${run.root}\` first, or use a fresh --run-dir.`,
+      },
+    );
+  }
+
+  const adminToken = process.env.LUDI_LIVE_ADMIN_TOKEN || randomBytes(24).toString('hex');
+  const logPath = join(run.root, 'live.log');
+  ensureRunDir(run);
+  const logFd = openSync(logPath, 'a');
+  const entry = join(packageRoot, 'src', 'live', 'entry.ts');
+  const tsxCli = join(packageRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
+  const child = spawn(
+    process.execPath,
+    [tsxCli, entry, String(opts.port)],
+    {
+      detached: true,
+      stdio: ['ignore', logFd, logFd],
+      env: {
+        ...process.env,
+        LUDI_LIVE_PORT: String(opts.port),
+        LUDI_LIVE_ADMIN_TOKEN: adminToken,
+      },
+      cwd: packageRoot,
+    },
+  );
+  closeSync(logFd);
+  child.unref();
+  if (!child.pid) {
+    throw Object.assign(new Error('Failed to spawn Ludi live server'), {
+      code: 'GENERAL_ERROR',
+      hint: 'Check that tsx is installed in tools/ludi (pnpm install from repo root).',
+    });
+  }
+
+  const url = `http://127.0.0.1:${opts.port}`;
+  const meta = {
+    pid: child.pid,
+    port: opts.port,
+    url,
+    started_at: new Date().toISOString(),
+    log_path: logPath,
+    admin_token: adminToken,
+  };
+  writeLive(run, meta);
+
+  const ready = await waitForHttp(`${url}/health`, 15000);
+  if (!ready) {
+    throw Object.assign(
+      new Error(`Live server did not become healthy at ${url}/health within 15s`),
+      {
+        code: 'UPSTREAM_ERROR',
+        hint: `Inspect ${logPath}. Try \`ludi live stop --run-dir ${run.root}\` then start again.`,
+      },
+    );
+  }
+
+  return { run, meta };
+}
+
+export async function stopLiveProcess(runDir?: string): Promise<{
+  stopped?: { pid: number; url: string };
+  already_stopped?: boolean;
+}> {
+  const run = resolveRunDir(runDir);
+  const meta = readLive(run);
+  if (!meta) {
+    return { already_stopped: true };
+  }
+  if (isPidAlive(meta.pid)) {
+    try {
+      process.kill(meta.pid, 'SIGTERM');
+    } catch {
+      /* already gone */
+    }
+    const deadline = Date.now() + 5000;
+    while (Date.now() < deadline && isPidAlive(meta.pid)) {
+      await sleep(50);
+    }
+    if (isPidAlive(meta.pid)) {
+      try {
+        process.kill(meta.pid, 'SIGKILL');
+      } catch {
+        /* ignore */
+      }
+    }
+  }
+  clearLive(run);
+  return { stopped: { pid: meta.pid, url: meta.url } };
+}
+
+export function liveStatus(runDir?: string) {
+  const run = resolveRunDir(runDir);
+  const meta = readLive(run);
+  if (!meta) {
+    return { running: false, run_dir: run.root };
+  }
+  const { admin_token: _token, ...publicMeta } = meta;
+  return {
+    running: isPidAlive(meta.pid),
+    run_dir: run.root,
+    ...publicMeta,
+    pid_alive: isPidAlive(meta.pid),
+  };
 }
