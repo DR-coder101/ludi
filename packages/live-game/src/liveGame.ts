@@ -555,7 +555,77 @@ function newGame(s: Internal, rt: Runtime, events: LiveEvent[], now: number): vo
   }
 }
 
-const internals = new WeakMap<LiveGame, Internal>();
+type LiveCommand =
+  | { type: 'chat'; inbound: ChatInbound }
+  | { type: 'admin'; action: AdminAction }
+  | { type: 'gift'; gift: GiftInbound }
+  | { type: 'tick'; now: number }
+  | { type: 'loadGame'; game: GameState };
+
+function giftEvent(gift: GiftInbound): LiveEvent {
+  return {
+    type: 'gift',
+    userId: gift.userId,
+    displayName: gift.displayName,
+    giftId: gift.giftId,
+    count: gift.count,
+    text: `@${gift.displayName} sent ${gift.giftId} x${gift.count}`,
+  };
+}
+
+function reduce(s: Internal, rt: Runtime, command: LiveCommand): LiveEvent[] {
+  const events: LiveEvent[] = [];
+  const now = command.type === 'tick' ? command.now : rt.clock.now();
+  switch (command.type) {
+    case 'chat': {
+      if (s.paused) return events;
+      const parsed = parseChat(command.inbound.text, rt.prefix, rt.commands);
+      handleParsed(s, rt, events, command.inbound, parsed, now);
+      return events;
+    }
+    case 'admin': {
+      switch (command.action.type) {
+        case 'pause':
+          pause(s, events, now);
+          return events;
+        case 'resume':
+          resume(s, events, now);
+          return events;
+        case 'skipTurn':
+          if (s.phase === 'PLAYING') autoplayTurn(s, rt, events, now);
+          return events;
+        case 'newGame':
+          newGame(s, rt, events, now);
+          return events;
+        case 'kick':
+          kick(s, rt, events, command.action.userId, now);
+          return events;
+        default: {
+          const _action: never = command.action;
+          return _action;
+        }
+      }
+    }
+    case 'gift':
+      events.push(giftEvent(command.gift));
+      return events;
+    case 'tick':
+      tickInternal(s, rt, events, now);
+      return events;
+    case 'loadGame':
+      s.game = command.game;
+      s.phase = 'PLAYING';
+      s.countdownBeat = null;
+      s.phaseEndsAt = null;
+      return events;
+    default: {
+      const _command: never = command;
+      return _command;
+    }
+  }
+}
+
+const sessions = new WeakMap<LiveGame, { state: Internal; rt: Runtime }>();
 
 export function createLiveGame(options: LiveConfig = {}): LiveGame {
   const rt: Runtime = {
@@ -569,7 +639,7 @@ export function createLiveGame(options: LiveConfig = {}): LiveGame {
     commands: { ...DEFAULT_COMMANDS, ...options.commands },
   };
 
-  const s: Internal = {
+  const state: Internal = {
     phase: rt.introMs === 0 ? 'WAITING' : 'INTRO',
     seats: emptySeats(),
     queue: [],
@@ -585,78 +655,32 @@ export function createLiveGame(options: LiveConfig = {}): LiveGame {
     vacant: new Set(),
   };
 
-  const run = (fn: (events: LiveEvent[], now: number) => void): LiveEvent[] => {
-    const events: LiveEvent[] = [];
-    fn(events, rt.clock.now());
-    return events;
-  };
-
   const api: LiveGame = {
     handleChat(inbound) {
-      return run((events, now) => {
-        if (s.paused) return;
-        const parsed = parseChat(inbound.text, rt.prefix, rt.commands);
-        handleParsed(s, rt, events, inbound, parsed, now);
-      });
+      return reduce(state, rt, { type: 'chat', inbound });
     },
     handleAdmin(action) {
-      return run((events, now) => {
-        switch (action.type) {
-          case 'pause':
-            pause(s, events, now);
-            return;
-          case 'resume':
-            resume(s, events, now);
-            return;
-          case 'skipTurn':
-            if (s.phase === 'PLAYING') autoplayTurn(s, rt, events, now);
-            return;
-          case 'newGame':
-            newGame(s, rt, events, now);
-            return;
-          case 'kick':
-            kick(s, rt, events, action.userId, now);
-            return;
-          default: {
-            const _x: never = action;
-            return _x;
-          }
-        }
-      });
+      return reduce(state, rt, { type: 'admin', action });
     },
-    handleGift(gift: GiftInbound) {
-      return [
-        {
-          type: 'gift' as const,
-          userId: gift.userId,
-          displayName: gift.displayName,
-          giftId: gift.giftId,
-          count: gift.count,
-          text: `@${gift.displayName} sent ${gift.giftId} x${gift.count}`,
-        },
-      ];
+    handleGift(gift) {
+      return reduce(state, rt, { type: 'gift', gift });
     },
     tick(nowMs) {
-      return run((events, now) => {
-        tickInternal(s, rt, events, nowMs ?? now);
-      });
+      return reduce(state, rt, { type: 'tick', now: nowMs ?? rt.clock.now() });
     },
     snapshot() {
-      return cloneState(s);
+      return cloneState(state);
     },
   };
 
-  internals.set(api, s);
+  sessions.set(api, { state, rt });
   return api;
 }
 
 export function __unsafeSetGame(live: LiveGame, game: GameState): void {
-  const s = internals.get(live);
-  if (!s) {
+  const session = sessions.get(live);
+  if (!session) {
     throw new Error('LiveGame has no internal state');
   }
-  s.game = game;
-  s.phase = 'PLAYING';
-  s.countdownBeat = null;
-  s.phaseEndsAt = null;
+  reduce(session.state, session.rt, { type: 'loadGame', game });
 }
