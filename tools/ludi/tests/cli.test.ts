@@ -212,6 +212,39 @@ describe('ludi CLI', () => {
     rmSync(runDir, { recursive: true, force: true });
   });
 
+  it('live help names tiktok-watch and the offline hint', () => {
+    const res = run(['live', '--help']);
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('tiktok-watch');
+    expect(res.stdout).toContain('latency');
+  });
+
+  it('live tiktok-watch replay of pass.jsonl prints PASS', () => {
+    const fixture = join(root, '..', '..', 'packages', 'live-connector', 'testdata', 'pass.jsonl');
+    const res = run([
+      'live',
+      'tiktok-watch',
+      '--replay',
+      fixture,
+      '--page',
+      'false',
+      '--output',
+      'json',
+    ]);
+    expect(res.status).toBe(0);
+    expect(res.stdout).toContain('PASS p95=100ms threshold=2000ms samples=4');
+    expect(res.stdout).toContain('"ok": true');
+  });
+
+  it('introspect JSON includes live.tiktok-watch', () => {
+    const res = run(['introspect', '--output', 'json']);
+    expect(res.status).toBe(0);
+    const body = JSON.parse(res.stdout);
+    const live = body.data.commands.find((c: { name: string }) => c.name === 'live');
+    const names = live.subcommands.map((c: { name: string }) => c.name);
+    expect(names).toContain('tiktok-watch');
+  });
+
   it('introspect JSON includes auth.guest', () => {
     const res = run(['introspect', '--output', 'json']);
     expect(res.status).toBe(0);

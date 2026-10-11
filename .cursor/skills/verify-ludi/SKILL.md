@@ -81,8 +81,17 @@ Discover gradually, then drive. Only call **`ludi`**.
 pnpm -s ludi -- --help
 pnpm -s ludi -- play --help
 pnpm -s ludi -- screens --help
+pnpm -s ludi -- live --help
 pnpm -s ludi -- introspect
 ```
+
+Ludi Live TikTok check (no game server, no screens):
+
+```bash
+pnpm -s ludi -- live tiktok-watch --replay packages/live-connector/testdata/pass.jsonl --page false --output json
+```
+
+PASS is the line `PASS p95=100ms threshold=2000ms samples=4`. Dean's real-stream gate is `ludi live tiktok-watch --user <tiktokUsername> --json` with `!join` in chat and p95 under 2s.
 
 Prefer deep flows from the feature map:
 
