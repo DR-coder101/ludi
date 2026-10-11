@@ -11,7 +11,12 @@ import { ensureRunDir, resolveRunDir } from '../runDir.js';
 import { sleep } from '../defaults.js';
 import {
   findRepoRoot,
+  isOverlayScreen,
   mobileDir,
+  overlayBaselineDir,
+  overlayDir,
+  overlayScreensToRun,
+  OVERLAY_SCREEN_IDS,
   PHONE,
   SCREEN_IDS,
   screensToRun,
@@ -20,6 +25,7 @@ import {
 } from './catalog.js';
 import { comparePng, type CompareResult } from './compare.js';
 import { serveExport } from './serve.js';
+import { planOverlayCheck, runOverlayCheck } from './overlay.js';
 
 function fail(code: string, message: string, hint: string): Result {
   return err(code, message, hint);
@@ -114,7 +120,12 @@ export function planScreensCheck(args: {
   port: number;
   url?: string;
   runDir: string;
+  target?: string;
 }): Result {
+  const target = args.target ?? (isOverlayScreen(args.screen) ? 'overlay' : 'web');
+  if (target === 'overlay' || isOverlayScreen(args.screen)) {
+    return planOverlayCheck(args);
+  }
   const specs = screensToRun(args.screen);
   if (specs.length === 0) {
     return fail(
@@ -167,6 +178,7 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
     );
   }
   const mobile = mobileDir(root);
+  const overlay = overlayDir(root);
   checks.push({
     name: 'mobile_app',
     ok: existsSync(join(mobile, 'package.json')),
@@ -174,12 +186,26 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
       ? `${mobile} has /dev fixture routes`
       : `${mobile} is missing app/dev fixture routes`,
   });
+  checks.push({
+    name: 'overlay_app',
+    ok: existsSync(join(overlay, 'package.json')),
+    detail: existsSync(join(overlay, 'index.html'))
+      ? `${overlay} is the 1080x1920 browser source`
+      : `${overlay} is missing index.html`,
+  });
   const webDir = webBaselineDir(root);
   const baselineCount = screensToRun('all').filter((s) => existsSync(join(webDir, s.file))).length;
   checks.push({
     name: 'web_baselines',
     ok: baselineCount === SCREEN_IDS.length,
     detail: `${baselineCount}/${SCREEN_IDS.length} under ${webDir}`,
+  });
+  const overlayBase = overlayBaselineDir(root);
+  const overlayCount = overlayScreensToRun('overlay').filter((s) => existsSync(join(overlayBase, s.file))).length;
+  checks.push({
+    name: 'overlay_baselines',
+    ok: overlayCount === OVERLAY_SCREEN_IDS.length,
+    detail: `${overlayCount}/${OVERLAY_SCREEN_IDS.length} under ${overlayBase}`,
   });
   let chromiumOk = false;
   let chromiumDetail = 'playwright not loaded';
@@ -195,7 +221,9 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
     chromiumDetail = `Cannot import playwright (${(e as Error).message}). Run pnpm install.`;
   }
   checks.push({ name: 'chromium', ok: chromiumOk, detail: chromiumDetail });
-  const worthDriving = checks.filter((c) => c.name !== 'web_baselines').every((c) => c.ok);
+  const worthDriving = checks
+    .filter((c) => c.name !== 'web_baselines' && c.name !== 'overlay_baselines')
+    .every((c) => c.ok);
   if (!worthDriving) {
     return fail(
       'PRECONDITION_FAILED',
@@ -218,6 +246,10 @@ export async function runScreensCheck(
   ctx: Ctx,
 ): Promise<Result> {
   const screen = String(args.screen ?? 'all');
+  const target = String(args.target ?? (isOverlayScreen(screen) ? 'overlay' : 'web'));
+  if (target === 'overlay' || isOverlayScreen(screen)) {
+    return runOverlayCheck({ ...args, screen: screen === 'all' ? 'overlay' : screen }, ctx);
+  }
   const update = Boolean(args['update-baselines']);
   const port = Number(args.port);
   const specs = screensToRun(screen);

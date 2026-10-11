@@ -7,7 +7,15 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { ExitCode } from '../src/exit.js';
-import { SCREENS, screensToRun, PHONE, findRepoRoot } from '../src/screens/catalog.js';
+import {
+  SCREENS,
+  screensToRun,
+  PHONE,
+  OVERLAY,
+  OVERLAY_SCREENS,
+  overlayScreensToRun,
+  findRepoRoot,
+} from '../src/screens/catalog.js';
 import { comparePng } from '../src/screens/compare.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -38,6 +46,19 @@ describe('screen catalog', () => {
     expect(screensToRun('board-start')[0]?.path).toBe('/dev/board?state=start');
     expect(screensToRun('board-video')[0]?.path).toBe('/dev/board?state=video');
     expect(PHONE).toEqual({ width: 390, height: 844, deviceScaleFactor: 2 });
+  });
+
+  it('names the 1080x1920 overlay fixtures', () => {
+    expect(OVERLAY_SCREENS.map((s) => s.id)).toEqual([
+      'overlay-intro',
+      'overlay-waiting',
+      'overlay-game',
+      'overlay-turn',
+      'overlay-winner',
+    ]);
+    expect(overlayScreensToRun('overlay')).toHaveLength(5);
+    expect(overlayScreensToRun('overlay-waiting')[0]?.path).toBe('/?demo=waiting&settle=1');
+    expect(OVERLAY).toEqual({ width: 1080, height: 1920, deviceScaleFactor: 1 });
   });
 
   it('keeps iPhone 14 web insets on every /dev fixture the 390×844 capture assumes', () => {
@@ -135,5 +156,35 @@ describe('ludi screens CLI', () => {
     const actions = body.planned_actions as Array<{ action: string }>;
     expect(actions[0]?.action).toBe('reuse_url');
     expect(actions.some((a) => a.action === 'expo_export_web')).toBe(false);
+  });
+
+  it('overlay dry-run plans a vite build, five captures, and wonder diffs', () => {
+    const runDir = join(root, '.tmp-overlay-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'screens',
+      'check',
+      '--target',
+      'overlay',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    const actions = body.planned_actions as Array<{ action: string; screen?: string }>;
+    expect(actions[0]?.action).toBe('vite_build_overlay');
+    expect(actions.filter((a) => a.action === 'screenshot').map((a) => a.screen)).toEqual([
+      'overlay-intro',
+      'overlay-waiting',
+      'overlay-game',
+      'overlay-turn',
+      'overlay-winner',
+    ]);
+    expect(actions.filter((a) => a.action === 'wonder_diff')).toHaveLength(5);
+    expect(existsSync(join(runDir, 'overlay-dist'))).toBe(false);
   });
 });
