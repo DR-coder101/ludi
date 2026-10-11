@@ -6,6 +6,7 @@ import {
   clearBridge,
   clearLive,
   clearServer,
+  ensureRunDir,
   readBridge,
   readLive,
   readServer,
@@ -306,6 +307,7 @@ export async function startLiveProcess(opts: {
 
   const adminToken = process.env.LUDI_LIVE_ADMIN_TOKEN || `live-${opts.port}`;
   const logPath = join(run.root, 'live.log');
+  ensureRunDir(run);
   const logFd = openSync(logPath, 'a');
   const entry = join(packageRoot, 'src', 'live', 'entry.ts');
   const tsxCli = join(packageRoot, 'node_modules', 'tsx', 'dist', 'cli.mjs');
@@ -319,6 +321,7 @@ export async function startLiveProcess(opts: {
         ...process.env,
         LUDI_LIVE_PORT: String(opts.port),
         LUDI_LIVE_ADMIN_TOKEN: adminToken,
+        LUDI_LIVE_INTRO_MS: process.env.LUDI_LIVE_INTRO_MS ?? '0',
       },
       cwd: packageRoot,
     },

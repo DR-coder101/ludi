@@ -60,7 +60,11 @@ export function createLiveServer(options: LiveServerOptions): {
   stop: () => Promise<void>;
   url: () => string;
 } {
-  const live = options.live ?? createLiveGame();
+  const live =
+    options.live ??
+    createLiveGame({
+      introMs: Number(process.env.LUDI_LIVE_INTRO_MS ?? 0),
+    });
   const adminToken = options.adminToken;
   let port = options.port ?? 0;
   let base = `http://127.0.0.1:${port}`;
