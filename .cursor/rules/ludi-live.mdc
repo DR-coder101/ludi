@@ -1,0 +1,56 @@
+---
+description: Invariants for Ludi Live (TikTok / livestream overlay)
+globs:
+  - apps/live-*/**
+  - packages/live-*/**
+  - server/src/live/**
+alwaysApply: false
+---
+
+# Ludi Live
+
+## Rules engine
+
+Import `@ludi/rules` unchanged. Never edit `packages/rules` or `docs/GAME_RULES.md` for Ludi Live work.
+
+## Authority
+
+The server is authoritative. The overlay only renders server state.
+
+## Adapters
+
+Adapters only map chat to commands (`!join`, `!roll`, `!move 1-4`, `!stay`, `!leave`). The core never imports platform code.
+
+## Gifts
+
+Gifts are cosmetic only. They never affect dice, turns, seats, outcomes, or prizes (UK lottery law and TikTok rules). Keep the test that proves this.
+
+## Canvas
+
+The canvas is 1080x1920. The safe zone is x 100-980 and y 40-1380, taken from one screenshot and still to be confirmed on a real stream.
+
+## Town colours
+
+- Kingston `#E4202E`
+- Ocho Rios `#0FAE47`
+- Montego Bay `#FED100`
+- Negril `#26272B`
+- Border `#D9DCE1`
+
+## UI
+
+The UI matches the approved Wonder artboards exactly. Do not write UI code without Dean's approved mockup. The Waiting badge reads `WINNER CAN STAY`.
+
+## Secrets
+
+No secrets in the repo.
+
+## Stack
+
+Use one WebSocket stack (socket.io), one test runner (vitest), and one validator (zod via `@ludi/protocol`).
+
+`tiktok-live-connector` is pinned to 2.4.0 (the last MIT release; later versions are AGPL) unless Dean decides otherwise.
+
+## Proof
+
+Prove each step with verify-ludi and green CI. Never merge or deploy without Dean.
