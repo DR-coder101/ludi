@@ -50,7 +50,7 @@ pnpm -s ludi -- live state --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- live stop --run-dir "$RUN_DIR" --output json
 ```
 
-Ready when `GET $url/health` is ok after `live start`. Mutating live commands accept `--dry-run` (exit 9).
+Ready when `GET $url/health` is ok after `live start`. Default start is `INTRO` for 5000ms. `!join` still seats. Play waits until intro ends. Set `LUDI_LIVE_INTRO_MS=0` to start in `WAITING`. Mutating live commands accept `--dry-run` (exit 9).
 
 Deep server flows can start their own server:
 

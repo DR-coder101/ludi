@@ -332,7 +332,11 @@ function join(s: Internal, rt: Runtime, events: LiveEvent[], inbound: ChatInboun
   const sittingOut = s.sitOut.includes(inbound.userId);
   const open = s.seats.find((seat) => seat.occupant === null);
 
-  if (!sittingOut && open && (s.phase === 'WAITING' || s.phase === 'COUNTDOWN' || s.phase === 'WINNER')) {
+  if (
+    !sittingOut &&
+    open &&
+    (s.phase === 'INTRO' || s.phase === 'WAITING' || s.phase === 'COUNTDOWN' || s.phase === 'WINNER')
+  ) {
     open.occupant = occ;
     events.push({
       type: 'joined',

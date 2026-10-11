@@ -67,6 +67,38 @@ function playToWinner(clock: ReturnType<typeof createFakeClock>, live: LiveGame)
 }
 
 describe('live join and queue', () => {
+  it('seats !join during INTRO and keeps the phase on INTRO', () => {
+    const clock = createFakeClock(0);
+    const live = createLiveGame({ clock, rng: alwaysSixRng(), introMs: 5000 });
+    const ev = join(live, 'a', 'A');
+    expect(eventsOf(ev, 'joined')).toEqual([
+      { type: 'joined', userId: 'a', displayName: 'A', town: 'kingston' },
+    ]);
+    expect(live.snapshot().phase).toBe('INTRO');
+    expect(seatedIds(live)).toEqual(['a', null, null, null]);
+    expect(live.snapshot().queue).toEqual([]);
+    clock.advance(4999);
+    live.tick();
+    expect(live.snapshot().phase).toBe('INTRO');
+    clock.advance(1);
+    const tickEv = live.tick();
+    expect(live.snapshot().phase).toBe('WAITING');
+    expect(eventsOf(tickEv, 'phase')).toEqual([{ type: 'phase', phase: 'WAITING' }]);
+    expect(seatedIds(live)).toEqual(['a', null, null, null]);
+  });
+
+  it('does not start countdown during INTRO even at 4/4', () => {
+    const clock = createFakeClock(0);
+    const live = createLiveGame({ clock, rng: alwaysSixRng(), introMs: 5000 });
+    seatFour(live);
+    expect(live.snapshot().phase).toBe('INTRO');
+    expect(live.snapshot().game).toBeNull();
+    expect(seatedIds(live)).toEqual(['a', 'b', 'c', 'd']);
+    clock.advance(5000);
+    live.tick();
+    expect(live.snapshot().phase).toBe('COUNTDOWN');
+  });
+
   it('seats first come first served in Kingston, Ocho Rios, Montego Bay, Negril order', () => {
     const live = createLiveGame({ introMs: 0, rng: alwaysSixRng() });
     join(live, 'a', 'A');
