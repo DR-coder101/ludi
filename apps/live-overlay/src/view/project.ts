@@ -236,7 +236,7 @@ export function project(
         winnerHex: winnerSeat?.hex ?? TOWN.kingston.hex,
         staySeconds,
         stayUrgent: staySeconds <= 5,
-        seatsOpen: snapshot.winnerStay === true ? 3 : 4,
+        seatsOpen: snapshot.winnerStay === false ? 4 : 3,
         results: winnerResults(snapshot),
         nextUp: nextUpNames(snapshot.queue),
         gameNumber: intent.gameNumber ?? 1,

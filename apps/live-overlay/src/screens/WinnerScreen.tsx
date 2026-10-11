@@ -53,7 +53,7 @@ export function WinnerScreen({ view, settle }: Props) {
           {BADGE_WINNER_CAN_STAY}
         </div>
         <div className="winner-name-row">
-          <div className="winner-disc" />
+          <div className={`winner-disc town-${view.winnerTown}`} />
           <div className="winner-name">{view.winnerHandle.toUpperCase()}</div>
         </div>
         <div className="winner-town-line">

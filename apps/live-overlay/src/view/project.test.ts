@@ -184,6 +184,7 @@ describe('project', () => {
     if (early.kind !== 'winner') return;
     expect(early.staySeconds).toBe(15);
     expect(early.stayUrgent).toBe(false);
+    expect(early.seatsOpen).toBe(3);
   });
 
   it('turns a joined event into a waiting toast', () => {
