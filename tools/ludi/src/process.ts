@@ -321,7 +321,6 @@ export async function startLiveProcess(opts: {
         ...process.env,
         LUDI_LIVE_PORT: String(opts.port),
         LUDI_LIVE_ADMIN_TOKEN: adminToken,
-        LUDI_LIVE_INTRO_MS: process.env.LUDI_LIVE_INTRO_MS ?? '0',
       },
       cwd: packageRoot,
     },
