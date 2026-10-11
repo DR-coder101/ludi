@@ -334,3 +334,48 @@ export interface MatchHistoryResponse {
   matches?: MatchHistory[];
   error?: string;
 }
+
+export const LiveChatInboundSchema = z.object({
+  platform: z.string().min(1),
+  userId: z.string().min(1),
+  displayName: z.string().min(1),
+  text: z.string(),
+  receivedAt: z.number(),
+});
+export type LiveChatInbound = z.infer<typeof LiveChatInboundSchema>;
+
+export const LiveGiftInboundSchema = z
+  .object({
+    platform: z.string().min(1),
+    userId: z.string().min(1),
+    displayName: z.string().min(1),
+    giftId: z.string().min(1).optional(),
+    giftName: z.string().min(1).optional(),
+    count: z.number().optional(),
+    repeatCount: z.number().optional(),
+  })
+  .transform((value, ctx) => {
+    const giftId = value.giftId ?? value.giftName;
+    const count = value.count ?? value.repeatCount;
+    if (!giftId || count === undefined) {
+      ctx.addIssue({ code: 'custom', message: 'gift id and count required' });
+      return z.NEVER;
+    }
+    return {
+      platform: value.platform,
+      userId: value.userId,
+      displayName: value.displayName,
+      giftId,
+      count,
+    };
+  });
+export type LiveGiftInbound = z.infer<typeof LiveGiftInboundSchema>;
+
+export const LiveAdminActionSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('pause') }),
+  z.object({ type: z.literal('resume') }),
+  z.object({ type: z.literal('skipTurn') }),
+  z.object({ type: z.literal('newGame') }),
+  z.object({ type: z.literal('kick'), userId: z.string().min(1) }),
+]);
+export type LiveAdminAction = z.infer<typeof LiveAdminActionSchema>;

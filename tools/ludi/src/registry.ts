@@ -30,6 +30,7 @@ import {
   resolveRunDir,
   resolveServerUrl,
 } from './runDir.js';
+import { planTikTokWatch, runTikTokWatchCommand } from './live.js';
 
 function str(args: Readonly<Record<string, unknown>>, key: string): string {
   return String(args[key]);
@@ -607,6 +608,30 @@ const screens: Command = {
   children: [screensDoctor, screensCheck],
 };
 
+const liveTikTokWatch: Command = {
+  name: 'tiktok-watch',
+  summary: 'Stream TikTok chat commands, measure lag, serve the local latency page. PASS is p95 under 2s.',
+  args: [
+    { name: 'user', type: 'string', summary: 'TikTok unique id (@name from the live URL)' },
+    { name: 'replay', type: 'string', summary: 'Offline JSONL fixture instead of a live user' },
+    { name: 'port', type: 'int', summary: 'Latency page port (0 = ephemeral)', default: 8787 },
+    { name: 'duration-s', type: 'int', summary: 'Stop after N seconds (0 = until Ctrl+C)', default: 0 },
+    { name: 'join-prefix', type: 'string', summary: 'Join command prefix', default: '!join' },
+    { name: 'roll-prefix', type: 'string', summary: 'Roll command prefix', default: '!roll' },
+    { name: 'move-prefix', type: 'string', summary: 'Move command prefix', default: '!move' },
+    { name: 'stay-prefix', type: 'string', summary: 'Stay command prefix', default: '!stay' },
+    { name: 'leave-prefix', type: 'string', summary: 'Leave command prefix', default: '!leave' },
+    { name: 'page', type: 'bool', summary: 'Serve the local latency page', default: true },
+  ],
+  mutates: true,
+  dryRun(args) {
+    return planTikTokWatch(args);
+  },
+  async run(args, ctx) {
+    return runTikTokWatchCommand(args, ctx.output);
+  },
+};
+
 const liveStart: Command = {
   name: 'start',
   summary: 'Start a detached live-game server into the run dir',
@@ -626,7 +651,8 @@ const liveStart: Command = {
         runDir: ctx.runDir,
         port: num(args, 'port'),
       });
-      return ok(meta);
+      const { admin_token: _token, ...publicMeta } = meta ?? {};
+      return ok(publicMeta);
     } catch (e) {
       const ex = e as Error & { code?: string; hint?: string };
       return err(ex.code ?? 'UPSTREAM_ERROR', ex.message, ex.hint ?? `ludi live start --run-dir ${ctx.runDir}`);
@@ -805,15 +831,15 @@ const liveAdmin: Command = {
 
 const live: Command = {
   name: 'live',
-  summary: 'Drive the chat-controlled live-game server',
+  summary: 'Ludi Live chat connector and chat-controlled game server',
   args: [],
   mutates: false,
-  children: [liveStart, liveStop, liveStatusCmd, liveInject, liveState, liveAdmin],
+  children: [liveTikTokWatch, liveStart, liveStop, liveStatusCmd, liveInject, liveState, liveAdmin],
 };
 
 export const registry: Command = {
   name: 'ludi',
-  summary: 'Drive the Ludi server (HTTP + Socket.IO), live-game, and Expo web screens for verification',
+  summary: 'Drive the Ludi server, Ludi Live, and Expo web screens for verification',
   args: [],
   mutates: false,
   children: [doctor, auth, server, session, room, match, play, http, live, screens, introspect],

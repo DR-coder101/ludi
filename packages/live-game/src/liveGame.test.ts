@@ -1,3 +1,4 @@
+import { LiveGiftInboundSchema } from '@ludi/protocol';
 import { createGame, type GameState, type TokenPos } from '@ludi/rules';
 import { describe, expect, it } from 'vitest';
 import { LIVE_HOUSE_RULES } from './seats.js';
@@ -410,6 +411,24 @@ describe('gifts', () => {
       },
     ]);
     expect(live.snapshot()).toEqual(before);
+  });
+
+  it('maps connector giftName and repeatCount onto giftId and count', () => {
+    expect(
+      LiveGiftInboundSchema.parse({
+        platform: 'tiktok',
+        userId: 'z',
+        displayName: 'Zed',
+        giftName: 'Rose',
+        repeatCount: 6,
+      }),
+    ).toEqual({
+      platform: 'tiktok',
+      userId: 'z',
+      displayName: 'Zed',
+      giftId: 'Rose',
+      count: 6,
+    });
   });
 });
 

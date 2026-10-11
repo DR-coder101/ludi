@@ -1,8 +1,13 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { createInterface } from 'node:readline';
+import {
+  LiveAdminActionSchema,
+  LiveChatInboundSchema,
+  LiveGiftInboundSchema,
+} from '@ludi/protocol';
 import { Server } from 'socket.io';
 import { createLiveGame } from './liveGame.js';
-import type { AdminAction, ChatInbound, GiftInbound, LiveGame } from './types.js';
+import type { LiveGame } from './types.js';
 
 export type LiveServerOptions = {
   live?: LiveGame;
@@ -31,41 +36,6 @@ function tokenOf(req: IncomingMessage, url: URL): string | null {
   return url.searchParams.get('token');
 }
 
-function isAdminAction(value: unknown): value is AdminAction {
-  if (!value || typeof value !== 'object') return false;
-  const type = (value as { type?: unknown }).type;
-  if (type === 'pause' || type === 'resume' || type === 'skipTurn' || type === 'newGame') {
-    return true;
-  }
-  if (type === 'kick') {
-    return typeof (value as { userId?: unknown }).userId === 'string';
-  }
-  return false;
-}
-
-function isChat(value: unknown): value is ChatInbound {
-  if (!value || typeof value !== 'object') return false;
-  const v = value as Record<string, unknown>;
-  return (
-    typeof v.platform === 'string' &&
-    typeof v.userId === 'string' &&
-    typeof v.displayName === 'string' &&
-    typeof v.text === 'string' &&
-    typeof v.receivedAt === 'number'
-  );
-}
-
-function isGift(value: unknown): value is GiftInbound {
-  if (!value || typeof value !== 'object') return false;
-  const v = value as Record<string, unknown>;
-  return (
-    typeof v.platform === 'string' &&
-    typeof v.userId === 'string' &&
-    typeof v.displayName === 'string' &&
-    typeof v.giftId === 'string' &&
-    typeof v.count === 'number'
-  );
-}
 
 function parseJson(raw: string): unknown {
   try {
@@ -108,22 +78,24 @@ export function createLiveServer(options: LiveServerOptions): {
     }
     if (req.method === 'POST' && url.pathname === '/dev/chat') {
       const raw = parseJson(await readBody(req));
-      if (!isChat(raw)) {
+      const chat = LiveChatInboundSchema.safeParse(raw);
+      if (!chat.success) {
         json(res, 400, { ok: false, error: 'invalid chat' });
         return;
       }
-      const events = live.handleChat(raw);
+      const events = live.handleChat(chat.data);
       broadcast(events);
       json(res, 200, { ok: true, events, snapshot: live.snapshot() });
       return;
     }
     if (req.method === 'POST' && url.pathname === '/dev/gift') {
       const raw = parseJson(await readBody(req));
-      if (!isGift(raw)) {
+      const gift = LiveGiftInboundSchema.safeParse(raw);
+      if (!gift.success) {
         json(res, 400, { ok: false, error: 'invalid gift' });
         return;
       }
-      const events = live.handleGift(raw);
+      const events = live.handleGift(gift.data);
       broadcast(events);
       json(res, 200, { ok: true, events, snapshot: live.snapshot() });
       return;
@@ -134,11 +106,12 @@ export function createLiveServer(options: LiveServerOptions): {
         return;
       }
       const raw = parseJson(await readBody(req));
-      if (!isAdminAction(raw)) {
+      const action = LiveAdminActionSchema.safeParse(raw);
+      if (!action.success) {
         json(res, 400, { ok: false, error: 'invalid admin action' });
         return;
       }
-      const events = live.handleAdmin(raw);
+      const events = live.handleAdmin(action.data);
       broadcast(events);
       json(res, 200, { ok: true, events, snapshot: live.snapshot() });
       return;
@@ -162,11 +135,12 @@ export function createLiveServer(options: LiveServerOptions): {
         ack?.({ ok: false, error: 'unauthorized' });
         return;
       }
-      if (!isAdminAction(action)) {
+      const parsed = LiveAdminActionSchema.safeParse(action);
+      if (!parsed.success) {
         ack?.({ ok: false, error: 'invalid admin action' });
         return;
       }
-      const events = live.handleAdmin(action);
+      const events = live.handleAdmin(parsed.data);
       broadcast(events);
       ack?.({ ok: true, events, snapshot: live.snapshot() });
     });
@@ -189,14 +163,14 @@ export function createLiveServer(options: LiveServerOptions): {
       const events = live.tick();
       if (events.length > 0) broadcast(events);
     }, 100);
-    if (options.stdin !== false && process.stdin.isTTY === false) {
+    if (options.stdin !== false && process.stdin.isTTY !== true) {
       const rl = createInterface({ input: process.stdin });
       rl.on('line', (line) => {
         const trimmed = line.trim();
         if (!trimmed) return;
-        const raw = parseJson(trimmed);
-        if (!isChat(raw)) return;
-        const events = live.handleChat(raw);
+        const chat = LiveChatInboundSchema.safeParse(parseJson(trimmed));
+        if (!chat.success) return;
+        const events = live.handleChat(chat.data);
         broadcast(events);
       });
     }

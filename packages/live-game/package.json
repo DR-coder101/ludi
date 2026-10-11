@@ -7,9 +7,6 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "bin": {
-    "ludi-live": "./src/bin.ts"
-  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
@@ -17,6 +14,7 @@
     "start": "tsx src/bin.ts"
   },
   "dependencies": {
+    "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",
     "socket.io": "^4.7.0"
   },

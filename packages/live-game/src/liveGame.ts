@@ -228,7 +228,11 @@ function autoplayTurn(s: Internal, rt: Runtime, events: LiveEvent[], now: number
     played += 1;
     applyEngineMove(s, rt, events, now, move, userId);
   }
-  if (s.phase === 'PLAYING' && s.game) {
+  if (
+    s.phase === 'PLAYING' &&
+    s.game &&
+    events[events.length - 1]?.type !== 'turnStarted'
+  ) {
     armTurn(s, rt, events, now);
   }
 }

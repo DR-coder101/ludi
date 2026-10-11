@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { writeFileSync, openSync, closeSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -305,7 +306,7 @@ export async function startLiveProcess(opts: {
     );
   }
 
-  const adminToken = process.env.LUDI_LIVE_ADMIN_TOKEN || `live-${opts.port}`;
+  const adminToken = process.env.LUDI_LIVE_ADMIN_TOKEN || randomBytes(24).toString('hex');
   const logPath = join(run.root, 'live.log');
   ensureRunDir(run);
   const logFd = openSync(logPath, 'a');
@@ -396,10 +397,11 @@ export function liveStatus(runDir?: string) {
   if (!meta) {
     return { running: false, run_dir: run.root };
   }
+  const { admin_token: _token, ...publicMeta } = meta;
   return {
     running: isPidAlive(meta.pid),
     run_dir: run.root,
-    ...meta,
+    ...publicMeta,
     pid_alive: isPidAlive(meta.pid),
   };
 }
