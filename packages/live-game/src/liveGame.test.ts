@@ -265,14 +265,15 @@ describe('winner stay, leave, and no reply', () => {
       winnerMs: 15_000,
     });
     playToWinner(clock, live);
-    const winnerId = live.snapshot().winnerUserId;
-    expect(winnerId).toBeTruthy();
-    const ev = live.handleChat(inbound(winnerId!, '!stay', winnerId!.toUpperCase()));
-    expect(eventsOf(ev, 'stay')).toEqual([{ type: 'stay', userId: winnerId }]);
+    expect(live.snapshot().winnerUserId).toBe('a');
+    expect(live.snapshot().winnerStay).toBeNull();
+    const ev = live.handleChat(inbound('a', '!stay', 'A'));
+    expect(eventsOf(ev, 'stay')).toEqual([{ type: 'stay', userId: 'a' }]);
+    expect(eventsOf(ev, 'phase')).toEqual([{ type: 'phase', phase: 'WAITING' }]);
     expect(live.snapshot().phase).toBe('WAITING');
-    expect(seatedIds(live).filter(Boolean)).toEqual([winnerId]);
-    expect(live.snapshot().sitOut).toHaveLength(3);
-    expect(live.snapshot().sitOut).not.toContain(winnerId);
+    expect(live.snapshot().winnerStay).toBe(true);
+    expect(seatedIds(live)).toEqual(['a', null, null, null]);
+    expect(live.snapshot().sitOut).toEqual(['b', 'c', 'd']);
   });
 
   it('opens the winner seat on !leave', () => {
@@ -285,11 +286,12 @@ describe('winner stay, leave, and no reply', () => {
       winnerMs: 15_000,
     });
     playToWinner(clock, live);
-    const winnerId = live.snapshot().winnerUserId!;
-    live.handleChat(inbound(winnerId, '!leave', winnerId.toUpperCase()));
+    const ev = live.handleChat(inbound('a', '!leave', 'A'));
+    expect(eventsOf(ev, 'leave')).toEqual([{ type: 'leave', userId: 'a' }]);
     expect(live.snapshot().phase).toBe('WAITING');
-    expect(seatedIds(live).filter(Boolean)).toEqual([]);
-    expect(live.snapshot().sitOut).toHaveLength(3);
+    expect(live.snapshot().winnerStay).toBe(false);
+    expect(seatedIds(live)).toEqual([null, null, null, null]);
+    expect(live.snapshot().sitOut).toEqual(['b', 'c', 'd']);
   });
 
   it('opens the winner seat after exactly 15000ms with no reply', () => {
@@ -310,8 +312,9 @@ describe('winner stay, leave, and no reply', () => {
     clock.advance(1);
     const ev = live.tick();
     expect(live.snapshot().phase).toBe('WAITING');
-    expect(eventsOf(ev, 'leave')).toHaveLength(1);
-    expect(seatedIds(live).filter(Boolean)).toEqual([]);
+    expect(eventsOf(ev, 'leave')).toEqual([{ type: 'leave', userId: 'a' }]);
+    expect(seatedIds(live)).toEqual([null, null, null, null]);
+    expect(live.snapshot().sitOut).toEqual(['b', 'c', 'd']);
   });
 });
 
@@ -326,31 +329,28 @@ describe('sit-out and queue after a win', () => {
       winnerMs: 15_000,
     });
     playToWinner(clock, live);
-    const winnerId = live.snapshot().winnerUserId!;
-    const losers = live
-      .snapshot()
-      .seats.map((s) => s.occupant?.userId)
-      .filter((id): id is string => !!id && id !== winnerId);
-    live.handleChat(inbound(winnerId, '!stay', winnerId.toUpperCase()));
-    expect(live.snapshot().sitOut).toEqual(losers);
-    const queued = ['e', 'f', 'g'] as const;
-    for (const id of queued) join(live, id, id.toUpperCase());
-    expect(seatedIds(live).filter(Boolean)).toHaveLength(4);
-    expect(seatedIds(live)).toContain(winnerId);
-    expect(seatedIds(live)).toEqual(expect.arrayContaining(['e', 'f', 'g']));
-    for (const loser of losers) {
-      join(live, loser, loser.toUpperCase());
-    }
-    expect(live.snapshot().queue.map((q) => q.userId)).toEqual(losers);
+    live.handleChat(inbound('a', '!stay', 'A'));
+    expect(live.snapshot().sitOut).toEqual(['b', 'c', 'd']);
+    join(live, 'e', 'E');
+    join(live, 'f', 'F');
+    join(live, 'g', 'G');
+    expect(seatedIds(live)).toEqual(['a', 'e', 'f', 'g']);
+    join(live, 'b', 'B');
+    join(live, 'c', 'C');
+    join(live, 'd', 'D');
+    expect(live.snapshot().queue.map((q) => q.userId)).toEqual(['b', 'c', 'd']);
     clock.advance(3000);
     live.tick();
+    expect(live.snapshot().phase).toBe('PLAYING');
     playToWinner(clock, live);
-    live.handleChat(inbound(live.snapshot().winnerUserId!, '!leave', 'X'));
-    expect(live.snapshot().sitOut).not.toEqual(losers);
-    const seated = seatedIds(live).filter(Boolean);
-    for (const loser of losers) {
-      expect(seated).toContain(loser);
-    }
+    expect(live.snapshot().winnerUserId).toBe('g');
+    const ev = live.handleChat(inbound('g', '!leave', 'G'));
+    expect(eventsOf(ev, 'leave')).toEqual([{ type: 'leave', userId: 'g' }]);
+    expect(live.snapshot().phase).toBe('WAITING');
+    expect(live.snapshot().winnerStay).toBe(false);
+    expect(live.snapshot().sitOut).toEqual(['a', 'e', 'f']);
+    expect(seatedIds(live)).toEqual(['b', 'c', 'd', null]);
+    expect(live.snapshot().queue).toEqual([]);
   });
 });
 

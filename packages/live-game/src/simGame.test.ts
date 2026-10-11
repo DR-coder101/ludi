@@ -43,11 +43,16 @@ describe('simulated 4-player game', () => {
 
     const snap = live.snapshot();
     expect(snap.phase).toBe('WINNER');
-    expect(snap.winnerUserId).toBeTruthy();
-    expect(snap.game?.winner).toBeTruthy();
+    expect(snap.winnerUserId).toBe('a');
+    expect(snap.winnerStay).toBeNull();
+    expect(snap.game?.winner).toBe('red');
     expect(snap.game?.phase).toBe('finished');
-    const winnerColor = snap.game!.winner!;
-    const home = snap.game!.tokens.filter((t) => t.color === winnerColor);
+    expect(snap.seats[0]).toMatchObject({
+      town: 'kingston',
+      color: 'red',
+      occupant: { userId: 'a', displayName: 'A' },
+    });
+    const home = snap.game?.tokens.filter((t) => t.color === 'red') ?? [];
     expect(home).toHaveLength(4);
     expect(home.every((t) => t.pos.zone === 'home')).toBe(true);
   });
