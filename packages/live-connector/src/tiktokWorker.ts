@@ -1,10 +1,6 @@
 import { createInterface } from 'node:readline';
-import {
-  ControlEvent,
-  TikTokLiveConnection,
-  UserOfflineError,
-  WebcastEvent,
-} from 'tiktok-live-connector';
+import { ControlEvent, TikTokLiveConnection, WebcastEvent } from 'tiktok-live-connector';
+import { classifyConnectError } from './connectError.js';
 import { STATUS_REASON } from './types.js';
 import { decodeParentLine, encodeLine, type ParentToWorker } from './workerProtocol.js';
 
@@ -50,21 +46,6 @@ function asTimeMs(value: unknown): number | undefined {
     if (Number.isFinite(n)) return n < 1e12 ? n * 1000 : n;
   }
   return undefined;
-}
-
-function classifyConnectError(err: unknown): { offline: boolean; reason: string } {
-  if (err instanceof UserOfflineError) {
-    return { offline: true, reason: STATUS_REASON.STREAM_OFFLINE };
-  }
-  const named = err as { name?: string; message?: string };
-  const text = `${named.name ?? ''} ${named.message ?? ''}`.toLowerCase();
-  if (text.includes('offline') || text.includes('not live') || named.name === 'UserOfflineError') {
-    return { offline: true, reason: STATUS_REASON.STREAM_OFFLINE };
-  }
-  return {
-    offline: false,
-    reason: named.message?.trim() || STATUS_REASON.CONNECT_FAILED,
-  };
 }
 
 async function connect(cmd: Extract<ParentToWorker, { type: 'connect' }>): Promise<void> {
@@ -150,7 +131,7 @@ async function connect(cmd: Extract<ParentToWorker, { type: 'connect' }>): Promi
       phase: 'error',
       reason: classified.reason,
     });
-    process.exitCode = classified.offline ? 8 : 7;
+    process.exitCode = classified.terminal ? 8 : 7;
   }
 }
 
@@ -158,11 +139,7 @@ async function disconnect(): Promise<void> {
   const current = connection;
   connection = undefined;
   if (!current) return;
-  try {
-    await current.disconnect();
-  } catch {
-    // Library disconnect can throw after a crash. The process is exiting anyway.
-  }
+  await current.disconnect().catch(() => undefined);
 }
 
 async function handle(line: string): Promise<void> {

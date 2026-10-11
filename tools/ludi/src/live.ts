@@ -52,13 +52,24 @@ export async function runTikTokWatchCommand(
       pageUrl: result.pageUrl,
     };
     if (result.verdict.pass) return ok(data);
-    const offline = result.commands.length === 0;
+    if (result.lastStatus?.reason === STATUS_REASON.SIGN_REQUIRED) {
+      return err(
+        'PRECONDITION_FAILED',
+        STATUS_REASON.SIGN_REQUIRED,
+        'export TIKTOK_SIGN_API_KEY from Euler Stream, then rerun ludi live tiktok-watch --user <tiktokUsername> --json',
+      );
+    }
+    if (result.lastStatus?.reason === STATUS_REASON.STREAM_OFFLINE) {
+      return err(
+        'PRECONDITION_FAILED',
+        STATUS_REASON.STREAM_OFFLINE,
+        'start a TikTok LIVE then rerun: ludi live tiktok-watch --user <tiktokUsername> --json',
+      );
+    }
     return err(
-      offline ? 'PRECONDITION_FAILED' : 'CONFLICT',
-      offline ? STATUS_REASON.STREAM_OFFLINE : result.verdict.line,
-      offline
-        ? 'start a TikTok LIVE then rerun: ludi live tiktok-watch --user <tiktokUsername> --json'
-        : 'ludi live tiktok-watch --replay packages/live-connector/testdata/pass.jsonl --json',
+      'CONFLICT',
+      result.verdict.line,
+      'Type !join in TikTok chat while the page is open, or replay packages/live-connector/testdata/pass.jsonl',
     );
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

@@ -40,6 +40,7 @@ export type WatchResult = {
   verdict: LagVerdict;
   commands: Array<ChatCommand & { lagMs: number | null }>;
   pageUrl?: string;
+  lastStatus?: ConnectionStatus;
 };
 
 const pagePath = join(dirname(fileURLToPath(import.meta.url)), 'page', 'index.html');
@@ -109,6 +110,8 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
 
   const lags: number[] = [];
   const commands: Array<ChatCommand & { lagMs: number | null }> = [];
+  let lastStatus: ConnectionStatus | undefined;
+  let terminalStatus: ConnectionStatus | undefined;
   const servePageWanted = options.servePage !== false;
   const page = servePageWanted ? await servePage(options.port ?? 8787) : undefined;
 
@@ -133,17 +136,22 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
     emit({ kind: 'command', ...row });
     emit({ kind: 'stats', ...verdict(lags) });
   });
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+
   adapter.onGift((gift) => {
     emit({ kind: 'gift', ...gift });
   });
   adapter.onStatus((status) => {
+    lastStatus = status;
+    if (status.phase === 'error') terminalStatus = status;
     emit({ kind: 'status', ...status });
+    if (status.phase === 'error') {
+      controller.abort();
+    }
   });
 
   await adapter.connect();
-
-  const controller = new AbortController();
-  const onAbort = () => controller.abort();
   options.signal?.addEventListener('abort', onAbort, { once: true });
   process.once('SIGINT', onAbort);
   process.once('SIGTERM', onAbort);
@@ -155,7 +163,7 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
     options.signal?.removeEventListener('abort', onAbort);
     process.removeListener('SIGINT', onAbort);
     process.removeListener('SIGTERM', onAbort);
-    return { verdict: result, commands, pageUrl: page?.pageUrl };
+    return { verdict: result, commands, pageUrl: page?.pageUrl, lastStatus: terminalStatus ?? lastStatus };
   }
 
   const duration = options.durationMs ?? 0;
@@ -180,5 +188,5 @@ export async function runWatch(options: WatchOptions): Promise<WatchResult> {
 
   const result = verdict(lags, P95_PASS_MS);
   emit({ kind: 'verdict', ...result });
-  return { verdict: result, commands, pageUrl: page?.pageUrl };
+  return { verdict: result, commands, pageUrl: page?.pageUrl, lastStatus: terminalStatus ?? lastStatus };
 }

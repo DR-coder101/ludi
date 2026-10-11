@@ -44,6 +44,7 @@ ENV (optional, never commit these):
 
 ERRORS:
   user is not live: start a TikTok LIVE then rerun
+  TikTok chat signing needs TIKTOK_SIGN_API_KEY from Euler Stream
   Missing --user or --replay: ludi live tiktok-watch --help
 
 EXAMPLES:

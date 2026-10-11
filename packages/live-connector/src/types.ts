@@ -67,6 +67,8 @@ export const P95_PASS_MS = 2000;
 
 export const STATUS_REASON = {
   STREAM_OFFLINE: 'user is not live: start a TikTok LIVE then rerun',
+  SIGN_REQUIRED:
+    'TikTok chat signing needs TIKTOK_SIGN_API_KEY from Euler Stream. Set it in the environment, then rerun',
   WORKER_CRASH: 'tiktok worker exited; reconnecting with backoff',
   DISCONNECT: 'disconnect requested',
   CONNECT_FAILED: 'connect failed; reconnecting with backoff',

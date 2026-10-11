@@ -40,6 +40,8 @@ If the library asks for a sign key or session, set them in your shell or a local
 - `TIKTOK_SESSION_COOKIE`
 - `TIKTOK_SESSION_IDC` (optional `tt-target-idc`)
 
+Euler Stream now asks for a Business-plan key before it will sign the chat socket. Without `TIKTOK_SIGN_API_KEY` the harness stops and says to set that key. It does not call that a "user is not live" failure.
+
 If the user is not live, the harness exits with `user is not live: start a TikTok LIVE then rerun`.
 
 ## Prefixes

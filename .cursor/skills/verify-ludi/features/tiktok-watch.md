@@ -29,4 +29,5 @@ Preconditions:
 - `tiktok-live-connector` is pinned at MIT `2.4.0`. Do not bump it. 2.4.1+ is AGPL-3.0-only.
 - Library calls live only in `packages/live-connector/src/tiktokWorker.ts`.
 - Do not put sign keys or session cookies in the repo. Read `TIKTOK_SIGN_API_KEY` / `EULER_API_KEY` / `TIKTOK_SESSION_COOKIE` from the environment.
+- A missing Euler sign key is `PRECONDITION_FAILED` with the sign-key hint. It is not "user is not live".
 - Existing `baselines/web/` shots are unchanged by this check.

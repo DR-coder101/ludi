@@ -15,6 +15,7 @@ import {
   type GiftEvent,
   type PlatformAdapter,
 } from './types.js';
+import { classifyConnectError, isTerminalReason } from './connectError.js';
 import { isConfiguredCommand } from './parseCommand.js';
 import { decodeWorkerLine, encodeLine, type ParentToWorker } from './workerProtocol.js';
 
@@ -106,9 +107,12 @@ export function createTikTokAdapter(options: TikTokAdapterOptions): PlatformAdap
               setStatus({ type: 'connect_requested' });
               return;
             }
-            if (message.reason === STATUS_REASON.STREAM_OFFLINE) {
+            if (isTerminalReason(message.reason)) {
               wantConnected = false;
-              setStatus({ type: 'offline', reason: STATUS_REASON.STREAM_OFFLINE });
+              setStatus({
+                type: 'fatal',
+                reason: classifyConnectError({ message: message.reason }).reason,
+              });
               return;
             }
             if (message.phase === 'error') {
@@ -156,14 +160,14 @@ export function createTikTokAdapter(options: TikTokAdapterOptions): PlatformAdap
     next.on('exit', () => {
       child = undefined;
       if (!wantConnected) return;
-      if (status.phase === 'error' && status.reason === STATUS_REASON.STREAM_OFFLINE) return;
+      if (status.phase === 'error') return;
       setStatus({ type: 'dropped', reason: STATUS_REASON.WORKER_CRASH });
     });
   };
 
   const runLoop = async (signal: AbortSignal) => {
     while (wantConnected && !signal.aborted) {
-      if (status.phase === 'error' && status.reason === STATUS_REASON.STREAM_OFFLINE) {
+      if (status.phase === 'error') {
         return;
       }
       if (status.phase === 'reconnecting') {
