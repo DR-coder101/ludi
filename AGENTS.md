@@ -67,3 +67,13 @@ The pstack pack (by Lauren Tan, v0.15.13) provides 51 skills covering principles
 - Use `expo-av` (not `expo-audio`)
 - Use `react-native-svg` for board rendering
 - Follow SDK 52 patterns from official Expo documentation when vendor skills reference newer APIs
+
+## Cursor Cloud specific instructions
+
+Agents run on Node 22 and pnpm 9.15.5 via corepack. `.cursor/environment.json` already installs workspace deps and Playwright Chromium. Do not run `npm install`.
+
+Verify with `pnpm test`, `pnpm -r lint`, and `pnpm -s ludi -- screens check`.
+
+Ludi Live work follows `.cursor/rules/ludi-live.mdc`. Wonder specs will live in `docs/live/wonder/`.
+
+This environment has no Android SDK. Mobile native builds are out of scope unless the task says so.

@@ -1,0 +1,4 @@
+{
+  "name": "Ludi",
+  "install": "set -euo pipefail\nnode -e \"const v = process.versions.node; const [maj, min] = v.split('.').map(Number); const ok = (maj === 20 && min >= 19) || (maj === 22 && min >= 12) || maj > 22; if (!ok) { console.error('Unsupported Node.js ' + v + '. Need ^20.19 or >=22.12.'); process.exit(1); } console.log('Node ' + v + ' OK');\"\ncorepack enable\ncorepack prepare pnpm@9.15.5 --activate\npnpm install --frozen-lockfile\npnpm --filter @ludi/cli exec playwright install --with-deps chromium\n"
+}
