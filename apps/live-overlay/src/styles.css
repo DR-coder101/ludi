@@ -77,7 +77,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 }
 .waiting { padding-top: 56px; gap: 22px; }
 .game { padding-top: 60px; gap: 14px; }
-.winner { padding-top: 40px; gap: 12px; }
+.winner { padding-top: 40px; gap: 10px; }
 
 .safe-zone {
   position: absolute;
@@ -336,9 +336,6 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   border: 3px solid #fed10099;
   border-radius: 30px;
   padding: 18px 22px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
 }
 .seat-head { display: flex; justify-content: space-between; align-items: center; }
 .players-title { display: flex; align-items: center; gap: 12px; font-size: 34px; }
@@ -350,13 +347,15 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   font-size: 32px;
   font-weight: 800;
 }
-.seat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.seat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px; }
 .seat-card {
-  min-height: 240px;
+  height: 240px;
+  box-sizing: border-box;
   border-radius: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   padding: 16px 10px;
   gap: 8px;
 }
@@ -425,7 +424,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   padding: 2px 10px;
   border: 2px solid currentColor;
 }
-.start-note { text-align: center; font-size: 24px; font-weight: 700; color: var(--cream); }
+.start-note { margin-top: 14px; text-align: center; font-size: 24px; font-weight: 700; color: var(--cream); }
 .join-toast {
   position: absolute;
   bottom: 560px;
@@ -473,7 +472,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 .mini-flag .g { background: var(--green); }
 .mini-flag .y { background: var(--gold); }
 .mini-flag .k { background: var(--ink); }
-.game-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-right: 8px; }
+.game-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-right: 20px; }
 .queue-badge {
   background: var(--green);
   border: 2px solid var(--ink);
@@ -758,10 +757,10 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   background: #0a0f0bdb;
   border: 3px solid #fed10099;
   border-radius: 28px;
-  padding: 16px 20px 18px;
+  padding: 12px 20px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   position: relative;
   z-index: 3;
 }
@@ -770,11 +769,11 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 .result-row {
   border-radius: 18px;
   border: 3px solid;
-  min-height: 83px;
+  min-height: 76px;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 10px 14px;
+  padding: 8px 14px;
 }
 .result-row.town-kingston { background: #16090b; border-color: #ff3340; }
 .result-row.town-ochoRios { background: #07140c; border-color: #19c45a; }
@@ -823,7 +822,7 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   color: #111;
   border: 5px solid #111;
   border-radius: 34px;
-  padding: 14px 28px;
+  padding: 10px 28px;
   font-size: 42px;
   line-height: 1;
   box-shadow: 0 0 40px rgba(254, 209, 0, 0.7), 0 8px 0 #111;
