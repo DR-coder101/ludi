@@ -55,16 +55,39 @@ function isChat(value: unknown): value is ChatInbound {
   );
 }
 
+function isGift(value: unknown): value is GiftInbound {
+  if (!value || typeof value !== 'object') return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.platform === 'string' &&
+    typeof v.userId === 'string' &&
+    typeof v.displayName === 'string' &&
+    typeof v.giftId === 'string' &&
+    typeof v.count === 'number'
+  );
+}
+
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw) as unknown;
+  } catch {
+    return null;
+  }
+}
+
 export function createLiveServer(options: LiveServerOptions): {
   start: () => Promise<string>;
   stop: () => Promise<void>;
   url: () => string;
 } {
+  const introRaw = process.env.LUDI_LIVE_INTRO_MS;
   const live =
     options.live ??
-    createLiveGame({
-      introMs: Number(process.env.LUDI_LIVE_INTRO_MS ?? 0),
-    });
+    createLiveGame(
+      introRaw === undefined || introRaw === ''
+        ? {}
+        : { introMs: Number(introRaw) },
+    );
   const adminToken = options.adminToken;
   let port = options.port ?? 0;
   let base = `http://127.0.0.1:${port}`;
@@ -84,7 +107,7 @@ export function createLiveServer(options: LiveServerOptions): {
       return;
     }
     if (req.method === 'POST' && url.pathname === '/dev/chat') {
-      const raw = JSON.parse(await readBody(req)) as unknown;
+      const raw = parseJson(await readBody(req));
       if (!isChat(raw)) {
         json(res, 400, { ok: false, error: 'invalid chat' });
         return;
@@ -95,18 +118,22 @@ export function createLiveServer(options: LiveServerOptions): {
       return;
     }
     if (req.method === 'POST' && url.pathname === '/dev/gift') {
-      const raw = JSON.parse(await readBody(req)) as GiftInbound;
+      const raw = parseJson(await readBody(req));
+      if (!isGift(raw)) {
+        json(res, 400, { ok: false, error: 'invalid gift' });
+        return;
+      }
       const events = live.handleGift(raw);
       broadcast(events);
       json(res, 200, { ok: true, events, snapshot: live.snapshot() });
       return;
     }
     if (req.method === 'POST' && url.pathname === '/admin') {
-      if (tokenOf(req, url) !== adminToken) {
+      if (!adminToken || tokenOf(req, url) !== adminToken) {
         json(res, 401, { ok: false, error: 'unauthorized' });
         return;
       }
-      const raw = JSON.parse(await readBody(req)) as unknown;
+      const raw = parseJson(await readBody(req));
       if (!isAdminAction(raw)) {
         json(res, 400, { ok: false, error: 'invalid admin action' });
         return;
@@ -123,8 +150,15 @@ export function createLiveServer(options: LiveServerOptions): {
   io.on('connection', (socket) => {
     socket.emit('live', { snapshot: live.snapshot(), events: [] });
     socket.on('admin', (action: unknown, ack?: (r: unknown) => void) => {
-      const auth = socket.handshake.auth as { token?: string };
-      if (auth.token !== adminToken) {
+      const auth = socket.handshake.auth;
+      const queryToken = socket.handshake.query.token;
+      const presented =
+        auth && typeof auth === 'object' && 'token' in auth && typeof auth.token === 'string'
+          ? auth.token
+          : typeof queryToken === 'string'
+            ? queryToken
+            : undefined;
+      if (!adminToken || presented !== adminToken) {
         ack?.({ ok: false, error: 'unauthorized' });
         return;
       }

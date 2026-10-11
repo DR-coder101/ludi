@@ -215,9 +215,17 @@ function autoplayTurn(s: Internal, rt: Runtime, events: LiveEvent[], now: number
   if (s.game.phase === 'awaiting_roll') {
     doRoll(s, rt, events, now, userId);
   }
-  while (s.phase === 'PLAYING' && s.game && s.game.phase === 'awaiting_move' && s.game.turn === color) {
+  let played = 0;
+  while (
+    played < 4 &&
+    s.phase === 'PLAYING' &&
+    s.game &&
+    s.game.phase === 'awaiting_move' &&
+    s.game.turn === color
+  ) {
     const move = pickTimeoutMove(s, rt);
     if (!move) break;
+    played += 1;
     applyEngineMove(s, rt, events, now, move, userId);
   }
   if (s.phase === 'PLAYING' && s.game) {

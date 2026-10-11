@@ -20,9 +20,9 @@ export function createSequenceRng(values: number[]): Rng {
   };
 }
 
-/** Faces 1–6 in a cycle so timeout autoplay can exact-finish home. */
+/** Faces 1 through 6, repeating. Values sit inside each die bucket so float rounding cannot collapse a face. */
 export function createCyclingDiceRng(): Rng {
-  return createSequenceRng([0, 1 / 6, 2 / 6, 3 / 6, 4 / 6, 5 / 6]);
+  return createSequenceRng([0, 0.2, 0.4, 0.5, 0.7, 0.9]);
 }
 
 export function systemClock(): Clock {
