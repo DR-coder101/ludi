@@ -25,5 +25,10 @@
     "mobile-game"
   ],
   "author": "Dean",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "pnpm": {
+    "overrides": {
+      "tiktok-live-connector": "2.4.0"
+    }
+  }
 }

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ludi Live TikTok watch</title>
+    <style>
+      :root {
+        --bg: #111214;
+        --ink: #f4f1e8;
+        --muted: #9aa0a6;
+        --gold: #fed100;
+        --green: #0fae47;
+        --red: #e4202e;
+        --panel: #1b1c20;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      header {
+        padding: 20px 24px 12px;
+        border-bottom: 4px solid var(--gold);
+      }
+      h1 { margin: 0 0 6px; font-size: 22px; }
+      .meta { color: var(--muted); font-size: 14px; }
+      .stats {
+        display: flex;
+        gap: 12px;
+        padding: 16px 24px;
+        flex-wrap: wrap;
+      }
+      .card {
+        background: var(--panel);
+        border-radius: 12px;
+        padding: 14px 16px;
+        min-width: 140px;
+      }
+      .card b { display: block; font-size: 28px; }
+      .pass { color: var(--green); }
+      .fail { color: var(--red); }
+      ol {
+        list-style: none;
+        margin: 0;
+        padding: 0 24px 24px;
+      }
+      li {
+        background: var(--panel);
+        border-radius: 10px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        display: grid;
+        grid-template-columns: 90px 1fr auto;
+        gap: 12px;
+        align-items: center;
+      }
+      .lag { font-variant-numeric: tabular-nums; color: var(--gold); }
+      code { color: var(--gold); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Ludi Live chat check</h1>
+      <div class="meta" id="status">connecting…</div>
+    </header>
+    <section class="stats">
+      <div class="card">p50<b id="p50">n/a</b></div>
+      <div class="card">p95<b id="p95">n/a</b></div>
+      <div class="card">samples<b id="samples">0</b></div>
+      <div class="card">verdict<b id="verdict" class="fail">WAIT</b></div>
+    </section>
+    <ol id="log"></ol>
+    <script>
+      const log = document.getElementById('log');
+      const source = new EventSource('/events');
+      function ms(value) {
+        return value == null ? 'n/a' : Math.round(value) + 'ms';
+      }
+      source.onmessage = (event) => {
+        const row = JSON.parse(event.data);
+        if (row.kind === 'status') {
+          document.getElementById('status').textContent = row.reason
+            ? row.phase + ' · ' + row.reason
+            : row.phase;
+        }
+        if (row.kind === 'stats' || row.kind === 'verdict') {
+          document.getElementById('p50').textContent = ms(row.p50Ms);
+          document.getElementById('p95').textContent = ms(row.p95Ms);
+          document.getElementById('samples').textContent = String(row.sampleCount);
+          const verdict = document.getElementById('verdict');
+          verdict.textContent = row.sampleCount === 0 ? 'WAIT' : row.pass ? 'PASS' : 'FAIL';
+          verdict.className = row.pass ? 'pass' : 'fail';
+        }
+        if (row.kind === 'command') {
+          const item = document.createElement('li');
+          const who = document.createElement('strong');
+          who.textContent = row.displayName;
+          const text = document.createElement('code');
+          text.textContent = row.text;
+          const lag = document.createElement('span');
+          lag.className = 'lag';
+          lag.textContent = ms(row.lagMs);
+          item.append(who, text, lag);
+          log.prepend(item);
+        }
+      };
+    </script>
+  </body>
+</html>
