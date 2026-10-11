@@ -1,0 +1,33 @@
+{
+  "name": "live-overlay",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --host 127.0.0.1 --port 4174",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/baloo-2": "^5.2.6",
+    "@ludi/live-game": "workspace:*",
+    "@ludi/protocol": "workspace:*",
+    "@ludi/rules": "workspace:*",
+    "canvas-confetti": "^1.9.3",
+    "motion": "^12.23.12",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "socket.io-client": "^4.8.3"
+  },
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "^5.5.0",
+    "vite": "^5.4.11",
+    "vitest": "^2.1.9"
+  }
+}

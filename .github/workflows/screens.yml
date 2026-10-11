@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "apps/mobile/**"
+      - "apps/live-overlay/**"
       - "tools/ludi/src/screens/**"
       - "tools/ludi/src/registry.ts"
       - "tools/ludi/src/introspect.ts"
@@ -15,6 +16,7 @@ on:
       - main
     paths:
       - "apps/mobile/**"
+      - "apps/live-overlay/**"
       - "tools/ludi/src/screens/**"
       - "tools/ludi/src/registry.ts"
       - "tools/ludi/src/introspect.ts"
@@ -55,6 +57,8 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Compare Expo web screens to baselines
         run: pnpm -s ludi -- screens check --output json --run-dir "$RUNNER_TEMP/ludi-screens"
+      - name: Compare overlay screens to baselines
+        run: pnpm -s ludi -- screens check --target overlay --output json --run-dir "$RUNNER_TEMP/ludi-overlay"
       - name: Upload diffs on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -63,4 +67,6 @@ jobs:
           path: |
             ${{ runner.temp }}/ludi-screens/evidence/screens/
             ${{ runner.temp }}/ludi-screens/expo-export.log
+            ${{ runner.temp }}/ludi-overlay/evidence/overlay/
+            ${{ runner.temp }}/ludi-overlay/overlay-build.log
           if-no-files-found: ignore

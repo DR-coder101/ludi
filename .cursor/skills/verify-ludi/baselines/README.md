@@ -17,3 +17,15 @@ pnpm -s ludi -- screens check --update-baselines --run-dir /tmp/ludi-screens --o
 ```
 
 A failing check writes `<id>.diff.png` next to the actual under `"$RUN_DIR/evidence/screens/"`.
+
+## `overlay/`
+
+Machine baselines for the 1080×1920 OBS overlay. `ludi screens check --target overlay` captures demo fixtures with `settle=1` and `prefers-reduced-motion: reduce`, then pixelmatches these files. Wonder-diff is informational and does not fail the check.
+
+Regenerate:
+
+```bash
+pnpm -s ludi -- screens check --target overlay --update-baselines --run-dir /tmp/ludi-overlay --output json
+```
+
+A failing check writes `<id>.diff.png` under `"$RUN_DIR/evidence/overlay/"`.

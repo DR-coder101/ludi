@@ -1,0 +1,1201 @@
+{
+ "artboard": "Ludi Live TikTok Overlay v4 - App Board",
+ "dataNodeId": "fit",
+ "wonderFileId": "01a1280f-1b74-77f2-96d4-e2a6357d0791",
+ "pageId": "01a1280f-1b76-78f9-a694-c24ae2ca8fa8",
+ "canvas": {
+  "width": 1080,
+  "height": 1920,
+  "x": 5660,
+  "y": 0
+ },
+ "note": "tree = raw get_element_tree output (depth 50); nodes = same tree parsed, with box = rendered position/size in artboard px (from rendering code.jsx at 1080x1920)",
+ "tree": "<div data-node-id=\"fit\" data-node-label=\"Ludi Live TikTok Overlay v4 - App Board\" data-component-x=\"5660\" data-component-y=\"0\">\n  <div data-node-id=\"fit.sam\" data-node-label=\"Background Photo Layer - Swap For Jamaica Photo\">\n    <div data-node-id=\"fit.nhs\" data-node-label=\"Backdrop Photo - Dean Beach Sunset\"></div>\n    <div data-node-id=\"fit.men\" data-node-label=\"Backdrop Readability Vertical Tint\"></div>\n    <div data-node-id=\"fit.per\" data-node-label=\"Backdrop Readability Centre Vignette\"></div>\n  </div>\n  <div data-node-id=\"fit.pdt\" data-node-label=\"Title Card Row\">\n    <div data-node-id=\"fit.dam\" data-node-label=\"Ludi Live Title Card\">\n      <div data-node-id=\"fit.our\" data-node-label=\"SVG\">\n        <div data-node-id=\"fit.sri\" data-node-label=\"SVG\">\n          <div data-node-id=\"fit.yid\" data-node-label=\"SVG\">\n            <svg stroke=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(254, 209, 0)\" fill=\"rgb(254, 209, 0)\" stroke=\"rgb(254, 209, 0)\" strokeWidth=\"0px\"></path></svg>\n          </div>\n        </div>\n      </div>\n      <div data-node-id=\"fit.gez\" data-node-label=\"Title Text Stack\">\n        <div data-node-id=\"fit.tom\" data-node-label=\"Ludi Live Wordmark\">LUDI LIVE</div>\n        <div data-node-id=\"fit.ley\" data-node-label=\"Brand Byline Row\">\n          <div data-node-id=\"fit.etc\" data-node-label=\"Jamaica Stripe Accent\">\n            <div data-node-id=\"fit.kol\" data-node-label=\"Stripe Green\"></div>\n            <div data-node-id=\"fit.tyt\" data-node-label=\"Stripe Gold\"></div>\n            <div data-node-id=\"fit.ink\" data-node-label=\"Stripe Black\"></div>\n          </div>\n          <div data-node-id=\"fit.rim\" data-node-label=\"By StreamArchitect Mark\">by StreamArchitect \u00b7 Game #24</div>\n        </div>\n      </div>\n    </div>\n    <div data-node-id=\"fit.sql\" data-node-label=\"Game Badges Stack\">\n      <div data-node-id=\"fit.mix\" data-node-label=\"Join Queue Badge\">\n        <div data-node-id=\"fit.oda\" data-node-label=\"SVG\">\n          <div data-node-id=\"fit.elm\" data-node-label=\"SVG\">\n            <svg stroke=\"rgb(255, 255, 255)\" fill=\"none\" strokeWidth=\"2\" viewBox=\"0 0 24 24\" strokeLinecap=\"round\" strokeLinejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 255, 255)\" width=\"100%\" height=\"100%\"><path d=\"M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\" color=\"rgb(255, 255, 255)\" fill=\"none\" stroke=\"rgb(255, 255, 255)\" strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth=\"2px\"></path><circle cx=\"8.5\" cy=\"7\" r=\"4\" color=\"rgb(255, 255, 255)\" fill=\"none\" stroke=\"rgb(255, 255, 255)\" strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth=\"2px\"></circle><line x1=\"20\" y1=\"8\" x2=\"20\" y2=\"14\" color=\"rgb(255, 255, 255)\" fill=\"none\" stroke=\"rgb(255, 255, 255)\" strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth=\"2px\"></line><line x1=\"23\" y1=\"11\" x2=\"17\" y2=\"11\" color=\"rgb(255, 255, 255)\" fill=\"none\" stroke=\"rgb(255, 255, 255)\" strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth=\"2px\"></line></svg>\n          </div>\n        </div>\n        <div data-node-id=\"fit.ace\" data-node-label=\"Join Queue Text\">NEXT: @Tom +1 \u00b7 !join</div>\n      </div>\n      <div data-node-id=\"fit.bid\" data-node-label=\"Winner Stays Badge\">\n        <div data-node-id=\"fit.zad\" data-node-label=\"SVG\">\n          <div data-node-id=\"fit.sub\" data-node-label=\"SVG\">\n            <div data-node-id=\"fit.may\" data-node-label=\"SVG\">\n              <svg stroke=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" strokeWidth=\"0\" viewBox=\"0 0 576 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(17, 17, 17)\" width=\"100%\" height=\"100%\"><path d=\"M309 106c11.4-7 19-19.7 19-34c0-22.1-17.9-40-40-40s-40 17.9-40 40c0 14.4 7.6 27 19 34L209.7 220.6c-9.1 18.2-32.7 23.4-48.6 10.7L72 160c5-6.7 8-15 8-24c0-22.1-17.9-40-40-40S0 113.9 0 136s17.9 40 40 40c.2 0 .5 0 .7 0L86.4 427.4c5.5 30.4 32 52.6 63 52.6l277.2 0c30.9 0 57.4-22.1 63-52.6L535.3 176c.2 0 .5 0 .7 0c22.1 0 40-17.9 40-40s-17.9-40-40-40s-40 17.9-40 40c0 9 3 17.3 8 24l-89.1 71.3c-15.9 12.7-39.5 7.5-48.6-10.7L309 106z\" color=\"rgb(17, 17, 17)\" fill=\"rgb(17, 17, 17)\" stroke=\"rgb(17, 17, 17)\" strokeWidth=\"0px\"></path></svg>\n            </div>\n          </div>\n        </div>\n        <div data-node-id=\"fit.els\" data-node-label=\"Winner Stays Text\">WINNER STAYS</div>\n      </div>\n    </div>\n  </div>\n  <div data-node-id=\"fit.goo\" data-node-label=\"Turn Row\">\n    <div data-node-id=\"fit.one\" data-node-label=\"Current Turn Panel\">\n      <div data-node-id=\"fit.kit\" data-node-label=\"Turn Info Stack\">\n        <div data-node-id=\"fit.ara\" data-node-label=\"Turn Name Row\">\n          <div data-node-id=\"fit.cee\" data-node-label=\"Current Turn Label\">TURN</div>\n          <div data-node-id=\"fit.six\" data-node-label=\"Current Turn Player\">@Dave</div>\n          <div data-node-id=\"fit.zoa\" data-node-label=\"Turn Timer Row\">\n            <div data-node-id=\"fit.geo\" data-node-label=\"SVG\">\n              <div data-node-id=\"fit.cgi\" data-node-label=\"SVG\">\n                <div data-node-id=\"fit.was\" data-node-label=\"SVG\">\n                  <svg stroke=\"rgb(255, 255, 255)\" fill=\"none\" strokeWidth=\"2\" viewBox=\"0 0 24 24\" strokeLinecap=\"round\" strokeLinejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 255, 255)\" width=\"100%\" height=\"100%\"><circle cx=\"12\" cy=\"12\" r=\"10\" color=\"rgb(255, 255, 255)\" fill=\"none\" stroke=\"rgb(255, 255, 255)\" strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth=\"2px\"></circle><polyline points=\"12 6 12 12 16 14\" color=\"rgb(255, 255, 255)\" fill=\"none\" stroke=\"rgb(255, 255, 255)\" strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth=\"2px\"></polyline></svg>\n                </div>\n              </div>\n            </div>\n            <div data-node-id=\"fit.roe\" data-node-label=\"Turn Timer Text\">00:18</div>\n          </div>\n        </div>\n        <div data-node-id=\"fit.dun\" data-node-label=\"Turn Timer Track\">\n          <div data-node-id=\"fit.yot\" data-node-label=\"Turn Timer Fill\"></div>\n        </div>\n        <div data-node-id=\"fit.yep\" data-node-label=\"Command Hint Row\">\n          <div data-node-id=\"fit.fro\" data-node-label=\"Command Hint Label\">Type</div>\n          <div data-node-id=\"fit.leo\" data-node-label=\"Roll Command Chip\">!roll</div>\n          <div data-node-id=\"fit.mod\" data-node-label=\"Command Hint Then\">then</div>\n          <div data-node-id=\"fit.usa\" data-node-label=\"Move Command Chip\">!move 1-4</div>\n        </div>\n      </div>\n      <div data-node-id=\"fit.pci\" data-node-label=\"Dice Result Die\">\n        <div data-node-id=\"fit.mah\" data-node-label=\"Die Top Pips\">\n          <div data-node-id=\"fit.mal\" data-node-label=\"Die Pip Top Left\"></div>\n          <div data-node-id=\"fit.wye\" data-node-label=\"Die Pip Top Right\"></div>\n        </div>\n        <div data-node-id=\"fit.oem\" data-node-label=\"Die Middle Pips\">\n          <div data-node-id=\"fit.how\" data-node-label=\"Die Pip Centre\"></div>\n        </div>\n        <div data-node-id=\"fit.had\" data-node-label=\"Die Bottom Pips\">\n          <div data-node-id=\"fit.too\" data-node-label=\"Die Pip Bottom Left\"></div>\n          <div data-node-id=\"fit.why\" data-node-label=\"Die Pip Bottom Right\"></div>\n        </div>\n      </div>\n    </div>\n  </div>\n  <div data-node-id=\"fit.ave\" data-node-label=\"Player Tags Row\">\n    <div data-node-id=\"fit.eos\" data-node-label=\"Kingston Red Player Tag\">\n      <div data-node-id=\"fit.hon\" data-node-label=\"Kingston Red Colour Dot\"></div>\n      <div data-node-id=\"fit.sic\" data-node-label=\"Red Player Name\">@Dave</div>\n      <div data-node-id=\"fit.who\" data-node-label=\"Red Player Out Count\">2 out</div>\n    </div>\n    <div data-node-id=\"fit.due\" data-node-label=\"Ocho Rios Green Player Tag\">\n      <div data-node-id=\"fit.art\" data-node-label=\"Ocho Rios Green Colour Dot\"></div>\n      <div data-node-id=\"fit.pda\" data-node-label=\"Green Player Name\">@Mike</div>\n      <div data-node-id=\"fit.pty\" data-node-label=\"Green Player Out Count\">2 out</div>\n    </div>\n    <div data-node-id=\"fit.soa\" data-node-label=\"Montego Bay Gold Player Tag\">\n      <div data-node-id=\"fit.low\" data-node-label=\"Montego Bay Gold Colour Dot\"></div>\n      <div data-node-id=\"fit.job\" data-node-label=\"Yellow Player Name\">@Sarah</div>\n      <div data-node-id=\"fit.pit\" data-node-label=\"Gold Player Out Count\">2 out</div>\n    </div>\n    <div data-node-id=\"fit.keg\" data-node-label=\"Negril Black Player Tag\">\n      <div data-node-id=\"fit.dev\" data-node-label=\"Negril Black Colour Dot\"></div>\n      <div data-node-id=\"fit.era\" data-node-label=\"Blue Player Name\">@John</div>\n      <div data-node-id=\"fit.leg\" data-node-label=\"Black Player Out Count\">3 out</div>\n    </div>\n  </div>\n  <div data-node-id=\"fit.non\" data-node-label=\"Board Row\">\n    <div data-node-id=\"fit.com\" data-node-label=\"App Ludi Board Holder\">\n      <div data-node-id=\"fit.oct\" data-node-label=\"App Ludi Board Image - Wide Track Kingston Active\"></div>\n    </div>\n    <div data-node-id=\"fit.her\" data-node-label=\"Turn Card Board Scrim\"></div>\n    <div data-node-id=\"fit.css\" data-node-label=\"Turn Name Card Popup\">\n      <div data-node-id=\"fit.zac\" data-node-label=\"Turn Card Top Row\">\n        <div data-node-id=\"fit.but\" data-node-label=\"Turn Card Colour Dot\"></div>\n        <div data-node-id=\"fit.can\" data-node-label=\"Turn Card Name\">@DAVE\u2019S</div>\n        <div data-node-id=\"fit.jat\" data-node-label=\"SVG\">\n          <div data-node-id=\"fit.waf\" data-node-label=\"SVG\">\n            <svg stroke=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" strokeWidth=\"0\" viewBox=\"0 0 448 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 255, 255)\" width=\"100%\" height=\"100%\"><path d=\"M64 32C28.7 32 0 60.7 0 96L0 416c0 35.3 28.7 64 64 64l320 0c35.3 0 64-28.7 64-64l0-320c0-35.3-28.7-64-64-64L64 32zm64 96a32 32 0 1 1 0 64 32 32 0 1 1 0-64zM96 352a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM224 224a32 32 0 1 1 0 64 32 32 0 1 1 0-64zm64-64a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32 160a32 32 0 1 1 0 64 32 32 0 1 1 0-64z\" color=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" stroke=\"rgb(255, 255, 255)\" strokeWidth=\"0px\"></path></svg>\n          </div>\n        </div>\n      </div>\n      <div data-node-id=\"fit.ler\" data-node-label=\"Turn Card Turn Word\">TURN!</div>\n      <div data-node-id=\"fit.bey\" data-node-label=\"Turn Card Hint\">type !roll</div>\n    </div>\n  </div>\n  <div data-node-id=\"fit.ltd\" data-node-label=\"Event Line Row\">\n    <div data-node-id=\"fit.you\" data-node-label=\"Capture Event Line\">\n      <div data-node-id=\"fit.far\" data-node-label=\"SVG\">\n        <div data-node-id=\"fit.iao\" data-node-label=\"SVG\">\n          <div data-node-id=\"fit.fut\" data-node-label=\"SVG\">\n            <svg stroke=\"rgb(254, 209, 0)\" fill=\"none\" strokeWidth=\"2\" viewBox=\"0 0 24 24\" strokeLinecap=\"round\" strokeLinejoin=\"round\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(254, 209, 0)\" width=\"100%\" height=\"100%\"><polygon points=\"13 2 3 14 12 14 11 22 21 10 12 10 13 2\" color=\"rgb(254, 209, 0)\" fill=\"none\" stroke=\"rgb(254, 209, 0)\" strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth=\"2px\"></polygon></svg>\n          </div>\n        </div>\n      </div>\n      <div data-node-id=\"fit.two\" data-node-label=\"Capture Event Text\">@Dave knocked @Sarah home!</div>\n    </div>\n    <div data-node-id=\"fit.red\" data-node-label=\"Gift Pop Line\">\n      <div data-node-id=\"fit.his\" data-node-label=\"SVG\">\n        <div data-node-id=\"fit.nec\" data-node-label=\"SVG\">\n          <div data-node-id=\"fit.mid\" data-node-label=\"SVG\">\n            <svg stroke=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" strokeWidth=\"0\" viewBox=\"0 0 512 512\" xmlns=\"http://www.w3.org/2000/svg\" color=\"rgb(255, 255, 255)\" width=\"100%\" height=\"100%\"><path d=\"M281.31 21.217L239.997 127.13l76.01 103.673 97.135-7.532-3.1-79.284-78.2-12.468-1.61 41.535 29.11 7.568-.766-14.1 18.662-1.012 2.15 39.635-68.41-17.788 3.004-77.61 68.65 10.946-2.456-86.044-98.863-13.43zM243.63 66.39l-73.702 39.917L195.885 243.7l141.306 80.704 154.447-80.037-11.252-142.205-79.617-.988.642 22.512 26.705 4.257 4.403 112.57-125.436 9.727-88.227-120.338 24.774-63.51zm-93.107 88.706c-2.992-.017-6.01.004-9.054.06-9.456.174-19.425.853-29.44 1.594 9.427 13.32 18.694 26.165 30.157 35.938 7.894 6.73 16.835 12.308 28.075 16.056l-10.1-53.453c-3.184-.11-6.396-.176-9.64-.194zm25.57 84.51c-14.278 5.27-27.16 13.25-39.437 23.55-17.875 14.995-34.273 35.22-50.625 58.47 56.9 2.6 100.16-6.41 147.316-35.01l-54.223-30.966-3.03-16.045zm270.854 48.968l-50.64 26.244c27.874 20.83 54.865 27.206 90.162 28.557-8.76-21.213-22.617-39.484-39.523-54.8zm-189.853 4.895c-14.566 9.75-28.84 17.8-43.156 24.342.37 10.843 2.813 19.703 6.968 26.47-29.49 37.69-61.714 72.017-96.78 102.843-17.584-1.215-24.577-19.137-17.845-37.344-22.758 18.074-30.427 42.166-20 68.376-6.832 5.23-13.75 10.354-20.78 15.344h45.344c25.65-20.11 49.915-41.82 72.844-65.094 29.485 9.192 54.05-1.51 69.625-27.97-14.975 8.052-31.217 5.627-37.438-6.686 9.653-11.06 19.037-22.436 28.156-34.125 7.25 1.21 15.586.57 24.72-2.03-8.863-17.974-13.326-39.19-11.656-64.126zm18.133 17.065c1.205 25.213 10.463 44.01 24.648 60.12 17.914 20.346 44.73 35.942 73.625 50.814 7.79-33.575 9.555-62.664-2.05-93.77l-34.692 17.978-61.53-35.143z\" color=\"rgb(255, 255, 255)\" fill=\"rgb(255, 255, 255)\" stroke=\"rgb(255, 255, 255)\" strokeWidth=\"0px\"></path></svg>\n          </div>\n        </div>\n      </div>\n      <div data-node-id=\"fit.bor\" data-node-label=\"Gift Pop Text\">@Lucy sent Rose x6</div>\n    </div>\n  </div>\n</div>",
+ "nodes": [
+  {
+   "tag": "div",
+   "id": "fit",
+   "label": "Ludi Live TikTok Overlay v4 - App Board",
+   "children": [
+    {
+     "tag": "div",
+     "id": "fit.sam",
+     "label": "Background Photo Layer - Swap For Jamaica Photo",
+     "children": [
+      {
+       "tag": "div",
+       "id": "fit.nhs",
+       "label": "Backdrop Photo - Dean Beach Sunset",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.men",
+       "label": "Backdrop Readability Vertical Tint",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.per",
+       "label": "Backdrop Readability Centre Vignette",
+       "children": [],
+       "box": {
+        "x": 0,
+        "y": 0,
+        "w": 1080,
+        "h": 1920
+       }
+      }
+     ],
+     "box": {
+      "x": 0,
+      "y": 0,
+      "w": 1080,
+      "h": 1920
+     }
+    },
+    {
+     "tag": "div",
+     "id": "fit.pdt",
+     "label": "Title Card Row",
+     "children": [
+      {
+       "tag": "div",
+       "id": "fit.dam",
+       "label": "Ludi Live Title Card",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.our",
+         "label": "SVG",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.sri",
+           "label": "SVG",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.yid",
+             "label": "SVG",
+             "children": [],
+             "box": {
+              "x": 119,
+              "y": 91,
+              "w": 60,
+              "h": 60
+             }
+            }
+           ],
+           "box": {
+            "x": 119,
+            "y": 91,
+            "w": 60,
+            "h": 60
+           }
+          }
+         ],
+         "box": {
+          "x": 119,
+          "y": 91,
+          "w": 60,
+          "h": 60
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.gez",
+         "label": "Title Text Stack",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.tom",
+           "label": "Ludi Live Wordmark",
+           "children": [],
+           "box": {
+            "x": 189,
+            "y": 75,
+            "w": 304,
+            "h": 63
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.ley",
+           "label": "Brand Byline Row",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.etc",
+             "label": "Jamaica Stripe Accent",
+             "children": [
+              {
+               "tag": "div",
+               "id": "fit.kol",
+               "label": "Stripe Green",
+               "children": [],
+               "box": {
+                "x": 189,
+                "y": 150,
+                "w": 16,
+                "h": 7
+               }
+              },
+              {
+               "tag": "div",
+               "id": "fit.tyt",
+               "label": "Stripe Gold",
+               "children": [],
+               "box": {
+                "x": 205,
+                "y": 150,
+                "w": 16,
+                "h": 7
+               }
+              },
+              {
+               "tag": "div",
+               "id": "fit.ink",
+               "label": "Stripe Black",
+               "children": [],
+               "box": {
+                "x": 221,
+                "y": 150,
+                "w": 16,
+                "h": 7
+               }
+              }
+             ],
+             "box": {
+              "x": 189,
+              "y": 150,
+              "w": 48,
+              "h": 7
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.rim",
+             "label": "By StreamArchitect Mark",
+             "children": [],
+             "box": {
+              "x": 245,
+              "y": 138,
+              "w": 273,
+              "h": 30
+             }
+            }
+           ],
+           "box": {
+            "x": 189,
+            "y": 138,
+            "w": 329,
+            "h": 30
+           }
+          }
+         ],
+         "box": {
+          "x": 189,
+          "y": 75,
+          "w": 329,
+          "h": 93
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 60,
+        "w": 644,
+        "h": 123
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.sql",
+       "label": "Game Badges Stack",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.mix",
+         "label": "Join Queue Badge",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.oda",
+           "label": "SVG",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.elm",
+             "label": "SVG",
+             "children": [],
+             "box": {
+              "x": 766,
+              "y": 82,
+              "w": 20,
+              "h": 20
+             }
+            }
+           ],
+           "box": {
+            "x": 766,
+            "y": 82,
+            "w": 20,
+            "h": 20
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.ace",
+           "label": "Join Queue Text",
+           "children": [],
+           "box": {
+            "x": 792,
+            "y": 78,
+            "w": 183,
+            "h": 29
+           }
+          }
+         ],
+         "box": {
+          "x": 752,
+          "y": 71,
+          "w": 237,
+          "h": 43
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.bid",
+         "label": "Winner Stays Badge",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.zad",
+           "label": "SVG",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.sub",
+             "label": "SVG",
+             "children": [
+              {
+               "tag": "div",
+               "id": "fit.may",
+               "label": "SVG",
+               "children": [],
+               "box": {
+                "x": 783,
+                "y": 142,
+                "w": 20,
+                "h": 21
+               }
+              }
+             ],
+             "box": {
+              "x": 783,
+              "y": 142,
+              "w": 20,
+              "h": 21
+             }
+            }
+           ],
+           "box": {
+            "x": 783,
+            "y": 142,
+            "w": 21,
+            "h": 21
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.els",
+           "label": "Winner Stays Text",
+           "children": [],
+           "box": {
+            "x": 809,
+            "y": 125,
+            "w": 148,
+            "h": 43
+           }
+          }
+         ],
+         "box": {
+          "x": 765,
+          "y": 116,
+          "w": 209,
+          "h": 63
+         }
+        }
+       ],
+       "box": {
+        "x": 760,
+        "y": 71,
+        "w": 220,
+        "h": 102
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 60,
+      "w": 880,
+      "h": 123
+     }
+    },
+    {
+     "tag": "div",
+     "id": "fit.goo",
+     "label": "Turn Row",
+     "children": [
+      {
+       "tag": "div",
+       "id": "fit.one",
+       "label": "Current Turn Panel",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.kit",
+         "label": "Turn Info Stack",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.ara",
+           "label": "Turn Name Row",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.cee",
+             "label": "Current Turn Label",
+             "children": [],
+             "box": {
+              "x": 124,
+              "y": 219,
+              "w": 70,
+              "h": 32
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.six",
+             "label": "Current Turn Player",
+             "children": [],
+             "box": {
+              "x": 206,
+              "y": 213,
+              "w": 148,
+              "h": 44
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.zoa",
+             "label": "Turn Timer Row",
+             "children": [
+              {
+               "tag": "div",
+               "id": "fit.geo",
+               "label": "SVG",
+               "children": [
+                {
+                 "tag": "div",
+                 "id": "fit.cgi",
+                 "label": "SVG",
+                 "children": [
+                  {
+                   "tag": "div",
+                   "id": "fit.was",
+                   "label": "SVG",
+                   "children": [],
+                   "box": {
+                    "x": 724,
+                    "y": 222,
+                    "w": 26,
+                    "h": 26
+                   }
+                  }
+                 ],
+                 "box": {
+                  "x": 724,
+                  "y": 222,
+                  "w": 26,
+                  "h": 26
+                 }
+                }
+               ],
+               "box": {
+                "x": 724,
+                "y": 222,
+                "w": 26,
+                "h": 26
+               }
+              },
+              {
+               "tag": "div",
+               "id": "fit.roe",
+               "label": "Turn Timer Text",
+               "children": [],
+               "box": {
+                "x": 756,
+                "y": 219,
+                "w": 78,
+                "h": 32
+               }
+              }
+             ],
+             "box": {
+              "x": 724,
+              "y": 219,
+              "w": 110,
+              "h": 32
+             }
+            }
+           ],
+           "box": {
+            "x": 124,
+            "y": 213,
+            "w": 710,
+            "h": 44
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.dun",
+           "label": "Turn Timer Track",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.yot",
+             "label": "Turn Timer Fill",
+             "children": [],
+             "box": {
+              "x": 124,
+              "y": 263,
+              "w": 426,
+              "h": 10
+             }
+            }
+           ],
+           "box": {
+            "x": 124,
+            "y": 263,
+            "w": 710,
+            "h": 10
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.yep",
+           "label": "Command Hint Row",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.fro",
+             "label": "Command Hint Label",
+             "children": [],
+             "box": {
+              "x": 124,
+              "y": 283,
+              "w": 48,
+              "h": 33
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.leo",
+             "label": "Roll Command Chip",
+             "children": [],
+             "box": {
+              "x": 180,
+              "y": 279,
+              "w": 72,
+              "h": 41
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.mod",
+             "label": "Command Hint Then",
+             "children": [],
+             "box": {
+              "x": 260,
+              "y": 283,
+              "w": 46,
+              "h": 33
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.usa",
+             "label": "Move Command Chip",
+             "children": [],
+             "box": {
+              "x": 314,
+              "y": 279,
+              "w": 138,
+              "h": 41
+             }
+            }
+           ],
+           "box": {
+            "x": 124,
+            "y": 279,
+            "w": 710,
+            "h": 41
+           }
+          }
+         ],
+         "box": {
+          "x": 124,
+          "y": 213,
+          "w": 710,
+          "h": 107
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.pci",
+         "label": "Dice Result Die",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.mah",
+           "label": "Die Top Pips",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.mal",
+             "label": "Die Pip Top Left",
+             "children": [],
+             "box": {
+              "x": 873,
+              "y": 228,
+              "w": 20,
+              "h": 20
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.wye",
+             "label": "Die Pip Top Right",
+             "children": [],
+             "box": {
+              "x": 922,
+              "y": 235,
+              "w": 20,
+              "h": 20
+             }
+            }
+           ],
+           "box": {
+            "x": 873,
+            "y": 228,
+            "w": 70,
+            "h": 27
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.oem",
+           "label": "Die Middle Pips",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.how",
+             "label": "Die Pip Centre",
+             "children": [],
+             "box": {
+              "x": 894,
+              "y": 256,
+              "w": 20,
+              "h": 20
+             }
+            }
+           ],
+           "box": {
+            "x": 869,
+            "y": 253,
+            "w": 70,
+            "h": 27
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.had",
+           "label": "Die Bottom Pips",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.too",
+             "label": "Die Pip Bottom Left",
+             "children": [],
+             "box": {
+              "x": 866,
+              "y": 278,
+              "w": 20,
+              "h": 20
+             }
+            },
+            {
+             "tag": "div",
+             "id": "fit.why",
+             "label": "Die Pip Bottom Right",
+             "children": [],
+             "box": {
+              "x": 915,
+              "y": 285,
+              "w": 20,
+              "h": 20
+             }
+            }
+           ],
+           "box": {
+            "x": 866,
+            "y": 278,
+            "w": 70,
+            "h": 27
+           }
+          }
+         ],
+         "box": {
+          "x": 845,
+          "y": 208,
+          "w": 117,
+          "h": 117
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 197,
+        "w": 880,
+        "h": 139
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 197,
+      "w": 880,
+      "h": 139
+     }
+    },
+    {
+     "tag": "div",
+     "id": "fit.ave",
+     "label": "Player Tags Row",
+     "children": [
+      {
+       "tag": "div",
+       "id": "fit.eos",
+       "label": "Kingston Red Player Tag",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.hon",
+         "label": "Kingston Red Colour Dot",
+         "children": [],
+         "box": {
+          "x": 113,
+          "y": 367,
+          "w": 18,
+          "h": 18
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.sic",
+         "label": "Red Player Name",
+         "children": [],
+         "box": {
+          "x": 139,
+          "y": 361,
+          "w": 112,
+          "h": 30
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.who",
+         "label": "Red Player Out Count",
+         "children": [],
+         "box": {
+          "x": 259,
+          "y": 363,
+          "w": 41,
+          "h": 27
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 350,
+        "w": 213,
+        "h": 52
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.due",
+       "label": "Ocho Rios Green Player Tag",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.art",
+         "label": "Ocho Rios Green Colour Dot",
+         "children": [],
+         "box": {
+          "x": 336,
+          "y": 367,
+          "w": 18,
+          "h": 18
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.pda",
+         "label": "Green Player Name",
+         "children": [],
+         "box": {
+          "x": 362,
+          "y": 361,
+          "w": 112,
+          "h": 30
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.pty",
+         "label": "Green Player Out Count",
+         "children": [],
+         "box": {
+          "x": 481,
+          "y": 363,
+          "w": 41,
+          "h": 27
+         }
+        }
+       ],
+       "box": {
+        "x": 323,
+        "y": 350,
+        "w": 213,
+        "h": 52
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.soa",
+       "label": "Montego Bay Gold Player Tag",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.low",
+         "label": "Montego Bay Gold Colour Dot",
+         "children": [],
+         "box": {
+          "x": 558,
+          "y": 367,
+          "w": 18,
+          "h": 18
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.job",
+         "label": "Yellow Player Name",
+         "children": [],
+         "box": {
+          "x": 584,
+          "y": 361,
+          "w": 112,
+          "h": 30
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.pit",
+         "label": "Gold Player Out Count",
+         "children": [],
+         "box": {
+          "x": 704,
+          "y": 363,
+          "w": 41,
+          "h": 27
+         }
+        }
+       ],
+       "box": {
+        "x": 545,
+        "y": 350,
+        "w": 213,
+        "h": 52
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.keg",
+       "label": "Negril Black Player Tag",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.dev",
+         "label": "Negril Black Colour Dot",
+         "children": [],
+         "box": {
+          "x": 781,
+          "y": 367,
+          "w": 18,
+          "h": 18
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.era",
+         "label": "Blue Player Name",
+         "children": [],
+         "box": {
+          "x": 807,
+          "y": 361,
+          "w": 112,
+          "h": 30
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.leg",
+         "label": "Black Player Out Count",
+         "children": [],
+         "box": {
+          "x": 926,
+          "y": 363,
+          "w": 41,
+          "h": 27
+         }
+        }
+       ],
+       "box": {
+        "x": 768,
+        "y": 350,
+        "w": 213,
+        "h": 52
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 350,
+      "w": 880,
+      "h": 52
+     }
+    },
+    {
+     "tag": "div",
+     "id": "fit.non",
+     "label": "Board Row",
+     "children": [
+      {
+       "tag": "div",
+       "id": "fit.com",
+       "label": "App Ludi Board Holder",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.oct",
+         "label": "App Ludi Board Image - Wide Track Kingston Active",
+         "children": [],
+         "box": {
+          "x": 120,
+          "y": 427,
+          "w": 840,
+          "h": 840
+         }
+        }
+       ],
+       "box": {
+        "x": 109,
+        "y": 416,
+        "w": 862,
+        "h": 862
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.her",
+       "label": "Turn Card Board Scrim",
+       "children": [],
+       "box": {
+        "x": 120,
+        "y": 427,
+        "w": 840,
+        "h": 840
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.css",
+       "label": "Turn Name Card Popup",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.zac",
+         "label": "Turn Card Top Row",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.but",
+           "label": "Turn Card Colour Dot",
+           "children": [],
+           "box": {
+            "x": 297,
+            "y": 778,
+            "w": 47,
+            "h": 47
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.can",
+           "label": "Turn Card Name",
+           "children": [],
+           "box": {
+            "x": 356,
+            "y": 737,
+            "w": 346,
+            "h": 100
+           }
+          },
+          {
+           "tag": "div",
+           "id": "fit.jat",
+           "label": "SVG",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.waf",
+             "label": "SVG",
+             "children": [],
+             "box": {
+              "x": 711,
+              "y": 740,
+              "w": 63,
+              "h": 63
+             }
+            }
+           ],
+           "box": {
+            "x": 711,
+            "y": 740,
+            "w": 63,
+            "h": 63
+           }
+          }
+         ],
+         "box": {
+          "x": 296,
+          "y": 732,
+          "w": 478,
+          "h": 109
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.ler",
+         "label": "Turn Card Turn Word",
+         "children": [],
+         "box": {
+          "x": 404,
+          "y": 825,
+          "w": 275,
+          "h": 105
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.bey",
+         "label": "Turn Card Hint",
+         "children": [],
+         "box": {
+          "x": 471,
+          "y": 925,
+          "w": 150,
+          "h": 60
+         }
+        }
+       ],
+       "box": {
+        "x": 210,
+        "y": 694,
+        "w": 659,
+        "h": 340
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 416,
+      "w": 880,
+      "h": 862
+     }
+    },
+    {
+     "tag": "div",
+     "id": "fit.ltd",
+     "label": "Event Line Row",
+     "children": [
+      {
+       "tag": "div",
+       "id": "fit.you",
+       "label": "Capture Event Line",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.far",
+         "label": "SVG",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.iao",
+           "label": "SVG",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.fut",
+             "label": "SVG",
+             "children": [],
+             "box": {
+              "x": 116,
+              "y": 1310,
+              "w": 26,
+              "h": 26
+             }
+            }
+           ],
+           "box": {
+            "x": 116,
+            "y": 1310,
+            "w": 26,
+            "h": 26
+           }
+          }
+         ],
+         "box": {
+          "x": 116,
+          "y": 1310,
+          "w": 26,
+          "h": 26
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.two",
+         "label": "Capture Event Text",
+         "children": [],
+         "box": {
+          "x": 152,
+          "y": 1304,
+          "w": 374,
+          "h": 39
+         }
+        }
+       ],
+       "box": {
+        "x": 100,
+        "y": 1294,
+        "w": 577,
+        "h": 59
+       }
+      },
+      {
+       "tag": "div",
+       "id": "fit.red",
+       "label": "Gift Pop Line",
+       "children": [
+        {
+         "tag": "div",
+         "id": "fit.his",
+         "label": "SVG",
+         "children": [
+          {
+           "tag": "div",
+           "id": "fit.nec",
+           "label": "SVG",
+           "children": [
+            {
+             "tag": "div",
+             "id": "fit.mid",
+             "label": "SVG",
+             "children": [],
+             "box": {
+              "x": 708,
+              "y": 1306,
+              "w": 27,
+              "h": 27
+             }
+            }
+           ],
+           "box": {
+            "x": 708,
+            "y": 1306,
+            "w": 27,
+            "h": 27
+           }
+          }
+         ],
+         "box": {
+          "x": 708,
+          "y": 1306,
+          "w": 27,
+          "h": 27
+         }
+        },
+        {
+         "tag": "div",
+         "id": "fit.bor",
+         "label": "Gift Pop Text",
+         "children": [],
+         "box": {
+          "x": 742,
+          "y": 1302,
+          "w": 220,
+          "h": 44
+         }
+        }
+       ],
+       "box": {
+        "x": 688,
+        "y": 1287,
+        "w": 293,
+        "h": 72
+       }
+      }
+     ],
+     "box": {
+      "x": 100,
+      "y": 1292,
+      "w": 880,
+      "h": 62
+     }
+    }
+   ],
+   "box": {
+    "x": 0,
+    "y": 0,
+    "w": 1080,
+    "h": 1920
+   }
+  }
+ ]
+}

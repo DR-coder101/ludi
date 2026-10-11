@@ -519,19 +519,39 @@ const screensDoctor: Command = {
 
 const screensCheck: Command = {
   name: 'check',
-  summary: 'Export Expo web, screenshot /dev fixtures, compare to web baselines',
+  summary: 'Screenshot Expo web /dev fixtures or the 1080x1920 live overlay, then compare to baselines',
   args: [
     {
       name: 'screen',
       type: 'enum',
-      summary: 'One fixture, or all five',
-      values: ['all', 'home', 'lobby', 'board-start', 'board-video', 'win'],
+      summary: 'One fixture, all phone screens, or all overlay screens',
+      values: [
+        'all',
+        'home',
+        'lobby',
+        'board-start',
+        'board-video',
+        'win',
+        'overlay',
+        'overlay-intro',
+        'overlay-waiting',
+        'overlay-game',
+        'overlay-turn',
+        'overlay-winner',
+      ],
       default: 'all',
+    },
+    {
+      name: 'target',
+      type: 'enum',
+      summary: 'Phone Expo web or the OBS overlay',
+      values: ['web', 'overlay'],
+      default: 'web',
     },
     {
       name: 'update-baselines',
       type: 'bool',
-      summary: 'Overwrite baselines/web from this capture',
+      summary: 'Overwrite baselines/web or baselines/overlay from this capture',
       default: false,
     },
     { name: 'port', type: 'int', summary: 'Static server port for the web export', default: 4173 },
@@ -540,6 +560,7 @@ const screensCheck: Command = {
   dryRun(args, ctx) {
     return planScreensCheck({
       screen: str(args, 'screen'),
+      target: str(args, 'target'),
       update: Boolean(args['update-baselines']),
       port: num(args, 'port'),
       url: ctx.url,
@@ -602,7 +623,7 @@ const auth: Command = {
 
 const screens: Command = {
   name: 'screens',
-  summary: 'Expo web screenshots of /dev home, lobby, board-start, board-video, and win',
+  summary: 'Expo web /dev screenshots and the 1080x1920 Ludi Live overlay',
   args: [],
   mutates: false,
   children: [screensDoctor, screensCheck],

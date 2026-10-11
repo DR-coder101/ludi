@@ -379,3 +379,45 @@ export const LiveAdminActionSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('kick'), userId: z.string().min(1) }),
 ]);
 export type LiveAdminAction = z.infer<typeof LiveAdminActionSchema>;
+
+export const LivePhaseSchema = z.enum(['INTRO', 'WAITING', 'COUNTDOWN', 'PLAYING', 'WINNER']);
+export const TownIdSchema = z.enum(['kingston', 'ochoRios', 'montegoBay', 'negril']);
+
+export const OccupantSchema = z.object({
+  platform: z.string(),
+  userId: z.string(),
+  displayName: z.string(),
+});
+
+export const SeatSchema = z.object({
+  town: TownIdSchema,
+  color: ColorSchema,
+  hex: z.string(),
+  borderHex: z.string().nullable(),
+  occupant: OccupantSchema.nullable(),
+});
+
+export const LiveGameStateSchema = z.object({
+  phase: LivePhaseSchema,
+  seats: z.tuple([SeatSchema, SeatSchema, SeatSchema, SeatSchema]),
+  queue: z.array(OccupantSchema),
+  sitOut: z.array(z.string()),
+  paused: z.boolean(),
+  phaseEndsAt: z.number().nullable(),
+  turnEndsAt: z.number().nullable(),
+  winnerUserId: z.string().nullable(),
+  winnerStay: z.boolean().nullable(),
+  game: z.unknown().nullable(),
+  countdownBeat: z.union([z.literal(3), z.literal(2), z.literal(1), z.null()]),
+});
+export type LiveGameStateWire = z.infer<typeof LiveGameStateSchema>;
+
+export const LiveEventSchema = z.object({
+  type: z.string(),
+}).passthrough();
+
+export const LiveFrameSchema = z.object({
+  snapshot: LiveGameStateSchema,
+  events: z.array(LiveEventSchema),
+});
+export type LiveFrame = z.infer<typeof LiveFrameSchema>;

@@ -53,3 +53,4 @@ Each feature file: H1, one paragraph, then exactly `Sub-features`, `How to get t
 - [Board screen](./board-screen.md) covers `/dev/board?state=start`, `/dev/board?state=video`, 68-cell track, 7-cell home columns, empty unused yards in 2-player, two dice, single-6 come-out, and the yard video tiles plus call bar.
 - [Win screen](./win-screen.md) covers `/dev/win` screenshot vs `baselines/web/win.png`.
 - [TikTok watch](./tiktok-watch.md) covers `ludi live tiktok-watch` replay PASS/FAIL, the TikFinity default, and Dean's live p95 < 2s gate.
+- [Overlay screens](./overlay-screens.md) covers the 1080×1920 live overlay demo fixtures vs `baselines/overlay/` and Wonder-diff vs `docs/live/wonder/`.
