@@ -27,6 +27,7 @@ export type ArgDef = {
   required?: boolean;
   default?: string | number | boolean;
   values?: readonly string[];
+  positional?: boolean;
 };
 
 /**

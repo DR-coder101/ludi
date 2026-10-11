@@ -100,17 +100,23 @@ export function parseArgv(argv: string[], root: Command): ParsedInvocation | Res
   }
 
   let command = root;
-  for (const segment of path) {
+  let walked = 0;
+  for (; walked < path.length; walked++) {
+    const segment = path[walked]!;
     const child = findChild(command, segment);
-    if (!child) {
-      const known = command.children?.map((c) => c.name).join(', ') ?? '(none)';
-      return err(
-        'INVALID_ARGS',
-        `Unknown command "${segment}" under ${command.name}`,
-        `ludi ${[command.name === 'ludi' ? '' : path.slice(0, -1).join(' '), '--help'].filter(Boolean).join(' ').trim()} (known: ${known})`,
-      );
-    }
+    if (!child) break;
     command = child;
+  }
+  const leftover = path.slice(walked);
+  const walkedPath = path.slice(0, walked);
+  if (leftover.length > 0 && !command.args.some((a) => a.positional)) {
+    const segment = leftover[0]!;
+    const known = command.children?.map((c) => c.name).join(', ') ?? '(none)';
+    return err(
+      'INVALID_ARGS',
+      `Unknown command "${segment}" under ${command.name}`,
+      `ludi ${[command.name === 'ludi' ? '' : walkedPath.join(' '), '--help'].filter(Boolean).join(' ').trim()} (known: ${known})`,
+    );
   }
 
   const ctx: Ctx = {
@@ -129,6 +135,7 @@ export function parseArgv(argv: string[], root: Command): ParsedInvocation | Res
   }
 
   const args: Record<string, unknown> = {};
+  let pos = 0;
   for (const def of command.args) {
     if (rawFlags.has(def.name)) {
       try {
@@ -138,15 +145,31 @@ export function parseArgv(argv: string[], root: Command): ParsedInvocation | Res
         return err('INVALID_ARGS', (e as Error).message, `ludi ${path.join(' ')} --help`);
       }
       rawFlags.delete(def.name);
+    } else if (def.positional && pos < leftover.length) {
+      try {
+        args[def.name] = coerce(def, leftover[pos]!);
+        pos += 1;
+      } catch (e) {
+        return err('INVALID_ARGS', (e as Error).message, `ludi ${walkedPath.join(' ')} --help`);
+      }
     } else if (def.required) {
       return err(
         'INVALID_ARGS',
-        `Missing required option --${def.name}`,
-        `ludi ${path.join(' ')} --help`,
+        def.positional
+          ? `Missing required argument ${def.name}`
+          : `Missing required option --${def.name}`,
+        `ludi ${walkedPath.join(' ')} --help`,
       );
     } else if (def.default !== undefined) {
       args[def.name] = def.default;
     }
+  }
+  if (pos < leftover.length) {
+    return err(
+      'INVALID_ARGS',
+      `Unexpected argument "${leftover[pos]}"`,
+      `ludi ${walkedPath.join(' ')} --help`,
+    );
   }
 
   for (const unknown of rawFlags.keys()) {
@@ -165,5 +188,5 @@ export function parseArgv(argv: string[], root: Command): ParsedInvocation | Res
     );
   }
 
-  return { path, command, args, ctx, dryRun, help: false, version: false };
+  return { path: walkedPath, command, args, ctx, dryRun, help: false, version: false };
 }

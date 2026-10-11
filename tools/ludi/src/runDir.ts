@@ -12,6 +12,15 @@ export interface ServerMeta {
   log_path: string;
 }
 
+export interface LiveMeta {
+  pid: number;
+  port: number;
+  url: string;
+  started_at: string;
+  log_path: string;
+  admin_token: string;
+}
+
 export interface SessionMeta {
   room_code?: string;
   session_token?: string;
@@ -30,6 +39,7 @@ export interface RunDir {
   serverPath: string;
   sessionPath: string;
   bridgeSockHint: string;
+  livePath: string;
 }
 
 export function defaultRunDir(explicit?: string): string {
@@ -46,6 +56,7 @@ export function resolveRunDir(explicit?: string): RunDir {
     serverPath: join(root, 'server.json'),
     sessionPath: join(root, 'session.json'),
     bridgeSockHint: join(root, 'bridge.json'),
+    livePath: join(root, 'live.json'),
   };
 }
 
@@ -95,6 +106,28 @@ export function writeBridge(run: RunDir, meta: { port: number; pid: number }): v
 
 export function clearBridge(run: RunDir): void {
   if (existsSync(run.bridgeSockHint)) rmSync(run.bridgeSockHint);
+}
+
+export function readLive(run: RunDir): LiveMeta | null {
+  if (!existsSync(run.livePath)) return null;
+  return JSON.parse(readFileSync(run.livePath, 'utf8')) as LiveMeta;
+}
+
+export function writeLive(run: RunDir, meta: LiveMeta): void {
+  ensureRunDir(run);
+  writeFileSync(run.livePath, JSON.stringify(meta, null, 2) + '\n');
+}
+
+export function clearLive(run: RunDir): void {
+  if (existsSync(run.livePath)) rmSync(run.livePath);
+}
+
+export function resolveLiveUrl(run: RunDir, override?: string): string {
+  if (override) return override.replace(/\/$/, '');
+  if (process.env.LUDI_LIVE_URL) return process.env.LUDI_LIVE_URL.replace(/\/$/, '');
+  const live = readLive(run);
+  if (live?.url) return live.url;
+  return 'http://127.0.0.1:3200';
 }
 
 /** Prefer run-dir URL, else LUDI_URL, else localhost:3000. */

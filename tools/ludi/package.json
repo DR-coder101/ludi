@@ -17,6 +17,7 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@ludi/live-game": "workspace:*",
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",
     "socket.io-client": "^4.8.3",

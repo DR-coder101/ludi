@@ -14,7 +14,7 @@ export function buildIntrospectFromRegistry(root: Command): {
     version: CLI_VERSION,
     acli_version: ACLI_VERSION,
     surface:
-      'Ludi server over HTTP + Socket.IO, plus Expo web screen checks at /dev/* fixture routes.',
+      'Ludi server over HTTP + Socket.IO, live-game over HTTP + Socket.IO, plus Expo web screen checks at /dev/* fixture routes.',
     commands: (root.children ?? []).map(serialize),
   };
 }
@@ -51,7 +51,10 @@ export function renderHelp(cmd: Command, path: string[]): string {
     }
   } else {
     const argBits = cmd.args
-      .map((a) => (a.required ? `--${a.name} <${a.type}>` : `[--${a.name} <${a.type}>]`))
+      .map((a) => {
+        if (a.positional) return a.required ? `<${a.name}>` : `[${a.name}]`;
+        return a.required ? `--${a.name} <${a.type}>` : `[--${a.name} <${a.type}>]`;
+      })
       .join(' ');
     lines.push(`  ${full}${argBits ? ` ${argBits}` : ''}${cmd.mutates ? ' [--dry-run]' : ''}`);
     if (cmd.args.length) {

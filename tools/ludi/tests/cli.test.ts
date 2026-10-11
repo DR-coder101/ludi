@@ -221,4 +221,40 @@ describe('ludi CLI', () => {
     expect(names).toContain('guest');
     expect(res.stdout).toContain('"name": "guest"');
   });
+
+  it('introspect includes live inject and state', () => {
+    const tree = buildIntrospectFromRegistry(registry);
+    const live = tree.commands.find((c) => (c as { name: string }).name === 'live') as {
+      subcommands: { name: string }[];
+    };
+    const names = live.subcommands.map((c) => c.name);
+    expect(names).toContain('inject');
+    expect(names).toContain('state');
+    expect(names).toContain('start');
+  });
+
+  it('live inject dry-run exits 9 and changes nothing', () => {
+    const runDir = join(root, '.tmp-live-inject-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'live',
+      'inject',
+      '!join',
+      '--user',
+      'a',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    expect(body.dry_run).toBe(true);
+    expect(body.command).toBe('ludi.live.inject');
+    expect(body.planned_actions[0].action).toBe('POST /dev/chat');
+    expect(body.planned_actions[0].body.text).toBe('!join');
+    expect(existsSync(join(runDir, 'live.json'))).toBe(false);
+  });
 });
