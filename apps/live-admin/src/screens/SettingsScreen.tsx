@@ -98,8 +98,8 @@ export function SettingsScreen({ view }: Props) {
                   <strong>{row.giftName}</strong>
                   <span className="arrow">→</span>
                   <em>{row.effect}</em>
-                  <button className="btn gold sm" type="button">
-                    <PencilIcon size={12} color="#111" /> Change
+                  <button className="btn outline-gold sm" type="button">
+                    <PencilIcon size={12} color="#FED100" /> Change
                   </button>
                 </li>
               ))}

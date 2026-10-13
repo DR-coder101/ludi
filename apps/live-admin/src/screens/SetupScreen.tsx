@@ -39,7 +39,7 @@ export function SetupScreen({ view }: Props) {
           <TikFinityCard step={s.tikfinity} />
         </div>
 
-        <article className="card gold-card overlay-card">
+          <article className={`card gold-card overlay-card${overlayDone || !tikfinityDone ? '' : ' current'}`}>
           <header className="card-h">
             {overlayDone ? (
               <span className="step-check"><CheckIcon size={14} color="#111" /></span>
@@ -102,7 +102,7 @@ function StepsBadge({ done }: { done: 1 | 2 | 3 }) {
 function TikFinityCard({ step }: { step: TikFinityStep }) {
   if (step === 'not-running') {
     return (
-      <article className="card gold-card">
+      <article className="card gold-card current">
         <header className="card-h">
           <span className="step-num">2</span>
           <h2>Check TikFinity</h2>
@@ -113,8 +113,8 @@ function TikFinityCard({ step }: { step: TikFinityStep }) {
             <strong>TikFinity not running</strong>
             <p>Open the TikFinity app on this computer, then click Check again.</p>
           </div>
-          <button className="btn gold sm" type="button">
-            <RefreshIcon size={14} color="#111" /> Check again
+          <button className="btn outline-gold sm" type="button">
+            <RefreshIcon size={14} color="#FED100" /> Check again
           </button>
         </div>
         <div className="seg">
@@ -139,8 +139,8 @@ function TikFinityCard({ step }: { step: TikFinityStep }) {
             <strong>Connected</strong>
             <p>TikFinity is linked to your LIVE. Chat commands are coming in.</p>
           </div>
-          <button className="btn gold sm" type="button">
-            <RefreshIcon size={14} color="#111" /> Check again
+          <button className="btn outline-gold sm" type="button">
+            <RefreshIcon size={14} color="#FED100" /> Check again
           </button>
         </div>
         <div className="seg">
@@ -153,7 +153,7 @@ function TikFinityCard({ step }: { step: TikFinityStep }) {
     );
   }
   return (
-    <article className="card gold-card">
+    <article className="card gold-card current">
       <header className="card-h">
         <span className="step-num">2</span>
         <h2>Check TikFinity</h2>
@@ -164,13 +164,13 @@ function TikFinityCard({ step }: { step: TikFinityStep }) {
           <strong>Running, not connected to a LIVE</strong>
           <p>TikFinity is open. Go LIVE on TikTok and it links up by itself.</p>
         </div>
-        <button className="btn gold sm" type="button">
-          <RefreshIcon size={14} color="#111" /> Check again
-        </button>
-      </div>
-      <div className="seg">
-        <span>Not running</span>
-        <span className="seg-on gold">Running, no LIVE</span>
+          <button className="btn outline-gold sm" type="button">
+            <RefreshIcon size={14} color="#FED100" /> Check again
+          </button>
+        </div>
+        <div className="seg">
+          <span>Not running</span>
+          <span className="seg-on gold">Running, no LIVE</span>
         <span>Connected</span>
       </div>
       <p className="hint">TikFinity is the free app that passes your LIVE chat to Ludi Live.</p>

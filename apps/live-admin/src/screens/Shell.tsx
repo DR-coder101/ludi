@@ -18,7 +18,7 @@ export function Shell({ view, screen, children }: Props) {
     >
       <header className="topbar">
         <div className="brand">
-          <CrownIcon size={22} color="#FED100" />
+          <CrownIcon size={28} color="#FED100" />
           <div>
             <div className="brand-title">LUDI LIVE</div>
             <div className="brand-flag" aria-hidden>
