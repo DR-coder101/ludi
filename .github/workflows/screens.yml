@@ -5,6 +5,8 @@ on:
     paths:
       - "apps/mobile/**"
       - "apps/live-overlay/**"
+      - "apps/live-admin/**"
+      - "docs/live/admin/**"
       - "tools/ludi/src/screens/**"
       - "tools/ludi/src/registry.ts"
       - "tools/ludi/src/introspect.ts"
@@ -17,6 +19,8 @@ on:
     paths:
       - "apps/mobile/**"
       - "apps/live-overlay/**"
+      - "apps/live-admin/**"
+      - "docs/live/admin/**"
       - "tools/ludi/src/screens/**"
       - "tools/ludi/src/registry.ts"
       - "tools/ludi/src/introspect.ts"
@@ -35,7 +39,7 @@ jobs:
   screens:
     name: screens
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -59,6 +63,8 @@ jobs:
         run: pnpm -s ludi -- screens check --output json --run-dir "$RUNNER_TEMP/ludi-screens"
       - name: Compare overlay screens to baselines
         run: pnpm -s ludi -- screens check --target overlay --output json --run-dir "$RUNNER_TEMP/ludi-overlay"
+      - name: Compare admin screens to baselines
+        run: pnpm -s ludi -- screens check --target admin --output json --run-dir "$RUNNER_TEMP/ludi-admin"
       - name: Upload diffs on failure
         if: failure()
         uses: actions/upload-artifact@v4
@@ -69,4 +75,6 @@ jobs:
             ${{ runner.temp }}/ludi-screens/expo-export.log
             ${{ runner.temp }}/ludi-overlay/evidence/overlay/
             ${{ runner.temp }}/ludi-overlay/overlay-build.log
+            ${{ runner.temp }}/ludi-admin/evidence/admin/
+            ${{ runner.temp }}/ludi-admin/admin-build.log
           if-no-files-found: ignore

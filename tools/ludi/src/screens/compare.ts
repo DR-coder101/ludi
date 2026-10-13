@@ -26,6 +26,7 @@ export function comparePng(opts: {
   diffPath: string;
   maxDiffRatio?: number;
   threshold?: number;
+  writeDiff?: boolean;
 }): CompareResult {
   const maxDiffRatio = opts.maxDiffRatio ?? MAX_DIFF_RATIO;
   const threshold = opts.threshold ?? PIXEL_THRESHOLD;
@@ -90,7 +91,7 @@ export function comparePng(opts: {
   );
   const diffRatio = pixels / (actual.width * actual.height);
   const ok = diffRatio <= maxDiffRatio;
-  if (!ok) writeFileSync(opts.diffPath, PNG.sync.write(diff));
+  if (!ok || opts.writeDiff) writeFileSync(opts.diffPath, PNG.sync.write(diff));
   return {
     ...base,
     ok,
