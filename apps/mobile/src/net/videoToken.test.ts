@@ -41,4 +41,20 @@ describe('fetchVideoToken', () => {
     expect(warn).toHaveBeenCalledWith('[Video] token fetch failed', 'offline');
     expect(warn.mock.calls.flat().join(' ')).not.toContain('session-secret');
   });
+
+  it('warns on a server error without logging the token', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({
+        json: async () => ({ success: false, error: 'LiveKit configuration missing' }),
+      })),
+    );
+
+    await expect(fetchVideoToken('ABCD', 'player-1', 'session-secret')).resolves.toEqual({
+      error: 'LiveKit configuration missing',
+    });
+    expect(warn).toHaveBeenCalledWith('[Video] token fetch failed', 'LiveKit configuration missing');
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('session-secret');
+  });
 });
