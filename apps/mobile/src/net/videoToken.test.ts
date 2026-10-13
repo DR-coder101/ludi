@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
-import { readVideoToken } from './videoToken';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fetchVideoToken, readVideoToken } from './videoToken';
 
 describe('readVideoToken', () => {
   it('reads the token and optional LiveKit URL', () => {
@@ -17,5 +17,28 @@ describe('readVideoToken', () => {
     expect(readVideoToken({ success: false, error: 'LiveKit configuration missing' })).toEqual({
       error: 'LiveKit configuration missing',
     });
+  });
+});
+
+describe('fetchVideoToken', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('warns on a failed fetch without logging the session token', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        throw new Error('offline');
+      }),
+    );
+
+    await expect(fetchVideoToken('ABCD', 'player-1', 'session-secret')).resolves.toEqual({
+      error: 'offline',
+    });
+    expect(warn).toHaveBeenCalledWith('[Video] token fetch failed', 'offline');
+    expect(warn.mock.calls.flat().join(' ')).not.toContain('session-secret');
   });
 });
