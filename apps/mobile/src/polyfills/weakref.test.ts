@@ -22,8 +22,8 @@ describe('installWeakRefPolyfill', () => {
     });
     expect(() => {
       registry.register(target, 'held');
-      registry.unregister(target);
     }).not.toThrow();
+    expect(registry.unregister(target)).toBe(false);
   });
 
   it('leaves a native WeakRef and FinalizationRegistry untouched', () => {

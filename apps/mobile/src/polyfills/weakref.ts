@@ -3,7 +3,8 @@ export type WeakRefHost = {
   FinalizationRegistry?: typeof FinalizationRegistry;
 };
 
-class StrongWeakRef<T extends object> {
+class StrongWeakRef<T extends WeakKey> implements WeakRef<T> {
+  readonly [Symbol.toStringTag] = 'WeakRef' as const;
   private readonly target: T;
 
   constructor(target: T) {
@@ -15,20 +16,24 @@ class StrongWeakRef<T extends object> {
   }
 }
 
-class NoopFinalizationRegistry<T> {
+class NoopFinalizationRegistry<T> implements FinalizationRegistry<T> {
+  readonly [Symbol.toStringTag] = 'FinalizationRegistry' as const;
+
   constructor(_callback: (heldValue: T) => void) {}
 
-  register(_target: object, _heldValue: T, _unregisterToken?: object): void {}
+  register(_target: WeakKey, _heldValue: T, _unregisterToken?: WeakKey): void {}
 
-  unregister(_unregisterToken?: object): void {}
+  unregister(_unregisterToken: WeakKey): boolean {
+    return false;
+  }
 }
 
 export function installWeakRefPolyfill(globals: WeakRefHost = globalThis): void {
   if (typeof globals.WeakRef === 'undefined') {
-    globals.WeakRef = StrongWeakRef as unknown as typeof WeakRef;
+    globals.WeakRef = StrongWeakRef;
   }
   if (typeof globals.FinalizationRegistry === 'undefined') {
-    globals.FinalizationRegistry = NoopFinalizationRegistry as unknown as typeof FinalizationRegistry;
+    globals.FinalizationRegistry = NoopFinalizationRegistry;
   }
 }
 
