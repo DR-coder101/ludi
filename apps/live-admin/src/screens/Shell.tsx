@@ -18,15 +18,17 @@ export function Shell({ view, screen, children }: Props) {
     >
       <header className="topbar">
         <div className="brand">
-          <CrownIcon size={28} color="#FED100" />
-          <div>
+          <CrownIcon size={25} color="#FED100" />
+          <div className="brand-copy">
             <div className="brand-title">LUDI LIVE</div>
-            <div className="brand-flag" aria-hidden>
-              <span className="flag-g" />
-              <span className="flag-y" />
-              <span className="flag-k" />
+            <div className="brand-meta">
+              <div className="brand-flag" aria-hidden>
+                <span className="flag-g" />
+                <span className="flag-y" />
+                <span className="flag-k" />
+              </div>
+              <div className="brand-sub">Streamer controls</div>
             </div>
-            <div className="brand-sub">Streamer controls</div>
           </div>
         </div>
         <nav className="nav" aria-label="Admin">
