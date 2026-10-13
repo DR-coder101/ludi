@@ -10,7 +10,7 @@ Drive Ludi the way Dean's app does. The agent-reachable surface is the **`ludi`*
 Two modules:
 
 - Server: HTTP + Socket.IO (`ludi server`, `ludi session`, `ludi room`, `ludi match`, `ludi play`).
-- Screens: Expo web export of `apps/mobile` plus headless Chromium (`ludi screens`). Fixed phone size 390×844 @2x. Compares to committed **web** baselines. Overlay: Vite build of `apps/live-overlay` at 1080×1920 (`ludi screens check --target overlay`). Compares to committed **overlay** baselines and reports Wonder-diff.
+- Screens: Expo web export of `apps/mobile` plus headless Chromium (`ludi screens`). Fixed phone size 390×844 @2x. Compares to committed **web** baselines. Overlay: Vite build of `apps/live-overlay` at 1080×1920 (`ludi screens check --target overlay`). Compares to committed **overlay** baselines and reports Wonder-diff. Admin: Vite build of `apps/live-admin` (`ludi screens check --target admin`). Compares to committed **admin** baselines and reports mockup-diff against `docs/live/admin/`.
 
 Never invent `ludi-verify` or `verify` as a command name. Subcommands hang under `ludi`.
 
@@ -41,6 +41,8 @@ pnpm -s ludi -- screens doctor --output json
 `ludi screens check` exports Expo web with `EXPO_PUBLIC_DEV_ROUTES=1`, serves the export, screenshots `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/win`, then pixelmatches `baselines/web/`. Pass `--url http://127.0.0.1:4173` to reuse an export already being served.
 
 `ludi screens check --target overlay` builds `apps/live-overlay`, serves it, screenshots the five demo fixtures at 1080×1920, pixelmatches `baselines/overlay/`, reports Wonder-diff against `docs/live/wonder/`, and fails if a `[data-safe]` box leaves x 100-980 / y 40-1380.
+
+`ludi screens check --target admin` builds `apps/live-admin`, serves it, screenshots the 13 demo fixtures at their mockup sizes (1024×640 / 667 / 738 / 849), pixelmatches `baselines/admin/`, and reports mockup-diff against `docs/live/admin/`.
 
 Live server (chat-controlled overlay authority, no TikTok/Twitch):
 
@@ -114,6 +116,7 @@ pnpm -s ludi -- play solo-vs-bots --run-dir "$RUN_DIR" --turns 1 --output json
 pnpm -s ludi -- screens check --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- screens check --screen board-start --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- screens check --target overlay --run-dir "$RUN_DIR" --output json
+pnpm -s ludi -- screens check --target admin --run-dir "$RUN_DIR" --output json
 ```
 
 Compose server recipes when a feature file says so: `ludi server` → `ludi session open` → `ludi room …` → `ludi match …`.

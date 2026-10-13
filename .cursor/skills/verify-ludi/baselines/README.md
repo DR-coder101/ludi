@@ -29,3 +29,15 @@ pnpm -s ludi -- screens check --target overlay --update-baselines --run-dir /tmp
 ```
 
 A failing check writes `<id>.diff.png` under `"$RUN_DIR/evidence/overlay/"`.
+
+## `admin/`
+
+Machine baselines for the streamer admin panel. `ludi screens check --target admin` captures demo fixtures at the mockup viewport (1024 wide) with `settle=1` and `prefers-reduced-motion: reduce`, then pixelmatches these files. Mockup-diff against `docs/live/admin/` is informational and does not fail the check.
+
+Regenerate:
+
+```bash
+pnpm -s ludi -- screens check --target admin --update-baselines --run-dir /tmp/ludi-admin --output json
+```
+
+A failing check writes `<id>.diff.png` under `"$RUN_DIR/evidence/admin/"`.

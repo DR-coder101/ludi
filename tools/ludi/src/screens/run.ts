@@ -11,6 +11,7 @@ import { ensureRunDir, resolveRunDir } from '../runDir.js';
 import { sleep } from '../defaults.js';
 import {
   findRepoRoot,
+  isAdminScreen,
   isOverlayScreen,
   mobileDir,
   overlayBaselineDir,
@@ -21,11 +22,16 @@ import {
   SCREEN_IDS,
   screensToRun,
   webBaselineDir,
+  adminDir,
+  adminBaselineDir,
+  adminScreensToRun,
+  ADMIN_SCREEN_IDS,
   type ScreenSpec,
 } from './catalog.js';
 import { comparePng, type CompareResult } from './compare.js';
 import { serveExport } from './serve.js';
 import { planOverlayCheck, runOverlayCheck } from './overlay.js';
+import { planAdminCheck, runAdminCheck } from './admin.js';
 
 function fail(code: string, message: string, hint: string): Result {
   return err(code, message, hint);
@@ -122,9 +128,14 @@ export function planScreensCheck(args: {
   runDir: string;
   target?: string;
 }): Result {
-  const target = args.target ?? (isOverlayScreen(args.screen) ? 'overlay' : 'web');
+  const target =
+    args.target ??
+    (isOverlayScreen(args.screen) ? 'overlay' : isAdminScreen(args.screen) ? 'admin' : 'web');
   if (target === 'overlay' || isOverlayScreen(args.screen)) {
     return planOverlayCheck(args);
+  }
+  if (target === 'admin' || isAdminScreen(args.screen)) {
+    return planAdminCheck({ ...args, screen: args.screen === 'all' ? 'admin' : args.screen });
   }
   const specs = screensToRun(args.screen);
   if (specs.length === 0) {
@@ -179,6 +190,7 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
   }
   const mobile = mobileDir(root);
   const overlay = overlayDir(root);
+  const admin = adminDir(root);
   checks.push({
     name: 'mobile_app',
     ok: existsSync(join(mobile, 'package.json')),
@@ -207,6 +219,20 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
     ok: overlayCount === OVERLAY_SCREEN_IDS.length,
     detail: `${overlayCount}/${OVERLAY_SCREEN_IDS.length} under ${overlayBase}`,
   });
+  checks.push({
+    name: 'admin_app',
+    ok: existsSync(join(admin, 'package.json')),
+    detail: existsSync(join(admin, 'index.html'))
+      ? `${admin} is the streamer admin panel`
+      : `${admin} is missing index.html`,
+  });
+  const adminBase = adminBaselineDir(root);
+  const adminCount = adminScreensToRun('admin').filter((s) => existsSync(join(adminBase, s.file))).length;
+  checks.push({
+    name: 'admin_baselines',
+    ok: adminCount === ADMIN_SCREEN_IDS.length,
+    detail: `${adminCount}/${ADMIN_SCREEN_IDS.length} under ${adminBase}`,
+  });
   let chromiumOk = false;
   let chromiumDetail = 'playwright not loaded';
   try {
@@ -222,7 +248,7 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
   }
   checks.push({ name: 'chromium', ok: chromiumOk, detail: chromiumDetail });
   const worthDriving = checks
-    .filter((c) => c.name !== 'web_baselines' && c.name !== 'overlay_baselines')
+    .filter((c) => c.name !== 'web_baselines' && c.name !== 'overlay_baselines' && c.name !== 'admin_baselines')
     .every((c) => c.ok);
   if (!worthDriving) {
     return fail(
@@ -246,9 +272,14 @@ export async function runScreensCheck(
   ctx: Ctx,
 ): Promise<Result> {
   const screen = String(args.screen ?? 'all');
-  const target = String(args.target ?? (isOverlayScreen(screen) ? 'overlay' : 'web'));
+  const target = String(
+    args.target ?? (isOverlayScreen(screen) ? 'overlay' : isAdminScreen(screen) ? 'admin' : 'web'),
+  );
   if (target === 'overlay' || isOverlayScreen(screen)) {
     return runOverlayCheck({ ...args, screen: screen === 'all' ? 'overlay' : screen }, ctx);
+  }
+  if (target === 'admin' || isAdminScreen(screen)) {
+    return runAdminCheck({ ...args, screen: screen === 'all' ? 'admin' : screen }, ctx);
   }
   const update = Boolean(args['update-baselines']);
   const port = Number(args.port);

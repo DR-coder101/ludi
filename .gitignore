@@ -9,6 +9,7 @@ coverage/
 # Production
 dist/
 build/
+apps/live-admin/release/
 
 # Misc
 .DS_Store

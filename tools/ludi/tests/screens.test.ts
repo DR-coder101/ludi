@@ -14,6 +14,8 @@ import {
   OVERLAY,
   OVERLAY_SCREENS,
   overlayScreensToRun,
+  ADMIN_SCREENS,
+  adminScreensToRun,
   findRepoRoot,
 } from '../src/screens/catalog.js';
 import { comparePng } from '../src/screens/compare.js';
@@ -59,6 +61,28 @@ describe('screen catalog', () => {
     expect(overlayScreensToRun('overlay')).toHaveLength(5);
     expect(overlayScreensToRun('overlay-waiting')[0]?.path).toBe('/?demo=waiting&settle=1');
     expect(OVERLAY).toEqual({ width: 1080, height: 1920, deviceScaleFactor: 1 });
+  });
+
+  it('names the 13 admin fixtures and their mockup files', () => {
+    expect(ADMIN_SCREENS.map((s) => s.id)).toEqual([
+      'setup',
+      'setup-tikfinity-not-running',
+      'setup-connected',
+      'settings',
+      'dashboard',
+      'dashboard-reconnecting',
+      'dashboard-disconnected',
+      'kick-confirm',
+      'error-tikfinity-closed',
+      'error-username-not-found',
+      'error-live-ended',
+      'error-overlay-not-loaded',
+      'error-port-in-use',
+    ]);
+    expect(adminScreensToRun('admin')).toHaveLength(13);
+    expect(adminScreensToRun('dashboard')[0]?.mockup).toBe('live-dashboard.png');
+    expect(adminScreensToRun('kick-confirm')[0]?.mockup).toBe('kick-player-confirm.png');
+    expect(adminScreensToRun('settings')[0]?.viewport).toEqual({ width: 1024, height: 849 });
   });
 
   it('keeps iPhone 14 web insets on every /dev fixture the 390×844 capture assumes', () => {
@@ -186,5 +210,43 @@ describe('ludi screens CLI', () => {
     ]);
     expect(actions.filter((a) => a.action === 'wonder_diff')).toHaveLength(5);
     expect(existsSync(join(runDir, 'overlay-dist'))).toBe(false);
+  });
+
+  it('admin dry-run plans a vite build, 13 captures, and mockup diffs', () => {
+    const runDir = join(root, '.tmp-admin-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'screens',
+      'check',
+      '--target',
+      'admin',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    const actions = body.planned_actions as Array<{ action: string; screen?: string }>;
+    expect(actions[0]?.action).toBe('vite_build_admin');
+    expect(actions.filter((a) => a.action === 'screenshot').map((a) => a.screen)).toEqual([
+      'setup',
+      'setup-tikfinity-not-running',
+      'setup-connected',
+      'settings',
+      'dashboard',
+      'dashboard-reconnecting',
+      'dashboard-disconnected',
+      'kick-confirm',
+      'error-tikfinity-closed',
+      'error-username-not-found',
+      'error-live-ended',
+      'error-overlay-not-loaded',
+      'error-port-in-use',
+    ]);
+    expect(actions.filter((a) => a.action === 'mockup_diff')).toHaveLength(13);
+    expect(existsSync(join(runDir, 'admin-dist'))).toBe(false);
   });
 });

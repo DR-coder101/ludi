@@ -189,3 +189,169 @@ export function overlayScreensToRun(id: string): OverlayScreenSpec[] {
 export function isOverlayScreen(id: string): boolean {
   return id === 'overlay' || id.startsWith('overlay-');
 }
+
+export type AdminScreenId =
+  | 'setup'
+  | 'setup-tikfinity-not-running'
+  | 'setup-connected'
+  | 'settings'
+  | 'dashboard'
+  | 'dashboard-reconnecting'
+  | 'dashboard-disconnected'
+  | 'kick-confirm'
+  | 'error-tikfinity-closed'
+  | 'error-username-not-found'
+  | 'error-live-ended'
+  | 'error-overlay-not-loaded'
+  | 'error-port-in-use';
+
+export type AdminViewport = { width: number; height: number };
+
+export type AdminScreenSpec = {
+  id: AdminScreenId;
+  path: string;
+  waitFor: WaitFor;
+  file: string;
+  mockup: string;
+  viewport: AdminViewport;
+};
+
+const ADMIN_SETUP: AdminViewport = { width: 1024, height: 640 };
+const ADMIN_SETTINGS: AdminViewport = { width: 1024, height: 849 };
+const ADMIN_DASH: AdminViewport = { width: 1024, height: 667 };
+const ADMIN_BANNER: AdminViewport = { width: 1024, height: 738 };
+
+export const ADMIN_SCREENS: readonly AdminScreenSpec[] = [
+  {
+    id: 'setup',
+    path: '/?demo=setup&settle=1',
+    waitFor: { role: 'heading', name: 'Get Ludi Live on your stream' },
+    file: 'setup.png',
+    mockup: 'setup.png',
+    viewport: ADMIN_SETUP,
+  },
+  {
+    id: 'setup-tikfinity-not-running',
+    path: '/?demo=setup-tikfinity-not-running&settle=1',
+    waitFor: { role: 'heading', name: 'Get Ludi Live on your stream' },
+    file: 'setup-tikfinity-not-running.png',
+    mockup: 'setup-tikfinity-not-running.png',
+    viewport: ADMIN_SETUP,
+  },
+  {
+    id: 'setup-connected',
+    path: '/?demo=setup-connected&settle=1',
+    waitFor: { role: 'heading', name: 'Get Ludi Live on your stream' },
+    file: 'setup-connected.png',
+    mockup: 'setup-connected.png',
+    viewport: ADMIN_SETUP,
+  },
+  {
+    id: 'settings',
+    path: '/?demo=settings&settle=1',
+    waitFor: { role: 'heading', name: 'Settings' },
+    file: 'settings.png',
+    mockup: 'settings.png',
+    viewport: ADMIN_SETTINGS,
+  },
+  {
+    id: 'dashboard',
+    path: '/?demo=dashboard&settle=1',
+    waitFor: { role: 'heading', name: 'GAME #24 · WHAT VIEWERS SEE NOW' },
+    file: 'dashboard.png',
+    mockup: 'live-dashboard.png',
+    viewport: ADMIN_DASH,
+  },
+  {
+    id: 'dashboard-reconnecting',
+    path: '/?demo=dashboard-reconnecting&settle=1',
+    waitFor: { role: 'heading', name: 'GAME #24 · WHAT VIEWERS SEE NOW' },
+    file: 'dashboard-reconnecting.png',
+    mockup: 'dashboard-reconnecting.png',
+    viewport: ADMIN_BANNER,
+  },
+  {
+    id: 'dashboard-disconnected',
+    path: '/?demo=dashboard-disconnected&settle=1',
+    waitFor: { role: 'heading', name: 'GAME #24 · WHAT VIEWERS SEE NOW' },
+    file: 'dashboard-disconnected.png',
+    mockup: 'dashboard-disconnected.png',
+    viewport: ADMIN_BANNER,
+  },
+  {
+    id: 'kick-confirm',
+    path: '/?demo=kick-confirm&settle=1',
+    waitFor: { role: 'heading', name: 'Kick @Sarah from the game?' },
+    file: 'kick-confirm.png',
+    mockup: 'kick-player-confirm.png',
+    viewport: ADMIN_DASH,
+  },
+  {
+    id: 'error-tikfinity-closed',
+    path: '/?demo=error-tikfinity-closed&settle=1',
+    waitFor: { role: 'heading', name: 'TikFinity stopped running' },
+    file: 'error-tikfinity-closed.png',
+    mockup: 'error-tikfinity-closed.png',
+    viewport: ADMIN_SETUP,
+  },
+  {
+    id: 'error-username-not-found',
+    path: '/?demo=error-username-not-found&settle=1',
+    waitFor: { role: 'heading', name: "We can't find that TikTok username" },
+    file: 'error-username-not-found.png',
+    mockup: 'error-username-not-found.png',
+    viewport: ADMIN_SETUP,
+  },
+  {
+    id: 'error-live-ended',
+    path: '/?demo=error-live-ended&settle=1',
+    waitFor: { role: 'heading', name: 'Your LIVE has ended' },
+    file: 'error-live-ended.png',
+    mockup: 'error-live-ended.png',
+    viewport: ADMIN_SETUP,
+  },
+  {
+    id: 'error-overlay-not-loaded',
+    path: '/?demo=error-overlay-not-loaded&settle=1',
+    waitFor: { role: 'heading', name: "Viewers can't see the game yet" },
+    file: 'error-overlay-not-loaded.png',
+    mockup: 'error-overlay-not-loaded.png',
+    viewport: ADMIN_SETUP,
+  },
+  {
+    id: 'error-port-in-use',
+    path: '/?demo=error-port-in-use&settle=1',
+    waitFor: { role: 'heading', name: "Another app is using Ludi Live's spot" },
+    file: 'error-port-in-use.png',
+    mockup: 'error-port-in-use.png',
+    viewport: ADMIN_SETUP,
+  },
+];
+
+export const ADMIN_SCREEN_IDS: readonly AdminScreenId[] = ADMIN_SCREENS.map((s) => s.id);
+
+export function adminDir(root = findRepoRoot()): string {
+  return join(root, 'apps', 'live-admin');
+}
+
+export function adminBaselineDir(root = findRepoRoot()): string {
+  return join(skillDir(root), 'baselines', 'admin');
+}
+
+export function adminMockupDir(root = findRepoRoot()): string {
+  return join(root, 'docs', 'live', 'admin');
+}
+
+export function adminById(id: string): AdminScreenSpec | undefined {
+  return ADMIN_SCREENS.find((s) => s.id === id);
+}
+
+export function adminScreensToRun(id: string): AdminScreenSpec[] {
+  if (id === 'all' || id === 'admin') return [...ADMIN_SCREENS];
+  const spec = adminById(id);
+  return spec ? [spec] : [];
+}
+
+export function isAdminScreen(id: string): boolean {
+  return id === 'admin' || ADMIN_SCREEN_IDS.includes(id as AdminScreenId);
+}

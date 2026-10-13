@@ -519,12 +519,12 @@ const screensDoctor: Command = {
 
 const screensCheck: Command = {
   name: 'check',
-  summary: 'Screenshot Expo web /dev fixtures or the 1080x1920 live overlay, then compare to baselines',
+  summary: 'Screenshot Expo web /dev fixtures, the live overlay, or the streamer admin panel, then compare to baselines',
   args: [
     {
       name: 'screen',
       type: 'enum',
-      summary: 'One fixture, all phone screens, or all overlay screens',
+      summary: 'One fixture, all phone screens, overlay screens, or admin screens',
       values: [
         'all',
         'home',
@@ -538,20 +538,34 @@ const screensCheck: Command = {
         'overlay-game',
         'overlay-turn',
         'overlay-winner',
+        'admin',
+        'setup',
+        'setup-tikfinity-not-running',
+        'setup-connected',
+        'settings',
+        'dashboard',
+        'dashboard-reconnecting',
+        'dashboard-disconnected',
+        'kick-confirm',
+        'error-tikfinity-closed',
+        'error-username-not-found',
+        'error-live-ended',
+        'error-overlay-not-loaded',
+        'error-port-in-use',
       ],
       default: 'all',
     },
     {
       name: 'target',
       type: 'enum',
-      summary: 'Phone Expo web or the OBS overlay',
-      values: ['web', 'overlay'],
+      summary: 'Phone Expo web, the OBS overlay, or the streamer admin panel',
+      values: ['web', 'overlay', 'admin'],
       default: 'web',
     },
     {
       name: 'update-baselines',
       type: 'bool',
-      summary: 'Overwrite baselines/web or baselines/overlay from this capture',
+      summary: 'Overwrite baselines/web, baselines/overlay, or baselines/admin from this capture',
       default: false,
     },
     { name: 'port', type: 'int', summary: 'Static server port for the web export', default: 4173 },
@@ -623,7 +637,7 @@ const auth: Command = {
 
 const screens: Command = {
   name: 'screens',
-  summary: 'Expo web /dev screenshots and the 1080x1920 Ludi Live overlay',
+  summary: 'Expo web /dev screenshots, the 1080x1920 overlay, and the streamer admin panel',
   args: [],
   mutates: false,
   children: [screensDoctor, screensCheck],
