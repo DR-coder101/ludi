@@ -1,3 +1,4 @@
+import '../src/polyfills/weakref';
 import { Stack } from 'expo-router';
 import { registerLiveKitGlobals } from '../src/livekit/registerGlobals';
 

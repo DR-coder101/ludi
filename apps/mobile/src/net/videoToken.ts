@@ -29,10 +29,14 @@ export async function fetchVideoToken(
     });
 
     const data: VideoTokenResponse = await response.json();
-    return readVideoToken(data);
+    const result = readVideoToken(data);
+    if ('error' in result) {
+      console.warn('[Video] token fetch failed', result.error);
+    }
+    return result;
   } catch (error) {
-    return {
-      error: error instanceof Error ? error.message : 'Network error',
-    };
+    const message = error instanceof Error ? error.message : 'Network error';
+    console.warn('[Video] token fetch failed', message);
+    return { error: message };
   }
 }

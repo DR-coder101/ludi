@@ -161,8 +161,12 @@ export default function OnlineGameScreen() {
       }
       const url = resolveLivekitUrl(result.url, process.env.EXPO_PUBLIC_LIVEKIT_URL);
       setConnection(roomCode, result.token);
-      if (url) setLivekitUrl(url);
-      else setVideoError('LiveKit URL missing');
+      if (url) {
+        setLivekitUrl(url);
+        return;
+      }
+      console.warn('[Video] LiveKit URL missing');
+      setVideoError('LiveKit URL missing');
     });
   }, [
     gameState,

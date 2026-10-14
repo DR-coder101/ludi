@@ -10,6 +10,10 @@ EXPO_PUBLIC_SOCKET_URL=http://localhost:3000
 
 # For development with a physical device on the same network:
 # EXPO_PUBLIC_SOCKET_URL=http://192.168.1.x:3000
+
+# LiveKit websocket URL. POST /video-token `url` wins. This value is the fallback
+# when the server omits one. Use your LiveKit Cloud project URL, not a token.
+EXPO_PUBLIC_LIVEKIT_URL=wss://<project>.livekit.cloud
 ```
 
 ## Development

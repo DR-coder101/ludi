@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { LiveKitRoom, useParticipants } from '@livekit/react-native';
 import type { CallParticipant } from './seatVideo';
 import type { LiveKitSessionProps } from './liveKitHost';
+import { createLiveKitRoomBind } from './liveKitRoomBind';
 
 export function LiveKitSession({
   token,
@@ -13,17 +15,28 @@ export function LiveKitSession({
   onError,
   children,
 }: LiveKitSessionProps) {
+  const [bind] = useState(createLiveKitRoomBind);
   if (!token || !url) return <>{children}</>;
+  const room = bind({
+    token,
+    url,
+    audio,
+    video,
+    facingUser,
+    onConnected,
+    onDisconnected,
+    onError,
+  });
   return (
     <LiveKitRoom
-      serverUrl={url}
-      token={token}
-      connect
-      audio={audio}
-      video={video ? { facingMode: facingUser ? 'user' : 'environment' } : false}
-      onConnected={onConnected}
-      onDisconnected={onDisconnected}
-      onError={onError}
+      serverUrl={room.serverUrl}
+      token={room.token}
+      connect={room.connect}
+      audio={room.audio}
+      video={room.video}
+      onConnected={room.onConnected}
+      onDisconnected={room.onDisconnected}
+      onError={room.onError}
     >
       {children}
     </LiveKitRoom>
