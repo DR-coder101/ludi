@@ -56,15 +56,15 @@ describe('turnCopy', () => {
 
   it('names the place and player when another device has the turn', () => {
     const copy = turnCopy({ ...base, phase: 'awaiting_move', dice: fresh(4, 1), turn: 'green', isMine: false, name: 'Shanice' });
-    expect(copy.kicker).toBe('OCHO RIOS · SHANICE');
+    expect(copy.kicker).toBe('NEGRIL · SHANICE');
     expect(copy.title).toBe('SHANICE ROLLED 4 + 1');
     expect(copy.cta).toBeNull();
   });
 
   it('falls back to the place name without a player name', () => {
     const copy = turnCopy({ ...base, phase: 'awaiting_roll', dice: null, turn: 'blue', isMine: false });
-    expect(copy.kicker).toBe('NEGRIL');
-    expect(copy.title).toBe("NEGRIL'S TURN");
+    expect(copy.kicker).toBe('OCHO RIOS');
+    expect(copy.title).toBe("OCHO RIOS'S TURN");
   });
 
   it('announces the winner by place', () => {

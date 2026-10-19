@@ -16,26 +16,24 @@ function cellType(r, c) {
   const inYard = (r < 8 || r > 10) && (c < 8 || c > 10);
   if (inYard) return 'yard';
   if (r >= 8 && r <= 10 && c >= 8 && c <= 10) return 'centre';
-  if (c === 9 && r >= 1 && r <= 7) return 'home-gold';
-  if (c === 9 && r >= 11 && r <= 17) return 'home-red';
-  if (r === 9 && c >= 1 && c <= 7) return 'home-black';
-  if (r === 9 && c >= 11 && c <= 17) return 'home-green';
+  if (c === 9 && r >= 1 && r <= 7) return 'home-green';
+  if (c === 9 && r >= 11 && r <= 17) return 'home-black';
+  if (r === 9 && c >= 1 && c <= 7) return 'home-gold';
+  if (r === 9 && c >= 11 && c <= 17) return 'home-red';
   return 'track';
 }
 
-// lib.js STARTS / ENTRIES as [row, col] (+ arrow direction into the home column).
-const STARTS = { gold: [1, 8], green: [8, 17], red: [17, 10], black: [10, 1] };
-const ENTRIES = { gold: [0, 9, 'down'], green: [9, 18, 'left'], red: [18, 9, 'up'], black: [9, 0, 'right'] };
+const STARTS = { red: [10, 17], black: [17, 8], gold: [8, 1], green: [1, 10] };
+const ENTRIES = { red: [9, 18, 'left'], black: [18, 9, 'up'], gold: [9, 0, 'right'], green: [0, 9, 'down'] };
 const DIR = { down: [1, 0], up: [-1, 0], left: [0, -1], right: [0, 1] };
 
 const PLACES = {
   red: { place: 'KINGSTON', corner: 'BR', engine: 'red', fill: '#E4202E', text: '#FFFFFF' },
-  green: { place: 'OCHO RIOS', corner: 'TR', engine: 'green', fill: '#0FAE47', text: '#FFFFFF' },
+  green: { place: 'OCHO RIOS', corner: 'TR', engine: 'blue', fill: '#0FAE47', text: '#FFFFFF' },
   gold: { place: 'MONTEGO BAY', corner: 'TL', engine: 'yellow', fill: '#FED100', text: '#0B0B0C' },
-  black: { place: 'NEGRIL', corner: 'BL', engine: 'blue', fill: '#26272B', text: '#D9DCE1' },
+  black: { place: 'NEGRIL', corner: 'BL', engine: 'green', fill: '#26272B', text: '#D9DCE1' },
 };
-// Engine colour order == movement order around the track.
-const ORDER = ['red', 'green', 'gold', 'black'];
+const ORDER = ['red', 'black', 'gold', 'green'];
 
 const key = (r, c) => `${r},${c}`;
 const isTrack = (r, c) => r >= 0 && r < N && c >= 0 && c < N && cellType(r, c) === 'track';
@@ -61,10 +59,8 @@ export function deriveTrack() {
     if (ringNeighbours(r, c).length !== 2) fail(`cell (${r},${c}) has ${ringNeighbours(r, c).length} ring neighbours`);
   }
 
-  // Index 0 = Red start; first move is up the bottom arm, matching the
-  // board.html midgame "+6" highlight path (16,10) -> (15,10) ... -> (10,11).
   const track = [STARTS.red];
-  let prev = [18, 10];
+  let prev = [10, 18];
   let cur = STARTS.red;
   for (;;) {
     const next = ringNeighbours(...cur).find(([a, b]) => key(a, b) !== key(...prev));
@@ -124,7 +120,7 @@ function renderSvg({ track, colours }) {
   s += `<marker id="ahk" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#0B0B0C"/></marker></defs>`;
   s += `<rect width="${W}" height="${H}" fill="#FFFFFF"/>`;
   s += `<text x="${BX}" y="40" font-size="26" font-weight="700" fill="#0B0B0C">Ludi track mapping — 68 track squares (17 per arm) + 7-square home columns</text>`;
-  s += `<text x="${BX}" y="70" font-size="15" fill="#444">19×19 grid, (row, col) 0-indexed from top-left. Derived from design-pack lib.js cellType / STARTS / ENTRIES. DRAFT — awaiting Dean's approval.</text>`;
+  s += `<text x="${BX}" y="70" font-size="15" fill="#444">19×19 grid, (row, col) 0-indexed from top-left. Clockwise layout approved by Dean: OUT Kingston (10,17), Negril (17,8), Montego Bay (8,1), Ocho Rios (1,10).</text>`;
 
   for (let i = 0; i < N; i++) {
     s += `<text x="${cx(i)}" y="${BY - 10}" font-size="12" fill="#777" text-anchor="middle">${i}</text>`;
@@ -230,7 +226,7 @@ function renderSvg({ track, colours }) {
 
   line('How to read', { size: 20, bold: true, gap: 30 });
   line('• Numbers 0–67 = absolute engine track index (zone "track", cell).', { gap: 22 });
-  line('• Pink ticks show movement direction: counter-clockwise as drawn.', { gap: 22 });
+  line('• Pink ticks show movement direction: clockwise as drawn.', { gap: 22 });
   line(`• Corner steps around the centre are diagonal: ${diagonals.map((i) => `${i}→${(i + 1) % track.length}`).join(', ')}.`, { gap: 22 });
   line('• Coloured cell + star = come-out (start). Coloured outline = home entry.', { gap: 22 });
   line('• H0..H6 = engine homeColumn.step 1..7. Step 8 = HOME (centre).', { gap: 22 });

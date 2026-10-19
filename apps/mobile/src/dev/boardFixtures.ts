@@ -17,9 +17,9 @@ const track = (cell: number): TokenPos => ({ zone: 'track', cell });
 const column = (step: number): TokenPos => ({ zone: 'homeColumn', step });
 
 /**
- * Engine positions behind board-midgame.png (grid cells from lib.js `pieces`):
- * red (16,10)=track 1, (13,9)=home step 5; green (8,14)=20, (15,8)=62;
- * gold (4,8)=37, (10,4)=54; black ×2 on (8,5)=43, (3,10)=28.
+ * Engine positions behind the mid fixture (cells from TRACK_CELLS after the clockwise transpose):
+ * red (10,16)=track 1, (9,13)=home step 5; green (14,8)=20, (8,15)=62;
+ * gold (8,4)=37, (4,10)=54; black ×2 on (5,8)=43, (10,3)=28.
  */
 const MID_POSITIONS: Record<Color, TokenPos[]> = {
   red: [track(1), column(5), yard, yard],

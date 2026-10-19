@@ -15,7 +15,7 @@ export const MIN_PLAYERS = 1;
 const CORNERS: Corner[] = ['TL', 'TR', 'BL', 'BR'];
 const ENGINE_COLORS = Object.keys(PLACES) as EngineColor[];
 
-/** Seat grid order, laid out like the island: Montego Bay, Ocho Rios, Negril, Kingston. */
+/** Seat grid order, laid out like the island: Montego Bay, Ocho Rios, Negril, Kingston. Engine blue sits TR, engine green sits BL. */
 export const SEAT_ORDER: EngineColor[] = CORNERS.map((c) => ENGINE_COLORS.find((k) => PLACES[k].corner === c)!);
 
 export interface LobbySeat {

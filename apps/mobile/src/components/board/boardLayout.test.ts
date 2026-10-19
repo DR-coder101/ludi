@@ -26,33 +26,32 @@ type CellType = 'yard' | 'centre' | 'track' | 'home-gold' | 'home-red' | 'home-b
 function libCellType(r: number, c: number): CellType {
   if ((r < 8 || r > 10) && (c < 8 || c > 10)) return 'yard';
   if (r >= 8 && r <= 10 && c >= 8 && c <= 10) return 'centre';
-  if (c === 9 && r >= 1 && r <= 7) return 'home-gold';
-  if (c === 9 && r >= 11 && r <= 17) return 'home-red';
-  if (r === 9 && c >= 1 && c <= 7) return 'home-black';
-  if (r === 9 && c >= 11 && c <= 17) return 'home-green';
+  if (c === 9 && r >= 1 && r <= 7) return 'home-green';
+  if (c === 9 && r >= 11 && r <= 17) return 'home-black';
+  if (r === 9 && c >= 1 && c <= 7) return 'home-gold';
+  if (r === 9 && c >= 11 && c <= 17) return 'home-red';
   return 'track';
 }
 
 const COLORS: Color[] = ['red', 'green', 'yellow', 'blue'];
 const HOME_TYPE: Record<Color, CellType> = {
   red: 'home-red',
-  green: 'home-green',
+  green: 'home-black',
   yellow: 'home-gold',
-  blue: 'home-black',
+  blue: 'home-green',
 };
 
-// lib.js STARTS / ENTRIES, keyed by engine colour (gold = yellow, black = blue).
 const MOCKUP_STARTS: Record<Color, CellPosition> = {
-  red: { row: 17, col: 10 },
-  green: { row: 8, col: 17 },
-  yellow: { row: 1, col: 8 },
-  blue: { row: 10, col: 1 },
+  red: { row: 10, col: 17 },
+  green: { row: 17, col: 8 },
+  yellow: { row: 8, col: 1 },
+  blue: { row: 1, col: 10 },
 };
 const MOCKUP_ENTRIES: Record<Color, { cell: CellPosition; dir: CellPosition }> = {
-  red: { cell: { row: 18, col: 9 }, dir: { row: -1, col: 0 } },
-  green: { cell: { row: 9, col: 18 }, dir: { row: 0, col: -1 } },
-  yellow: { cell: { row: 0, col: 9 }, dir: { row: 1, col: 0 } },
-  blue: { cell: { row: 9, col: 0 }, dir: { row: 0, col: 1 } },
+  red: { cell: { row: 9, col: 18 }, dir: { row: 0, col: -1 } },
+  green: { cell: { row: 18, col: 9 }, dir: { row: -1, col: 0 } },
+  yellow: { cell: { row: 9, col: 0 }, dir: { row: 0, col: 1 } },
+  blue: { cell: { row: 0, col: 9 }, dir: { row: 1, col: 0 } },
 };
 
 const key = (p: CellPosition) => `${p.row},${p.col}`;
@@ -164,6 +163,36 @@ describe('TRACK_CELLS', () => {
     for (const color of COLORS) {
       expect(TRACK_CELLS[HOME_COLUMN_ENTRY[color]], color).toEqual(MOCKUP_ENTRIES[color].cell);
       expect((START_CELLS[color] - HOME_COLUMN_ENTRY[color] + TRACK_SIZE) % TRACK_SIZE).toBe(2);
+    }
+  });
+
+  it('walks clockwise (positive shoelace on a y-down grid)', () => {
+    let area2 = 0;
+    for (let i = 0; i < TRACK_CELLS.length; i++) {
+      const a = TRACK_CELLS[i];
+      const b = TRACK_CELLS[(i + 1) % TRACK_CELLS.length];
+      area2 += a.col * b.row - b.col * a.row;
+    }
+    expect(area2).toBeGreaterThan(0);
+  });
+
+  it('keeps each START orthogonally adjacent to its own yard', () => {
+    const yardAt: Record<Color, { r0: number; c0: number }> = {
+      red: { r0: 11, c0: 11 },
+      green: { r0: 11, c0: 0 },
+      yellow: { r0: 0, c0: 0 },
+      blue: { r0: 0, c0: 11 },
+    };
+    for (const color of COLORS) {
+      const start = TRACK_CELLS[START_CELLS[color]];
+      const { r0, c0 } = yardAt[color];
+      const hits = [
+        { row: start.row - 1, col: start.col },
+        { row: start.row + 1, col: start.col },
+        { row: start.row, col: start.col - 1 },
+        { row: start.row, col: start.col + 1 },
+      ].some((n) => n.row >= r0 && n.row < r0 + 8 && n.col >= c0 && n.col < c0 + 8);
+      expect(hits, color).toBe(true);
     }
   });
 });
