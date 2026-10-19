@@ -3,6 +3,9 @@ import { StyleSheet, Text, View, TouchableOpacity, ScrollView, TextInput, Activi
 import { Stack, useRouter } from 'expo-router';
 import type { Color } from '@ludi/rules';
 import { socketManager } from '../src/net/socket';
+import { leaveAppOnlineSession } from '../src/net/leaveAppSession';
+import { loadLocalGame } from '../src/game/localGame';
+import { storage } from '../src/utils/storage';
 import { useAuthStore } from '../src/stores/authStore';
 import { useToastStore } from '../src/stores/toastStore';
 import { Toast } from '../src/components/Toast';
@@ -36,6 +39,11 @@ export default function HomeScreen() {
 
   useEffect(() => {
     initializeAuth();
+    void loadLocalGame(storage).then((saved) => {
+      if (saved && saved.state.phase !== 'finished') {
+        router.replace(`/game?colors=${saved.colors.join(',')}&resume=1`);
+      }
+    });
   }, []);
 
   const handlePlayerCountChange = (count: 2 | 3 | 4) => {
@@ -44,7 +52,8 @@ export default function HomeScreen() {
     setSelectedColors(colors);
   };
 
-  const handleStartLocalGame = () => {
+  const handleStartLocalGame = async () => {
+    await leaveAppOnlineSession();
     const colorsParam = selectedColors.join(',');
     router.push(`/game?colors=${colorsParam}`);
   };

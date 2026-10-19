@@ -7,7 +7,7 @@ import type { TurnCopy } from './turnCopy';
 import { DiceFace } from './DiceFace';
 import type { DieIndex } from './diceModel';
 import { dieStatusLabel } from './dieStatus';
-import { turnTitleSize, TURN_TITLE_MAX } from './turnTitle';
+import { turnTitleLineHeight, turnTitleSize, TURN_TITLE_MAX } from './turnTitle';
 
 interface TurnCardProps {
   copy: TurnCopy;
@@ -78,7 +78,7 @@ export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickD
             }}
           >
             <Text
-              style={[styles.title, { fontSize: titleSize, lineHeight: titleSize + 1 }]}
+              style={[styles.title, { fontSize: titleSize, lineHeight: turnTitleLineHeight(titleSize) }]}
               numberOfLines={1}
               adjustsFontSizeToFit
               minimumFontScale={0.55}
@@ -187,19 +187,22 @@ const styles = StyleSheet.create({
   },
   titleBox: {
     alignSelf: 'stretch',
-    marginTop: 4,
+    marginTop: 2,
+    paddingTop: 2,
+    overflow: 'visible',
   },
   title: {
     width: '100%',
     textAlign: 'center',
     fontFamily: font.display,
     fontSize: 29,
-    lineHeight: 30,
+    lineHeight: 37,
     letterSpacing: 0.5,
     color: color.gold,
     textShadowColor: color.greenDeep,
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 0.1,
+    includeFontPadding: false,
   },
   sub: {
     marginTop: 3,

@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
+import { AppState } from 'react-native';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import type { ErrorBoundaryProps } from 'expo-router';
 import type { Color, GameState } from '@ludi/rules';
-import { createGame, rollDice, legalMoves, applyMove } from '@ludi/rules';
+import { legalMoves } from '@ludi/rules';
 import { BoardScreen } from '../src/components/game/BoardScreen';
 import type { MoveLike } from '../src/components/board/boardModel';
 import { makeHop, type HopAnimation } from '../src/components/board/BoardView';
@@ -10,6 +12,17 @@ import { winView } from '../src/components/win/winModel';
 import { useMatchStats } from '../src/components/win/useMatchStats';
 import { gameAudio, triggerHaptic } from '../src/utils/gameAudio';
 import { OnboardingTooltip, useOnboarding } from '../src/components/OnboardingTooltip';
+import {
+  clearLocalGame,
+  createLocalGame,
+  loadLocalGame,
+  reduceLocalGame,
+  saveLocalGame,
+  type LocalGame,
+} from '../src/game/localGame';
+import { decidePlayEvent, playSessionFlag } from '../src/nav/playNavigation';
+import { RouteErrorBoundary } from '../src/nav/RouteErrorView';
+import { storage } from '../src/utils/storage';
 
 interface PendingMove {
   anim: HopAnimation;
@@ -17,9 +30,13 @@ interface PendingMove {
   captures: boolean;
 }
 
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <RouteErrorBoundary {...props} />;
+}
+
 export default function GameScreen() {
   const router = useRouter();
-  const { colors } = useLocalSearchParams<{ colors: string }>();
+  const { colors, resume } = useLocalSearchParams<{ colors: string; resume?: string }>();
 
   const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
 
@@ -36,23 +53,50 @@ export default function GameScreen() {
     return out;
   }, [playerColors]);
 
-  const newGame = () =>
-    createGame({
-      playerColors,
-      houseRules: {
-        maxConsecutiveSixes: 2,
-        extraRollOnCapture: false,
-        blockadeCanMoveTogether: false,
-        exactFinishBonus: false,
-        playForPlacements: false,
-      },
-    });
-  const [gameState, setGameState] = useState<GameState>(newGame);
-  const [lastRoll, setLastRoll] = useState<[number, number] | null>(null);
-  const [rollKey, setRollKey] = useState(0);
+  const [game, setGame] = useState<LocalGame>(() => createLocalGame(playerColors));
   const [pending, setPending] = useState<PendingMove | null>(null);
   const [previousTurn, setPreviousTurn] = useState<Color | null>(null);
-  const match = useMatchStats(gameState.phase === 'finished');
+  const match = useMatchStats(game.state.phase === 'finished');
+  const gameState = game.state;
+
+  useEffect(() => {
+    playSessionFlag.setLocal(true);
+    let cancelled = false;
+    if (resume === '1') {
+      void loadLocalGame(storage).then((saved) => {
+        if (cancelled || !saved) return;
+        if (saved.colors.join(',') !== playerColors.join(',')) return;
+        if (saved.state.phase === 'finished') return;
+        setGame(saved);
+      });
+    }
+    return () => {
+      cancelled = true;
+      playSessionFlag.setLocal(false);
+    };
+  }, [playerColors, resume]);
+
+  useEffect(() => {
+    if (game.state.phase === 'finished') {
+      void clearLocalGame(storage);
+      return;
+    }
+    void saveLocalGame(storage, game);
+  }, [game]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      const event = next === 'active' ? 'app-active' : 'app-background';
+      const cmd = decidePlayEvent('local', event);
+      if (cmd.type !== 'stay') {
+        console.error('[LocalGame] refused to leave the board on', event, cmd);
+      }
+      if (next === 'background' || next === 'inactive') {
+        void saveLocalGame(storage, game);
+      }
+    });
+    return () => sub.remove();
+  }, [game]);
 
   useEffect(() => {
     gameAudio.initialize();
@@ -84,13 +128,11 @@ export default function GameScreen() {
 
   const handleRoll = () => {
     if (gameState.phase !== 'awaiting_roll' || pending) return;
-    const result = rollDice(gameState, Math.random);
-    match.roll(gameState.turn, result.values);
+    const next = reduceLocalGame(game, { type: 'roll', random: Math.random });
+    if (next.lastRoll) match.roll(gameState.turn, next.lastRoll);
     gameAudio.play('roll');
     triggerHaptic.medium();
-    setLastRoll(result.values);
-    setRollKey((k) => k + 1);
-    setGameState(result.state);
+    setGame(next);
   };
 
   const handleMove = ({ tokenIndex, dieIndex }: MoveLike) => {
@@ -99,13 +141,13 @@ export default function GameScreen() {
     if (!move) return;
     if (move.captures) match.capture(gameState.turn);
 
-    const next = applyMove(gameState, tokenIndex, dieIndex).state;
+    const next = reduceLocalGame(game, { type: 'move', tokenIndex, dieIndex });
     const anim = makeHop(gameState, tokenIndex, move.resulting);
     if (!anim) {
-      setGameState(next);
+      setGame(next);
       return;
     }
-    setPending({ anim, next, captures: !!move.captures });
+    setPending({ anim, next: next.state, captures: !!move.captures });
   };
 
   const handleHopDone = () => {
@@ -114,15 +156,20 @@ export default function GameScreen() {
       gameAudio.play('capture');
       triggerHaptic.heavy();
     }
-    setGameState(pending.next);
+    setGame((current) => ({ ...current, state: pending.next }));
     setPending(null);
   };
 
   const handleRematch = () => {
-    setGameState(newGame());
-    setLastRoll(null);
+    setGame(reduceLocalGame(game, { type: 'rematch' }));
     setPending(null);
     match.reset();
+  };
+
+  const leaveBoard = () => {
+    void clearLocalGame(storage);
+    playSessionFlag.setLocal(false);
+    router.back();
   };
 
   const results = winView({ state: gameState, names, roomCode: null, stats: match.stats });
@@ -136,18 +183,18 @@ export default function GameScreen() {
         me={null}
         names={names}
         roomCode={null}
-        lastRoll={lastRoll}
-        rollKey={rollKey}
+        lastRoll={game.lastRoll}
+        rollKey={game.rollKey}
         hop={pending?.anim ?? null}
         onHopDone={handleHopDone}
         onRoll={handleRoll}
         onMove={handleMove}
-        onMenu={() => router.back()}
+        onMenu={leaveBoard}
         onProfile={() => router.push('/profile')}
       >
         {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
         {gameState.phase === 'finished' && results ? (
-          <WinScreen view={results} onRematch={handleRematch} onLobby={() => router.back()} />
+          <WinScreen view={results} onRematch={handleRematch} onLobby={leaveBoard} />
         ) : null}
       </BoardScreen>
     </>
