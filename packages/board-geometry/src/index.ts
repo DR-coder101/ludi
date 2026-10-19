@@ -5,7 +5,14 @@
  * Towns stay in corners. Engine green sits at Negril, engine blue at Ocho Rios,
  * so Red → Green → Yellow → Blue walks Kingston → Negril → Montego Bay → Ocho Rios.
  */
-import type { Color } from '@ludi/rules';
+import {
+  HOME_ENTRY_DISTANCE,
+  START_CELLS,
+  TOTAL_JOURNEY_STEPS,
+  normalizeTrackCell,
+  type Color,
+  type TokenPos,
+} from '@ludi/rules';
 
 export type { Color };
 
@@ -224,3 +231,45 @@ export const CENTER_TRIANGLES: Record<Color, CellPosition[]> = {
     { row: 9, col: 9 },
   ],
 };
+
+/** Finished tokens sit on the centroid of their arrival triangle. */
+export const HOME_SPOTS: Record<Color, CellPosition> = {
+  red: { row: 10, col: 9 },
+  green: { row: 9, col: 10 },
+  yellow: { row: 8, col: 9 },
+  blue: { row: 9, col: 8 },
+};
+
+export { TOTAL_JOURNEY_STEPS };
+
+/**
+ * Journey progress 0 is that colour's start cell. 74 is the centre.
+ * The engine never emits a progress outside 0..TOTAL_JOURNEY_STEPS.
+ */
+export function tokenPosForProgress(color: Color, progress: number): TokenPos | undefined {
+  if (!Number.isInteger(progress) || progress < 0 || progress > TOTAL_JOURNEY_STEPS) {
+    return undefined;
+  }
+  if (progress === TOTAL_JOURNEY_STEPS) return { zone: 'home' };
+  if (progress > HOME_ENTRY_DISTANCE) {
+    return { zone: 'homeColumn', step: progress - HOME_ENTRY_DISTANCE };
+  }
+  return { zone: 'track', cell: normalizeTrackCell(START_CELLS[color] + progress) };
+}
+
+export function cellForToken(color: Color, pos: TokenPos): CellPosition | undefined {
+  switch (pos.zone) {
+    case 'yard':
+      return YARDS[color]?.tokenPositions[0];
+    case 'track':
+      return TRACK_CELLS[pos.cell];
+    case 'homeColumn':
+      return HOME_COLUMNS[color]?.cells[pos.step - 1];
+    case 'home':
+      return HOME_SPOTS[color];
+    default: {
+      const _never: never = pos;
+      return _never;
+    }
+  }
+}

@@ -1,5 +1,6 @@
 import { computePath, type Color, type GameState, type TokenPos } from '@ludi/rules';
-import { HOME_COLUMNS, TRACK_CELLS, type CellPosition } from './boardLayout';
+import { HOME_SPOTS, cellForToken } from '@ludi/board-geometry';
+import { type CellPosition } from './boardLayout';
 import { PLACES, TURN_ORDER, type PieceColor } from '../../theme/tokens';
 
 export interface MoveLike {
@@ -54,26 +55,12 @@ export interface BoardModel {
   highlight: MoveHighlight | null;
 }
 
-/** Where a finished token rests: the centroid of its colour's arrival triangle in the centre flag. */
-export const HOME_SPOTS: Record<Color, CellPosition> = {
-  red: { row: 10, col: 9 },
-  green: { row: 9, col: 10 },
-  yellow: { row: 8, col: 9 },
-  blue: { row: 9, col: 8 },
-};
+export { HOME_SPOTS };
 
 /** Grid cell for a token position, or null while it sits in the yard. */
 export function cellOf(pos: TokenPos, color: Color): CellPosition | null {
-  switch (pos.zone) {
-    case 'track':
-      return TRACK_CELLS[pos.cell];
-    case 'homeColumn':
-      return HOME_COLUMNS[color].cells[pos.step - 1];
-    case 'home':
-      return HOME_SPOTS[color];
-    default:
-      return null;
-  }
+  if (pos.zone === 'yard') return null;
+  return cellForToken(color, pos) ?? null;
 }
 
 function samePos(a: TokenPos, b: TokenPos): boolean {

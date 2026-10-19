@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   HOME_COLUMN_ENTRY,
   START_CELLS,
+  TOTAL_JOURNEY_STEPS,
   TRACK_SIZE,
   type Color,
 } from '@ludi/rules';
@@ -12,6 +13,8 @@ import {
   TOWN_BY_COLOR,
   TRACK_CELLS,
   YARDS,
+  cellForToken,
+  tokenPosForProgress,
   type CellPosition,
   type TownId,
 } from './index';
@@ -185,5 +188,32 @@ describe('Dean clockwise layout', () => {
       expect(cell.col).toBeGreaterThanOrEqual(0);
       expect(cell.col).toBeLessThan(BOARD_SIZE);
     }
+  });
+});
+
+describe('every engine (colour, progress) maps to a cell', () => {
+  it('defines a board cell for yard, each journey step, and home', () => {
+    for (const color of COLORS) {
+      const yard = cellForToken(color, { zone: 'yard' });
+      expect(yard, `${color} yard`).toEqual(YARDS[color].tokenPositions[0]);
+      for (let progress = 0; progress <= TOTAL_JOURNEY_STEPS; progress++) {
+        const pos = tokenPosForProgress(color, progress);
+        expect(pos, `${color} progress ${progress}`).toBeDefined();
+        if (!pos) continue;
+        const cell = cellForToken(color, pos);
+        expect(cell, `${color} ${progress} ${JSON.stringify(pos)}`).toEqual(
+          expect.objectContaining({ row: expect.any(Number), col: expect.any(Number) }),
+        );
+        expect(cell!.row).toBeGreaterThanOrEqual(0);
+        expect(cell!.row).toBeLessThan(BOARD_SIZE);
+        expect(cell!.col).toBeGreaterThanOrEqual(0);
+        expect(cell!.col).toBeLessThan(BOARD_SIZE);
+      }
+    }
+  });
+
+  it('rejects a progress the engine cannot produce', () => {
+    expect(tokenPosForProgress('red', -1)).toBeUndefined();
+    expect(tokenPosForProgress('blue', TOTAL_JOURNEY_STEPS + 1)).toBeUndefined();
   });
 });
