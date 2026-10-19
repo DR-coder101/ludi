@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Share } from 'react-native';
-import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
-import type { Color, HouseRules } from '@ludi/protocol';
+import { useEffect, useRef, useState } from 'react';
+import { BackHandler, Share } from 'react-native';
+import { Stack, useNavigation, useRouter, useLocalSearchParams } from 'expo-router';
+import type { Color, HouseRules, RoomState } from '@ludi/protocol';
 import { socketManager } from '../../src/net/socket';
+import { bindLobbySocket, type SocketLike } from '../../src/net/onlineSession';
+import { leaveAppOnlineSession } from '../../src/net/leaveAppSession';
+import { decidePlayEvent, playSessionFlag } from '../../src/nav/playNavigation';
 import { useRoomStore } from '../../src/stores/roomStore';
 import { useConnectionStore } from '../../src/stores/connectionStore';
 import { useVideoStore } from '../../src/stores/videoStore';
@@ -41,21 +44,39 @@ export default function LobbyScreen() {
   const [loadingError, setLoadingError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
+  const focusedRef = useRef(true);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const onFocus = navigation.addListener('focus', () => {
+      focusedRef.current = true;
+    });
+    const onBlur = navigation.addListener('blur', () => {
+      focusedRef.current = false;
+    });
+    return () => {
+      onFocus();
+      onBlur();
+    };
+  }, [navigation]);
+
   useEffect(() => {
     const socket = socketManager.getSocket();
+    const missing = decidePlayEvent(playSessionFlag.session(), 'missing-socket');
     if (!socket) {
-      router.replace('/');
+      if (missing.type === 'error') {
+        console.error('[Lobby]', missing.message);
+        setLoadingError(missing.message);
+      }
       return;
     }
 
-    // Set my player ID from stored server-issued ID
     const storedPlayerId = socketManager.getPlayerId();
     if (storedPlayerId) {
       setMyPlayerId(storedPlayerId);
     }
     setConnected(socket.connected);
 
-    // Timeout if room state doesn't arrive within 10 seconds
     const timeout = setTimeout(() => {
       if (!roomState) {
         console.error('[Lobby] Timeout waiting for room state');
@@ -63,80 +84,71 @@ export default function LobbyScreen() {
       }
     }, 10000);
 
-    // Listen for room state updates
-    socket.on('room:state', (state) => {
-      console.log('[Lobby] Room state update:', state);
-      setRoomState(state);
-      clearTimeout(timeout);
-      setLoadingError(null);
-      
-      // Update myPlayerId if we don't have it yet and can find ourselves
-      const storedPlayerId = socketManager.getPlayerId();
-      if (storedPlayerId && state.players.some(p => p.id === storedPlayerId)) {
-        setMyPlayerId(storedPlayerId);
-      }
+    const unbind = bindLobbySocket(socket as SocketLike, {
+      onRoomState: (state) => {
+        console.log('[Lobby] Room state update:', state);
+        setRoomState(state as RoomState);
+        clearTimeout(timeout);
+        setLoadingError(null);
+        const id = socketManager.getPlayerId();
+        if (id && state.players.some((p) => p.id === id)) {
+          setMyPlayerId(id);
+        }
+      },
+      onGameState: (gameState) => {
+        setGameState(gameState as Parameters<typeof setGameState>[0]);
+        const cmd = decidePlayEvent(playSessionFlag.session(), 'game-state');
+        if (cmd.type !== 'open-online-game') return;
+        if (!focusedRef.current) return;
+        console.log('[Lobby] Game started, navigating to game screen');
+        router.replace(`/game/${roomCode}`);
+      },
+      onConnect: () => {
+        console.log('[Lobby] Socket connected');
+        setConnected(true);
+      },
+      onDisconnect: () => {
+        console.log('[Lobby] Socket disconnected');
+        setConnected(false);
+      },
+      onReconnectAttempt: () => {
+        console.log('[Lobby] Attempting to reconnect');
+        setReconnecting(true);
+      },
+      onReconnect: () => {
+        console.log('[Lobby] Reconnected');
+        setConnected(true);
+        setReconnecting(false);
+      },
+      onPlayerConnection: (playerId, connected) => {
+        console.log(`[Lobby] Player ${playerId} connection: ${connected}`);
+        updatePlayerConnection(playerId, connected);
+      },
+      onError: (message) => {
+        console.error('[Lobby] Server error:', message);
+        showToast(String(message), 'error');
+      },
     });
 
-    // Request current room state when mounting (handles race condition where
-    // room:create emits room:state before this listener is set up)
     socket.emit('room:requestState');
-
-    // Listen for game start
-    socket.on('game:state', (gameState) => {
-      console.log('[Lobby] Game started, navigating to game screen');
-      // The game screen subscribes after it mounts, so it would miss this first state.
-      setGameState(gameState);
-      router.replace(`/game/${roomCode}`);
-    });
-
-    // Connection status
-    socket.on('connect', () => {
-      console.log('[Lobby] Socket connected');
-      setConnected(true);
-    });
-
-    socket.on('disconnect', () => {
-      console.log('[Lobby] Socket disconnected');
-      setConnected(false);
-    });
-
-    socket.io.on('reconnect_attempt', () => {
-      console.log('[Lobby] Attempting to reconnect');
-      setReconnecting(true);
-    });
-
-    socket.io.on('reconnect', () => {
-      console.log('[Lobby] Reconnected');
-      setConnected(true);
-      setReconnecting(false);
-    });
-
-    // Player connection changes
-    socket.on('player:connectionChanged', (playerId, connected) => {
-      console.log(`[Lobby] Player ${playerId} connection: ${connected}`);
-      updatePlayerConnection(playerId, connected);
-    });
-
-    socket.on('error', (message) => {
-      console.error('[Lobby] Server error:', message);
-      showToast(message, 'error');
-    });
 
     return () => {
       clearTimeout(timeout);
-      socket.off('room:state');
-      socket.off('game:state');
-      socket.off('player:connectionChanged');
-      socket.off('error');
+      unbind();
     };
-  }, [roomCode, router, retryCount]);
+  }, [roomCode, retryCount]);
+
+  useEffect(() => {
+    const onBack = () => {
+      void handleLeave();
+      return true;
+    };
+    const sub = BackHandler.addEventListener('hardwareBackPress', onBack);
+    return () => sub.remove();
+  }, []);
 
   const handleLeave = async () => {
-    const socket = socketManager.getSocket();
-    if (socket) {
-      socket.emit('room:leave');
-    }
-    await socketManager.clearSession();
+    await leaveAppOnlineSession();
     router.replace('/');
   };
 
@@ -210,7 +222,7 @@ export default function LobbyScreen() {
       <LobbyLoading error={loadingError} onRetry={() => {
         setLoadingError(null);
         setRetryCount(prev => prev + 1);
-      }} onBack={() => router.replace('/')}>
+      }} onBack={() => { void handleLeave(); }}>
         {header}
         {toast}
       </LobbyLoading>

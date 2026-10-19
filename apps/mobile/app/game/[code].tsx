@@ -2,6 +2,10 @@ import { useEffect, useState, useMemo, useCallback, type ReactNode } from 'react
 import { StyleSheet, View, SafeAreaView, Text, ActivityIndicator, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
+import type { ErrorBoundaryProps } from 'expo-router';
+import { decidePlayEvent, playSessionFlag } from '../../src/nav/playNavigation';
+import { RouteErrorBoundary } from '../../src/nav/RouteErrorView';
+import { leaveAppOnlineSession } from '../../src/net/leaveAppSession';
 import type { Color, Player } from '@ludi/protocol';
 import { legalMoves as engineMoves } from '@ludi/rules';
 import { socketManager } from '../../src/net/socket';
@@ -65,6 +69,10 @@ function LiveCallBoard({
   });
   const liveCount = Object.values(seats).filter((seat) => seat && seat.kind !== 'none').length;
   return <>{children(seats, liveCount)}</>;
+}
+
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <RouteErrorBoundary {...props} />;
 }
 
 export default function OnlineGameScreen() {
@@ -185,7 +193,11 @@ export default function OnlineGameScreen() {
   useEffect(() => {
     const socket = socketManager.getSocket();
     if (!socket) {
-      router.replace('/');
+      const cmd = decidePlayEvent(playSessionFlag.session(), 'missing-socket');
+      if (cmd.type === 'error') {
+        console.error('[Game]', cmd.message);
+        showToast(cmd.message, 'error');
+      }
       return;
     }
 
@@ -244,27 +256,29 @@ export default function OnlineGameScreen() {
       addChatMessage(playerId, message);
     });
 
-    socket.on('connect', () => {
+    const onConnect = () => {
       setConnected(true);
-    });
-
-    socket.on('disconnect', () => {
+    };
+    const onDisconnect = () => {
       setConnected(false);
-    });
-
-    socket.io.on('reconnect_attempt', () => {
+    };
+    const onReconnectAttempt = () => {
       setReconnecting(true);
-    });
-
-    socket.io.on('reconnect', () => {
+    };
+    const onReconnect = () => {
       setConnected(true);
       setReconnecting(false);
-    });
-
-    socket.on('error', (message) => {
+    };
+    const onError = (message: string) => {
       console.error('[Game] Server error:', message);
       showToast(message, 'error');
-    });
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
+    socket.io.on('reconnect_attempt', onReconnectAttempt);
+    socket.io.on('reconnect', onReconnect);
+    socket.on('error', onError);
 
     return () => {
       socket.off('game:state');
@@ -273,7 +287,11 @@ export default function OnlineGameScreen() {
       socket.off('game:turnChanged');
       socket.off('game:over');
       socket.off('chat:message');
-      socket.off('error');
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
+      socket.io.off('reconnect_attempt', onReconnectAttempt);
+      socket.io.off('reconnect', onReconnect);
+      socket.off('error', onError);
     };
   }, [roomCode, myPlayerId]);
 
@@ -341,11 +359,7 @@ export default function OnlineGameScreen() {
   }, [isMyTurn, gameState, legalMoves, isMoving, applyOptimisticMove, rollbackOptimisticMove]);
 
   const handleLeave = async () => {
-    const socket = socketManager.getSocket();
-    if (socket) {
-      socket.emit('room:leave');
-    }
-    await socketManager.clearSession();
+    await leaveAppOnlineSession();
     router.replace('/');
   };
 

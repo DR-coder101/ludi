@@ -54,6 +54,12 @@ const SLACK = 4;
 
 export const TURN_TITLE_MAX = 29;
 export const TURN_TITLE_MIN = 16;
+/** Anton caps sit above the em box; +1 clips the top of PLAY / IT'S. */
+export const TURN_TITLE_LINE_SLACK = 8;
+
+export function turnTitleLineHeight(fontSize: number): number {
+  return fontSize + TURN_TITLE_LINE_SLACK;
+}
 
 /**
  * Title box on the 390 screens phone: column minus rails, card border, and
