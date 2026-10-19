@@ -17,6 +17,7 @@ import {
   createLocalGame,
   loadLocalGame,
   reduceLocalGame,
+  resumeLocalGame,
   saveLocalGame,
   type LocalGame,
 } from '../src/game/localGame';
@@ -54,6 +55,7 @@ export default function GameScreen() {
   }, [playerColors]);
 
   const [game, setGame] = useState<LocalGame>(() => createLocalGame(playerColors));
+  const [hydrated, setHydrated] = useState(resume !== '1');
   const [pending, setPending] = useState<PendingMove | null>(null);
   const [previousTurn, setPreviousTurn] = useState<Color | null>(null);
   const match = useMatchStats(game.state.phase === 'finished');
@@ -64,11 +66,12 @@ export default function GameScreen() {
     let cancelled = false;
     if (resume === '1') {
       void loadLocalGame(storage).then((saved) => {
-        if (cancelled || !saved) return;
-        if (saved.colors.join(',') !== playerColors.join(',')) return;
-        if (saved.state.phase === 'finished') return;
-        setGame(saved);
+        if (cancelled) return;
+        setGame((fresh) => resumeLocalGame(fresh, saved));
+        setHydrated(true);
       });
+    } else {
+      setHydrated(true);
     }
     return () => {
       cancelled = true;
@@ -77,12 +80,13 @@ export default function GameScreen() {
   }, [playerColors, resume]);
 
   useEffect(() => {
+    if (!hydrated) return;
     if (game.state.phase === 'finished') {
       void clearLocalGame(storage);
       return;
     }
     void saveLocalGame(storage, game);
-  }, [game]);
+  }, [game, hydrated]);
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
@@ -91,12 +95,12 @@ export default function GameScreen() {
       if (cmd.type !== 'stay') {
         console.error('[LocalGame] refused to leave the board on', event, cmd);
       }
-      if (next === 'background' || next === 'inactive') {
+      if (hydrated && (next === 'background' || next === 'inactive')) {
         void saveLocalGame(storage, game);
       }
     });
     return () => sub.remove();
-  }, [game]);
+  }, [game, hydrated]);
 
   useEffect(() => {
     gameAudio.initialize();

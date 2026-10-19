@@ -113,6 +113,13 @@ export function parseLocalGame(raw: string | null): LocalGame | null {
   }
 }
 
+export function resumeLocalGame(fresh: LocalGame, saved: LocalGame | null): LocalGame {
+  if (!saved) return fresh;
+  if (saved.colors.join(',') !== fresh.colors.join(',')) return fresh;
+  if (saved.state.phase === 'finished') return fresh;
+  return saved;
+}
+
 export async function loadLocalGame(store: {
   getItem(key: string): Promise<string | null>;
 }): Promise<LocalGame | null> {

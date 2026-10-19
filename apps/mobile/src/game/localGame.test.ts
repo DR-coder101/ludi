@@ -9,6 +9,7 @@ import {
   loadLocalGame,
   parseLocalGame,
   reduceLocalGame,
+  resumeLocalGame,
   saveLocalGame,
   serializeLocalGame,
   type LocalGame,
@@ -124,6 +125,29 @@ describe('local pass-and-play reducer', () => {
     expect(restored?.lastRoll).toEqual(game.lastRoll);
     await clearLocalGame(store);
     expect(await loadLocalGame(store)).toBeNull();
+  });
+
+  it('resumes a mid-game snapshot instead of writing a fresh board over it', async () => {
+    const memory = new Map<string, string>();
+    const store = {
+      async getItem(key: string) {
+        return memory.get(key) ?? null;
+      },
+      async setItem(key: string, value: string) {
+        memory.set(key, value);
+      },
+      async deleteItem(key: string) {
+        memory.delete(key);
+      },
+    };
+    let mid = createLocalGame(COLORS);
+    mid = reduceLocalGame(mid, { type: 'roll', random: mulberry32(7) });
+    await saveLocalGame(store, mid);
+    const fresh = createLocalGame(COLORS);
+    const resumed = resumeLocalGame(fresh, await loadLocalGame(store));
+    expect(resumed.state).toEqual(mid.state);
+    expect(resumed.lastRoll).toEqual(mid.lastRoll);
+    expect(resumeLocalGame(fresh, null).state.phase).toBe('awaiting_roll');
   });
 
   it('rejects a broken snapshot instead of inventing a board', () => {
