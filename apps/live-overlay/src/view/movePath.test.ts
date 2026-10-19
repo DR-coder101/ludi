@@ -34,7 +34,7 @@ describe('stepAt', () => {
 describe('applyMovedToPieces', () => {
   const pieces = [
     { key: 'red-0', color: 'red' as const, town: 'kingston' as const, tokenIndex: 0, pos: { zone: 'track' as const, cell: 3 } },
-    { key: 'green-0', color: 'green' as const, town: 'ochoRios' as const, tokenIndex: 0, pos: { zone: 'track' as const, cell: 20 } },
+    { key: 'green-0', color: 'green' as const, town: 'negril' as const, tokenIndex: 0, pos: { zone: 'track' as const, cell: 20 } },
   ];
 
   it('walks the matching token along the server path and leaves others still', () => {

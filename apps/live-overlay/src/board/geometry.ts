@@ -1,5 +1,13 @@
-import type { Color, TokenPos } from '@ludi/rules';
-import type { TownId } from '@ludi/live-game';
+import {
+  COLOR_BY_TOWN,
+  HOME_COLUMNS,
+  TOWN_BY_COLOR,
+  TRACK_CELLS,
+  YARDS,
+  type Color,
+  type TownId,
+} from '@ludi/board-geometry';
+import type { TokenPos } from '@ludi/rules';
 
 export const BOARD_ART = 380;
 export const BOARD_BEVEL = 4;
@@ -8,47 +16,27 @@ export const ARM_B = 27;
 export const ALONG = (BOARD_ART - 3 * ARM_B) / 16;
 export const YARD = 8 * ALONG;
 
-export const TRACK: readonly [number, number][] = [
-  [17, 10], [16, 10], [15, 10], [14, 10], [13, 10], [12, 10], [11, 10], [10, 11],
-  [10, 12], [10, 13], [10, 14], [10, 15], [10, 16], [10, 17], [10, 18], [9, 18], [8, 18],
-  [8, 17], [8, 16], [8, 15], [8, 14], [8, 13], [8, 12], [8, 11], [7, 10], [6, 10],
-  [5, 10], [4, 10], [3, 10], [2, 10], [1, 10], [0, 10], [0, 9], [0, 8],
-  [1, 8], [2, 8], [3, 8], [4, 8], [5, 8], [6, 8], [7, 8], [8, 7], [8, 6],
-  [8, 5], [8, 4], [8, 3], [8, 2], [8, 1], [8, 0], [9, 0], [10, 0],
-  [10, 1], [10, 2], [10, 3], [10, 4], [10, 5], [10, 6], [10, 7], [11, 8], [12, 8],
-  [13, 8], [14, 8], [15, 8], [16, 8], [17, 8], [18, 8], [18, 9], [18, 10],
-];
+export const TRACK: readonly [number, number][] = TRACK_CELLS.map((c) => [c.row, c.col]);
 
 export const START: Record<Color, number> = { red: 0, green: 17, yellow: 34, blue: 51 };
 export const ENTRY: Record<Color, number> = { red: 66, green: 15, yellow: 32, blue: 49 };
 
 export const HOME_COL: Record<Color, readonly [number, number][]> = {
-  red: [[17, 9], [16, 9], [15, 9], [14, 9], [13, 9], [12, 9], [11, 9]],
-  green: [[9, 17], [9, 16], [9, 15], [9, 14], [9, 13], [9, 12], [9, 11]],
-  yellow: [[1, 9], [2, 9], [3, 9], [4, 9], [5, 9], [6, 9], [7, 9]],
-  blue: [[9, 1], [9, 2], [9, 3], [9, 4], [9, 5], [9, 6], [9, 7]],
+  red: HOME_COLUMNS.red.cells.map((c) => [c.row, c.col]),
+  green: HOME_COLUMNS.green.cells.map((c) => [c.row, c.col]),
+  yellow: HOME_COLUMNS.yellow.cells.map((c) => [c.row, c.col]),
+  blue: HOME_COLUMNS.blue.cells.map((c) => [c.row, c.col]),
 };
 
 export const YARD_TL: Record<Color, readonly [number, number]> = {
-  red: [11, 11],
-  green: [0, 11],
-  yellow: [0, 0],
-  blue: [11, 0],
+  red: [YARDS.red.topLeft.row, YARDS.red.topLeft.col],
+  green: [YARDS.green.topLeft.row, YARDS.green.topLeft.col],
+  yellow: [YARDS.yellow.topLeft.row, YARDS.yellow.topLeft.col],
+  blue: [YARDS.blue.topLeft.row, YARDS.blue.topLeft.col],
 };
 
-export const COLOR_TOWN: Record<Color, TownId> = {
-  red: 'kingston',
-  green: 'ochoRios',
-  yellow: 'montegoBay',
-  blue: 'negril',
-};
-
-export const TOWN_COLOR: Record<TownId, Color> = {
-  kingston: 'red',
-  ochoRios: 'green',
-  montegoBay: 'yellow',
-  negril: 'blue',
-};
+export const COLOR_TOWN: Record<Color, TownId> = TOWN_BY_COLOR;
+export const TOWN_COLOR: Record<TownId, Color> = COLOR_BY_TOWN;
 
 export function gpos(i: number): number {
   if (i <= 8) return i * ALONG;
