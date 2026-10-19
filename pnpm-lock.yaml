@@ -74,6 +74,9 @@ importers:
       '@fontsource/baloo-2':
         specifier: ^5.2.6
         version: 5.3.0
+      '@ludi/board-geometry':
+        specifier: workspace:*
+        version: link:../../packages/board-geometry
       '@ludi/live-game':
         specifier: workspace:*
         version: link:../../packages/live-game
@@ -150,6 +153,9 @@ importers:
       '@livekit/react-native-webrtc':
         specifier: ^144.2.0
         version: 144.2.0(react-native@0.76.9(@babel/core@7.29.7)(@babel/preset-env@7.29.7(@babel/core@7.29.7))(@types/react@18.3.31)(react@18.3.1))
+      '@ludi/board-geometry':
+        specifier: workspace:*
+        version: link:../../packages/board-geometry
       '@ludi/protocol':
         specifier: workspace:*
         version: link:../../packages/protocol
@@ -236,6 +242,22 @@ importers:
         specifier: 2.1.9
         version: 2.1.9(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.51.2)
 
+  packages/board-geometry:
+    dependencies:
+      '@ludi/rules':
+        specifier: workspace:*
+        version: link:../rules
+    devDependencies:
+      '@types/node':
+        specifier: ^20.14.0
+        version: 20.19.43
+      typescript:
+        specifier: ^5.5.0
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.9
+        version: 2.1.9(@types/node@20.19.43)(lightningcss@1.27.0)(terser@5.51.2)
+
   packages/live-connector:
     dependencies:
       tiktok-live-connector:
@@ -263,6 +285,9 @@ importers:
 
   packages/live-game:
     dependencies:
+      '@ludi/board-geometry':
+        specifier: workspace:*
+        version: link:../board-geometry
       '@ludi/protocol':
         specifier: workspace:*
         version: link:../protocol
@@ -1609,7 +1634,7 @@ packages:
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
-    engines: {'0': node >=0.10.0}
+    engines: {node: '>=0.10.0'}
 
   '@expo/cli@0.22.28':
     resolution: {integrity: sha512-lvt72KNitGuixYD2l3SZmRKVu2G4zJpmg5V7WfUBNpmUU5oODBw/6qmiJ6kSLAlfDozscUk+BBGknBBzxUrwrA==}
