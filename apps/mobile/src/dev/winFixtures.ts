@@ -7,7 +7,7 @@ function seat(color: Color, positions: TokenPos[]): TokenState[] {
   return positions.map((pos, i) => ({ color, index: i as TokenState['index'], pos }));
 }
 
-/** win.png's finish: Kingston all home, Ocho Rios 3, Montego Bay 2, Negril 1. */
+/** win.png's finish: Kingston all home, Negril 3, Montego Bay 2, Ocho Rios 1. */
 export const WIN_STATE: GameState = {
   config: {
     playerColors: ['red', 'green', 'yellow', 'blue'],

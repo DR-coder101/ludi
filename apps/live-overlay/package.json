@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@fontsource/baloo-2": "^5.2.6",
+    "@ludi/board-geometry": "workspace:*",
     "@ludi/live-game": "workspace:*",
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",

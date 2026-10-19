@@ -28,9 +28,9 @@ describe('winView', () => {
       ],
       rows: [
         { rank: 1, color: 'red', name: 'Dean', progress: '4/4 HOME', place: 'KINGSTON', winner: true },
-        { rank: 2, color: 'green', name: 'Shanice', progress: '3/4', place: 'OCHO RIOS', winner: false },
+        { rank: 2, color: 'green', name: 'Shanice', progress: '3/4', place: 'NEGRIL', winner: false },
         { rank: 3, color: 'yellow', name: 'Marcus', progress: '2/4', place: 'MONTEGO BAY', winner: false },
-        { rank: 4, color: 'blue', name: 'Andre', progress: '1/4', place: 'NEGRIL', winner: false },
+        { rank: 4, color: 'blue', name: 'Andre', progress: '1/4', place: 'OCHO RIOS', winner: false },
       ],
     });
   });
@@ -43,7 +43,7 @@ describe('winView', () => {
     const view = winView({ state: WIN_STATE, names: { red: '  ' }, roomCode: null, stats: EMPTY_STATS })!;
     expect(view.kicker).toBe('GAME OVER · PASS & PLAY');
     expect(view.headline).toBe('KINGSTON RUN DI BOARD!');
-    expect(view.rows[1].name).toBe('Ocho Rios');
+    expect(view.rows[1].name).toBe('Negril');
     expect(view.stats.map((s) => s.value)).toEqual(['0', '0', '0:00']);
   });
 

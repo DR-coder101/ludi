@@ -26,7 +26,7 @@ const room = (players: Player[]): RoomState => ({
 
 describe('lobbySeats', () => {
   it('lays seats out TL, TR, BL, BR like the board corners', () => {
-    expect(SEAT_ORDER).toEqual(['yellow', 'green', 'blue', 'red']);
+    expect(SEAT_ORDER).toEqual(['yellow', 'blue', 'green', 'red']);
   });
 
   it('places players by colour and leaves the rest open', () => {
@@ -39,8 +39,8 @@ describe('lobbySeats', () => {
     );
     expect(seats.map((s) => [s.color, s.name, s.status, s.ready, s.you])).toEqual([
       ['yellow', null, 'Tap to sit', false, false],
-      ['green', 'Shanice', 'Ready', true, false],
       ['blue', null, 'Tap to sit', false, false],
+      ['green', 'Shanice', 'Ready', true, false],
       ['red', 'Dean (You)', 'Host · Ready', true, true],
     ]);
   });

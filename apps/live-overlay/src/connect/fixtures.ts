@@ -32,16 +32,16 @@ function seat(
 
 const FOUR: LiveGameState['seats'] = [
   seat('kingston', 'red', '#E4202E', 'Dave'),
-  seat('ochoRios', 'green', '#0FAE47', 'Mike'),
+  seat('ochoRios', 'blue', '#0FAE47', 'Mike'),
   seat('montegoBay', 'yellow', '#FED100', 'Sarah'),
-  seat('negril', 'blue', '#26272B', 'John', '#D9DCE1'),
+  seat('negril', 'green', '#26272B', 'John', '#D9DCE1'),
 ];
 
 const TWO: LiveGameState['seats'] = [
   seat('kingston', 'red', '#E4202E', 'Dave'),
-  seat('ochoRios', 'green', '#0FAE47', 'Mike'),
+  seat('ochoRios', 'blue', '#0FAE47', 'Mike'),
   seat('montegoBay', 'yellow', '#FED100', null),
-  seat('negril', 'blue', '#26272B', null, '#D9DCE1'),
+  seat('negril', 'green', '#26272B', null, '#D9DCE1'),
 ];
 
 function emptyGame(turn: GameState['turn'] = 'red'): GameState {

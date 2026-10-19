@@ -6,8 +6,8 @@ export const MOCKUP_LOBBY: { code: string; seats: LobbySeat[]; note: RoomNote; s
   code: '7X8K9',
   seats: [
     { color: 'yellow', name: null, status: 'Invite a friend', ready: false, you: false },
-    { color: 'green', name: 'Shanice', status: 'Ready', ready: true, you: false },
-    { color: 'blue', name: 'Andre', status: 'Joined', ready: false, you: false },
+    { color: 'blue', name: 'Shanice', status: 'Ready', ready: true, you: false },
+    { color: 'green', name: 'Andre', status: 'Joined', ready: false, you: false },
     { color: 'red', name: 'Dean (You)', status: 'Host · Ready', ready: true, you: true },
   ],
   note: { text: 'Expires in 14:52', tone: 'muted' },

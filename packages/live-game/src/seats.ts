@@ -1,3 +1,4 @@
+import { COLOR_BY_TOWN } from '@ludi/board-geometry';
 import type { Color, GameConfig } from '@ludi/rules';
 import type { Seat, TownId } from './types.js';
 
@@ -15,10 +16,10 @@ export const SEAT_DEFS: readonly {
   hex: string;
   borderHex: string | null;
 }[] = [
-  { town: 'kingston', color: 'red', hex: '#E4202E', borderHex: null },
-  { town: 'ochoRios', color: 'green', hex: '#0FAE47', borderHex: null },
-  { town: 'montegoBay', color: 'yellow', hex: '#FED100', borderHex: null },
-  { town: 'negril', color: 'blue', hex: '#26272B', borderHex: '#D9DCE1' },
+  { town: 'kingston', color: COLOR_BY_TOWN.kingston, hex: '#E4202E', borderHex: null },
+  { town: 'ochoRios', color: COLOR_BY_TOWN.ochoRios, hex: '#0FAE47', borderHex: null },
+  { town: 'montegoBay', color: COLOR_BY_TOWN.montegoBay, hex: '#FED100', borderHex: null },
+  { town: 'negril', color: COLOR_BY_TOWN.negril, hex: '#26272B', borderHex: '#D9DCE1' },
 ];
 
 function makeSeat(def: (typeof SEAT_DEFS)[number]): Seat {

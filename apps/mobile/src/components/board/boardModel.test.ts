@@ -7,15 +7,15 @@ const rc = (c: { row: number; col: number } | null) => (c ? [c.row, c.col] : nul
 
 describe('cellOf', () => {
   it('puts start cells on the mockup start stars', () => {
-    expect(rc(cellOf({ zone: 'track', cell: 0 }, 'red'))).toEqual([17, 10]);
-    expect(rc(cellOf({ zone: 'track', cell: 17 }, 'green'))).toEqual([8, 17]);
-    expect(rc(cellOf({ zone: 'track', cell: 34 }, 'yellow'))).toEqual([1, 8]);
-    expect(rc(cellOf({ zone: 'track', cell: 51 }, 'blue'))).toEqual([10, 1]);
+    expect(rc(cellOf({ zone: 'track', cell: 0 }, 'red'))).toEqual([10, 17]);
+    expect(rc(cellOf({ zone: 'track', cell: 17 }, 'green'))).toEqual([17, 8]);
+    expect(rc(cellOf({ zone: 'track', cell: 34 }, 'yellow'))).toEqual([8, 1]);
+    expect(rc(cellOf({ zone: 'track', cell: 51 }, 'blue'))).toEqual([1, 10]);
   });
 
   it('walks home columns toward the centre', () => {
-    expect(rc(cellOf({ zone: 'homeColumn', step: 1 }, 'red'))).toEqual([17, 9]);
-    expect(rc(cellOf({ zone: 'homeColumn', step: 7 }, 'yellow'))).toEqual([7, 9]);
+    expect(rc(cellOf({ zone: 'homeColumn', step: 1 }, 'red'))).toEqual([9, 17]);
+    expect(rc(cellOf({ zone: 'homeColumn', step: 7 }, 'yellow'))).toEqual([9, 7]);
     expect(cellOf({ zone: 'yard' }, 'blue')).toBeNull();
   });
 });
@@ -23,16 +23,16 @@ describe('cellOf', () => {
 describe('hopCells', () => {
   it('hops one cell per pip and ends on the destination', () => {
     const cells = hopCells({ zone: 'track', cell: 1 }, { zone: 'track', cell: 7 }, 'red').map(rc);
-    expect(cells).toEqual([[15, 10], [14, 10], [13, 10], [12, 10], [11, 10], [10, 11]]);
+    expect(cells).toEqual([[10, 15], [10, 14], [10, 13], [10, 12], [10, 11], [11, 10]]);
   });
 
   it('turns into the home column after the entry arrow', () => {
     const cells = hopCells({ zone: 'track', cell: 64 }, { zone: 'homeColumn', step: 2 }, 'red').map(rc);
-    expect(cells).toEqual([[18, 8], [18, 9], [17, 9], [16, 9]]);
+    expect(cells).toEqual([[8, 18], [9, 18], [9, 17], [9, 16]]);
   });
 
   it('pops straight onto the start star from the yard', () => {
-    expect(hopCells({ zone: 'yard' }, { zone: 'track', cell: 34 }, 'yellow').map(rc)).toEqual([[1, 8]]);
+    expect(hopCells({ zone: 'yard' }, { zone: 'track', cell: 34 }, 'yellow').map(rc)).toEqual([[8, 1]]);
   });
 });
 
@@ -53,14 +53,14 @@ describe('buildBoardModel on the mockup fixtures', () => {
     const placed = model.pieces.map((p) => [p.piece, p.row, p.col, p.count]).sort();
     expect(placed).toEqual(
       [
-        ['red', 16, 10, 1],
-        ['red', 13, 9, 1],
-        ['green', 8, 14, 1],
-        ['green', 15, 8, 1],
-        ['gold', 4, 8, 1],
-        ['gold', 10, 4, 1],
-        ['black', 8, 5, 2],
-        ['black', 3, 10, 1],
+        ['red', 10, 16, 1],
+        ['red', 9, 13, 1],
+        ['black', 14, 8, 1],
+        ['black', 8, 15, 1],
+        ['gold', 8, 4, 1],
+        ['gold', 4, 10, 1],
+        ['green', 5, 8, 2],
+        ['green', 10, 3, 1],
       ].sort(),
     );
 
@@ -72,20 +72,20 @@ describe('buildBoardModel on the mockup fixtures', () => {
 
     expect(model.highlight).not.toBeNull();
     const h = model.highlight!;
-    expect(rc(h.from)).toEqual([16, 10]);
-    expect(h.path.map(rc)).toEqual([[15, 10], [14, 10], [13, 10], [12, 10], [11, 10]]);
-    expect(rc(h.to)).toEqual([10, 11]);
+    expect(rc(h.from)).toEqual([10, 16]);
+    expect(h.path.map(rc)).toEqual([[10, 15], [10, 14], [10, 13], [10, 12], [10, 11]]);
+    expect(rc(h.to)).toEqual([11, 10]);
     expect(h.steps).toBe(6);
 
     // The 3 also takes the home-column piece in, so both red pieces glow.
     const legalOnBoard = model.pieces.filter((p) => p.legal).map((p) => [p.row, p.col]).sort();
-    expect(legalOnBoard).toEqual([[13, 9], [16, 10]]);
+    expect(legalOnBoard).toEqual([[10, 16], [9, 13]]);
   });
 
   it('mid: previews the focused die', () => {
     const state = boardFixture('mid');
     const model = buildBoardModel(state, legalMoves(state), { focusDie: 1 });
-    expect(rc(model.highlight!.from)).toEqual([16, 10]);
+    expect(rc(model.highlight!.from)).toEqual([10, 16]);
     expect(model.highlight!.steps).toBe(3);
   });
 
@@ -101,6 +101,6 @@ describe('buildBoardModel on the mockup fixtures', () => {
   it('leaves hidden (animating) tokens out', () => {
     const state = boardFixture('mid');
     const model = buildBoardModel(state, [], { hidden: [0] });
-    expect(model.pieces.find((p) => p.row === 16 && p.col === 10)).toBeUndefined();
+    expect(model.pieces.find((p) => p.row === 10 && p.col === 16)).toBeUndefined();
   });
 });

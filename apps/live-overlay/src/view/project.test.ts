@@ -69,9 +69,9 @@ function baseSnapshot(over: Partial<LiveGameState> = {}): LiveGameState {
     phase: 'WAITING',
     seats: [
       seat('kingston', 'red', '#E4202E', 'Dave'),
-      seat('ochoRios', 'green', '#0FAE47', 'Mike'),
+      seat('ochoRios', 'blue', '#0FAE47', 'Mike'),
       seat('montegoBay', 'yellow', '#FED100', null),
-      seat('negril', 'blue', '#26272B', null, '#D9DCE1'),
+      seat('negril', 'green', '#26272B', null, '#D9DCE1'),
     ],
     queue: [],
     sitOut: [],
@@ -118,9 +118,9 @@ describe('project', () => {
         turnEndsAt: 18_000,
         seats: [
           seat('kingston', 'red', '#E4202E', 'Dave'),
-          seat('ochoRios', 'green', '#0FAE47', 'Mike'),
+          seat('ochoRios', 'blue', '#0FAE47', 'Mike'),
           seat('montegoBay', 'yellow', '#FED100', 'Sarah'),
-          seat('negril', 'blue', '#26272B', 'John', '#D9DCE1'),
+          seat('negril', 'green', '#26272B', 'John', '#D9DCE1'),
         ],
       }),
       [{ type: 'turnStarted', userId: 'dave', color: 'red', town: 'kingston', endsAt: 18_000 }],
@@ -135,15 +135,16 @@ describe('project', () => {
     expect(view.turn.timerLabel).toBe('00:18');
     expect(view.showTurnCard).toBe(true);
     expect(view.seats[0]?.outCount).toBe(2);
-    expect(view.seats[3]?.outCount).toBe(3);
+    expect(view.seats[1]?.outCount).toBe(3);
+    expect(view.seats[3]?.outCount).toBe(2);
   });
 
   it('counts the winner stay ring and marks the last 5s urgent', () => {
     const seats: LiveGameState['seats'] = [
       seat('kingston', 'red', '#E4202E', 'Dave'),
-      seat('ochoRios', 'green', '#0FAE47', 'Mike'),
+      seat('ochoRios', 'blue', '#0FAE47', 'Mike'),
       seat('montegoBay', 'yellow', '#FED100', 'Sarah'),
-      seat('negril', 'blue', '#26272B', 'John', '#D9DCE1'),
+      seat('negril', 'green', '#26272B', 'John', '#D9DCE1'),
     ];
     const game = emptyGame('red');
     game.phase = 'finished';

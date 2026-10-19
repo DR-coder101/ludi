@@ -61,15 +61,15 @@ export interface Place {
   pin: PinKey;
 }
 
-/** Engine colour → place. Corners follow the engine start cells on the 68-cell track. */
+/** Engine colour → place. Clockwise turn order is Kingston → Negril → Montego Bay → Ocho Rios. */
 export const PLACES: Record<EngineColor, Place> = {
   yellow: { lines: ['MONTEGO', 'BAY'], full: 'Montego Bay', short: 'MOBAY', piece: 'gold', corner: 'TL', pin: 'montego' },
-  green: { lines: ['OCHO', 'RIOS'], full: 'Ocho Rios', short: 'OCHI', piece: 'green', corner: 'TR', pin: 'ocho' },
-  blue: { lines: ['NEGRIL'], full: 'Negril', short: 'NEGRIL', piece: 'black', corner: 'BL', pin: 'negril' },
+  blue: { lines: ['OCHO', 'RIOS'], full: 'Ocho Rios', short: 'OCHI', piece: 'green', corner: 'TR', pin: 'ocho' },
+  green: { lines: ['NEGRIL'], full: 'Negril', short: 'NEGRIL', piece: 'black', corner: 'BL', pin: 'negril' },
   red: { lines: ['KINGSTON'], full: 'Kingston', short: 'KINGSTON', piece: 'red', corner: 'BR', pin: 'kingston' },
 };
 
-/** Player-strip order in the mockup: Kingston, Ocho Rios, Montego Bay, Negril (engine turn order). */
+/** Engine turn order, clockwise on the board: Kingston, Negril, Montego Bay, Ocho Rios. */
 export const TURN_ORDER: EngineColor[] = ['red', 'green', 'yellow', 'blue'];
 
 export const font = {

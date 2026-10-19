@@ -113,6 +113,7 @@ describe('live join and queue', () => {
       'montegoBay',
       'negril',
     ]);
+    expect(snap.seats.map((s) => s.color)).toEqual(['red', 'blue', 'yellow', 'green']);
     expect(snap.seats.map((s) => s.hex)).toEqual(['#E4202E', '#0FAE47', '#FED100', '#26272B']);
     expect(snap.seats[3]?.borderHex).toBe('#D9DCE1');
     expect(seatedIds(live)).toEqual(['a', 'b', 'c', null]);
@@ -272,7 +273,7 @@ describe('capture', () => {
       ],
       tokens: game.tokens.map((t) => {
         if (t.color === 'red' && t.index === 0) return { ...t, pos: { zone: 'track', cell: 8 } };
-        if (t.color === 'green' && t.index === 0) return { ...t, pos: { zone: 'track', cell: 9 } };
+        if (t.color === 'blue' && t.index === 0) return { ...t, pos: { zone: 'track', cell: 9 } };
         return t;
       }),
     };
@@ -282,7 +283,7 @@ describe('capture', () => {
       { type: 'captured', userId: 'a', text: '@A knocked @B home' },
     ]);
     expect(
-      live.snapshot().game?.tokens.find((t) => t.color === 'green' && t.index === 0)?.pos,
+      live.snapshot().game?.tokens.find((t) => t.color === 'blue' && t.index === 0)?.pos,
     ).toEqual({ zone: 'yard' });
   });
 });
@@ -376,12 +377,12 @@ describe('sit-out and queue after a win', () => {
     live.tick();
     expect(live.snapshot().phase).toBe('PLAYING');
     playToWinner(clock, live);
-    expect(live.snapshot().winnerUserId).toBe('g');
-    const ev = live.handleChat(inbound('g', '!leave', 'G'));
-    expect(eventsOf(ev, 'leave')).toEqual([{ type: 'leave', userId: 'g' }]);
+    expect(live.snapshot().winnerUserId).toBe('e');
+    const ev = live.handleChat(inbound('e', '!leave', 'E'));
+    expect(eventsOf(ev, 'leave')).toEqual([{ type: 'leave', userId: 'e' }]);
     expect(live.snapshot().phase).toBe('WAITING');
     expect(live.snapshot().winnerStay).toBe(false);
-    expect(live.snapshot().sitOut).toEqual(['a', 'e', 'f']);
+    expect(live.snapshot().sitOut).toEqual(['a', 'f', 'g']);
     expect(seatedIds(live)).toEqual(['b', 'c', 'd', null]);
     expect(live.snapshot().queue).toEqual([]);
   });

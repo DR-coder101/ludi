@@ -1,14 +1,8 @@
+import { TOWN_BY_COLOR } from '@ludi/board-geometry';
 import type { Color, GameState, TokenPos, TokenState } from '@ludi/rules';
 import type { LiveEvent, LiveGameState, LivePhase, Occupant, TownId } from '@ludi/live-game';
 import { TOWN } from '../theme.js';
 import type { OverlayIntent, OverlayView, PieceView, ResultRow, SeatView, TurnView } from './types.js';
-
-const TOWN_BY_COLOR: Record<Color, TownId> = {
-  red: 'kingston',
-  green: 'ochoRios',
-  yellow: 'montegoBay',
-  blue: 'negril',
-};
 
 const RESULT_RANK: readonly ResultRow['rank'][] = ['2nd', '3rd', '4th'];
 

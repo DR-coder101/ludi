@@ -14,6 +14,7 @@
     "start": "tsx src/bin.ts"
   },
   "dependencies": {
+    "@ludi/board-geometry": "workspace:*",
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",
     "socket.io": "^4.7.0"

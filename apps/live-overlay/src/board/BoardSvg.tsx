@@ -29,8 +29,8 @@ const PIECE = {
 
 const PLACE: Record<Color, { lines: string[]; piece: keyof typeof PIECE; corner: 'TL' | 'TR' | 'BL' | 'BR'; pin: keyof typeof JAMAICA_PINS; acc: string }> = {
   yellow: { lines: ['MONTEGO', 'BAY'], piece: 'gold', corner: 'TL', pin: 'montego', acc: '#FED100' },
-  green: { lines: ['OCHO', 'RIOS'], piece: 'green', corner: 'TR', pin: 'ocho', acc: '#19C45A' },
-  blue: { lines: ['NEGRIL'], piece: 'black', corner: 'BL', pin: 'negril', acc: '#D9DCE1' },
+  blue: { lines: ['OCHO', 'RIOS'], piece: 'green', corner: 'TR', pin: 'ocho', acc: '#19C45A' },
+  green: { lines: ['NEGRIL'], piece: 'black', corner: 'BL', pin: 'negril', acc: '#D9DCE1' },
   red: { lines: ['KINGSTON'], piece: 'red', corner: 'BR', pin: 'kingston', acc: '#FF3340' },
 };
 
