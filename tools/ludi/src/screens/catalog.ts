@@ -50,7 +50,7 @@ export const SCREENS: readonly ScreenSpec[] = [
   {
     id: 'board-video',
     path: '/dev/board?state=video',
-    waitFor: { role: 'button', name: 'Leave video call' },
+    waitFor: { role: 'button', name: 'Mute microphone' },
     file: 'board-video.png',
   },
   {
