@@ -16,6 +16,9 @@ import type {
   AuthResponse,
   ProfileResponse,
   MatchHistoryResponse,
+  InviteCreateResponse,
+  RecentOpponentsResponse,
+  RematchStatePayload,
 } from '@ludi/protocol';
 import { 
   RoomCreatePayloadSchema, 
@@ -30,7 +33,18 @@ import {
   EmailSignInPayloadSchema,
   GuestUpgradePayloadSchema,
   UpdateProfilePayloadSchema,
+  InviteCreatePayloadSchema,
+  RematchOfferPayloadSchema,
+  RematchRespondPayloadSchema,
 } from '@ludi/protocol';
+import { createDiceAuditLog, type DiceAuditLog } from './dice/auditLog.js';
+import { createInviteLog } from './invite/inviteLog.js';
+import { inviteLandingHtml } from './invite/landingPage.js';
+import { DEFAULT_INVITE_HOUSE_RULES } from './invite/defaults.js';
+import { createCapacityGate, parseMaxRooms, type CapacityGate } from './capacity.js';
+import { createRematchRegistry, DEFAULT_REMATCH_TIMEOUT_MS } from './rematch/rematchRegistry.js';
+import { createRecentOpponentsStore } from './opponents/recentOpponents.js';
+import { maybeAttachRedisAdapter } from './scale/redisAdapter.js';
 import { RoomRegistry } from './RoomRegistry.js';
 import { publicRoom } from './publicRoom.js';
 import { RateLimiter } from './RateLimiter.js';
@@ -49,6 +63,12 @@ export interface ServerConfig {
   port?: number;
   timingConfig?: GameTimingConfig;
   supabase?: SupabaseClient<Database>;
+  diceAudit?: DiceAuditLog;
+  diceAuditPath?: string;
+  capacity?: { busy?: boolean; maxRooms?: number };
+  rematchTimeoutMs?: number;
+  now?: () => number;
+  rateLimit?: { maxRequests: number; windowMs: number };
 }
 
 export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
@@ -67,11 +87,29 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
   const roomRegistry = new RoomRegistry();
   const gameRegistry = new GameManagerRegistry(config.timingConfig);
-  const rateLimiter = new RateLimiter(10, 1000);
+  const rateLimiter = new RateLimiter(
+    config.rateLimit?.maxRequests ?? 10,
+    config.rateLimit?.windowMs ?? 1000,
+  );
   const socketToRoom = new Map<string, string>();
   const socketToPlayer = new Map<string, string>();
   const socketToColor = new Map<string, Color>();
   const playerToAuthUserId = new Map<string, string>();
+  const inviteRooms = new Set<string>();
+  const inviteInviterByCode = new Map<string, string>();
+
+  const diceAudit = config.diceAudit ?? createDiceAuditLog({
+    filePath: config.diceAuditPath ?? process.env.LUDI_DICE_AUDIT_PATH,
+    cleanupIntervalMs: 60 * 60 * 1000,
+  });
+  const inviteLog = createInviteLog();
+  const recentOpponents = createRecentOpponentsStore();
+  const rematches = createRematchRegistry(config.now ?? Date.now);
+  const rematchTimeoutMs = config.rematchTimeoutMs ?? DEFAULT_REMATCH_TIMEOUT_MS;
+  const capacity: CapacityGate = createCapacityGate({
+    busy: config.capacity?.busy ?? false,
+    maxRooms: config.capacity?.maxRooms ?? parseMaxRooms(process.env.LUDI_MAX_ROOMS),
+  });
 
   const cleanupInterval = setInterval(() => rateLimiter.cleanup(), 10000);
 
@@ -109,6 +147,118 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
 
   app.get('/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  function publicShareUrl(req: express.Request, code: string): string {
+    const host = req.get('x-forwarded-host') ?? req.get('host') ?? `localhost:${port}`;
+    const proto = req.get('x-forwarded-proto') ?? (req.secure ? 'https' : 'http');
+    return `${proto}://${host}/r/${code}`;
+  }
+
+  function viewerIdFromRequest(req: express.Request): string | undefined {
+    const headerId = req.header('x-ludi-player-id');
+    if (typeof headerId === 'string' && headerId.length > 0) {
+      return headerId;
+    }
+    const bearer = req.headers.authorization?.replace('Bearer ', '');
+    if (typeof bearer === 'string' && bearer.length > 0) {
+      return bearer;
+    }
+    if (typeof req.query.playerId === 'string' && req.query.playerId.length > 0) {
+      return req.query.playerId;
+    }
+    return undefined;
+  }
+
+  function rejectIfBusy(): { busy: true; error: string } | { busy: false } {
+    if (capacity.isBusy(roomRegistry.getRoomCount())) {
+      return { busy: true, error: capacity.busyError() };
+    }
+    return { busy: false };
+  }
+
+  app.post('/invites', (req, res) => {
+    const gate = rejectIfBusy();
+    if (gate.busy) {
+      const response: InviteCreateResponse = { success: false, error: gate.error };
+      res.status(503).json(response);
+      return;
+    }
+
+    const validationResult = InviteCreatePayloadSchema.safeParse(req.body ?? {});
+    if (!validationResult.success) {
+      const response: InviteCreateResponse = { success: false, error: 'Invalid payload' };
+      res.status(400).json(response);
+      return;
+    }
+
+    const { displayName, houseRules, inviterId } = validationResult.data;
+    const sessionToken = roomRegistry.generateSessionToken();
+    const { roomCode, playerId } = roomRegistry.createRoom(
+      displayName,
+      houseRules ?? DEFAULT_INVITE_HOUSE_RULES,
+      sessionToken,
+    );
+    const rawInviter = inviterId ?? playerId;
+    inviteRooms.add(roomCode);
+    inviteInviterByCode.set(roomCode, rawInviter);
+    const recorded = inviteLog.record('invite_sent', roomCode, rawInviter);
+    const response: InviteCreateResponse = {
+      success: true,
+      code: roomCode,
+      shareUrl: publicShareUrl(req, roomCode),
+      sessionToken,
+      playerId,
+      inviterId: recorded.inviterId,
+    };
+    res.status(201).json(response);
+  });
+
+  app.get('/r/:code', (req, res) => {
+    const code = String(req.params.code ?? '').toUpperCase();
+    const room = roomRegistry.getRoom(code);
+    if (!room) {
+      res.status(404).type('html').send('<!doctype html><title>Room not found</title><p>Room not found.</p>');
+      return;
+    }
+    const rawInviter = inviteInviterByCode.get(code) ?? room.hostId;
+    inviteLog.record('invite_opened', code, rawInviter);
+    const scheme = `ludi://room/${code}`;
+    res.status(200).type('html').send(inviteLandingHtml(code, scheme));
+  });
+
+  app.get('/opponents/recent', (req, res) => {
+    const viewerId = viewerIdFromRequest(req);
+    if (!viewerId) {
+      const response: RecentOpponentsResponse = { success: false, error: 'Missing player id' };
+      res.status(401).json(response);
+      return;
+    }
+    const response: RecentOpponentsResponse = {
+      success: true,
+      opponents: recentOpponents.list(viewerId),
+    };
+    res.json(response);
+  });
+
+  app.post('/opponents/:id/block', (req, res) => {
+    const viewerId = viewerIdFromRequest(req);
+    if (!viewerId) {
+      res.status(401).json({ success: false, error: 'Missing player id' });
+      return;
+    }
+    const ok = recentOpponents.block(viewerId, req.params.id);
+    res.status(ok ? 200 : 404).json({ success: ok, error: ok ? undefined : 'Opponent not found' });
+  });
+
+  app.delete('/opponents/:id', (req, res) => {
+    const viewerId = viewerIdFromRequest(req);
+    if (!viewerId) {
+      res.status(401).json({ success: false, error: 'Missing player id' });
+      return;
+    }
+    const ok = recentOpponents.remove(viewerId, req.params.id);
+    res.status(ok ? 200 : 404).json({ success: ok, error: ok ? undefined : 'Opponent not found' });
   });
 
   app.post('/video-token', async (req, res) => {
@@ -419,14 +569,78 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     io.to(roomCode).emit('game:tokenMoved', tokenMovedPayload);
   }
 
+  function recordDiceAudit(roomCode: string, playerId: string | undefined, values: [number, number]): void {
+    const game = gameRegistry.getGame(roomCode);
+    if (!game || !playerId) {
+      return;
+    }
+    const timestamp = new Date((config.now ?? Date.now)()).toISOString();
+    for (const value of values) {
+      diceAudit.append({
+        matchId: game.matchId,
+        turn: game.throwIndex,
+        playerId,
+        value,
+        timestamp,
+      });
+    }
+  }
+
   function emitDiceRolled(roomCode: string, playerId: string | undefined, values: [number, number]): void {
     if (!playerId) return;
+    recordDiceAudit(roomCode, playerId, values);
     const dicePayload: DiceRolledPayload = {
       playerId,
       values,
       legalMoves: gameRegistry.getLegalMoves(roomCode),
     };
     io.to(roomCode).emit('game:diceRolled', dicePayload);
+  }
+
+  function humanPlayerIds(room: RoomState): string[] {
+    return room.players
+      .filter((player) => player.status !== 'ai-substitute')
+      .map((player) => player.id);
+  }
+
+  function opponentIdentity(playerId: string, displayName: string): { id: string; displayName: string } {
+    return { id: historyUserId(playerId) ?? playerId, displayName };
+  }
+
+  function startRematchGame(roomCode: string): boolean {
+    const room = roomRegistry.getRoom(roomCode);
+    if (!room || room.players.length < 2) {
+      return false;
+    }
+    gameRegistry.deleteGame(roomCode);
+    rematches.clear(roomCode);
+    room.status = 'in_progress';
+    const seated = new Set(room.players.map((p) => p.color));
+    const playerColors = (['red', 'green', 'yellow', 'blue'] as Color[]).filter((c) => seated.has(c));
+    const gameState = gameRegistry.createGame(roomCode, {
+      playerColors,
+      houseRules: room.houseRules,
+    });
+    for (const player of room.players) {
+      if (player.status === 'ai-substitute') {
+        gameRegistry.markAsAISubstitute(roomCode, player.color);
+      }
+    }
+    io.to(roomCode).emit('game:state', gameState);
+    const currentPlayerId = getPlayerIdByColor(roomCode, gameState.turn);
+    if (currentPlayerId) {
+      const turnPayload: TurnChangedPayload = {
+        playerId: currentPlayerId,
+        deadlineTs: Date.now() + 30000,
+      };
+      io.to(roomCode).emit('game:turnChanged', turnPayload);
+    }
+    if (gameRegistry.isAISubstitute(roomCode, gameState.turn)) {
+      setTimeout(() => {
+        handleAITurn(roomCode);
+      }, gameRegistry.getAIThinkDelay());
+    }
+    return true;
   }
 
   /**
@@ -440,6 +654,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     const state = game.state;
 
     if (state.phase === 'finished') {
+      room.status = 'finished';
       const placements = state.placements.map((color, idx) => ({
         playerId: room.players.find(p => p.color === color)?.id || '',
         color,
@@ -450,6 +665,11 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         placements,
       };
       io.to(roomCode).emit('game:over', gameOverPayload);
+      recentOpponents.recordMatch(
+        room.players
+          .filter((player) => player.status !== 'ai-substitute')
+          .map((player) => opponentIdentity(player.id, player.displayName)),
+      );
       const match = buildFinishedMatch(
         roomCode,
         state.config.houseRules,
@@ -632,6 +852,12 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         return;
       }
 
+      const gate = rejectIfBusy();
+      if (gate.busy) {
+        callback({ success: false, error: gate.error });
+        return;
+      }
+
       const validationResult = RoomCreatePayloadSchema.safeParse(payload);
       if (!validationResult.success) {
         callback({ success: false, error: 'Invalid payload' });
@@ -660,6 +886,12 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     socket.on('room:join', (payload, callback) => {
       if (!checkRateLimit(socket)) {
         callback({ success: false, error: 'Rate limit exceeded' });
+        return;
+      }
+
+      const gate = rejectIfBusy();
+      if (gate.busy) {
+        callback({ success: false, error: gate.error });
         return;
       }
 
@@ -711,6 +943,10 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       }
 
       callback({ success: true, sessionToken: sessionTokenNew, playerId });
+      if (inviteRooms.has(roomCode)) {
+        const rawInviter = inviteInviterByCode.get(roomCode) ?? room?.hostId ?? playerId;
+        inviteLog.record('invite_joined', roomCode, rawInviter);
+      }
       console.log(`Player ${playerId} joined room ${roomCode} (socket ${socket.id})`);
     });
 
@@ -808,6 +1044,75 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       }
 
       callback({ success: true });
+    });
+
+    socket.on('room:rematchOffer', (payload, callback) => {
+      if (!checkRateLimit(socket)) {
+        callback({ success: false, error: 'Rate limit exceeded' });
+        return;
+      }
+      const validationResult = RematchOfferPayloadSchema.safeParse(payload ?? {});
+      if (!validationResult.success) {
+        callback({ success: false, error: 'Invalid payload' });
+        return;
+      }
+      const roomCode = socketToRoom.get(socket.id);
+      const playerId = socketToPlayer.get(socket.id);
+      if (!roomCode || !playerId) {
+        callback({ success: false, error: 'Not in a room' });
+        return;
+      }
+      const room = roomRegistry.getRoom(roomCode);
+      const game = gameRegistry.getGame(roomCode);
+      if (!room || !game || game.state.phase !== 'finished') {
+        callback({ success: false, error: 'Rematch only after the match ends' });
+        return;
+      }
+      const required = humanPlayerIds(room);
+      const result = rematches.offer(roomCode, required, rematchTimeoutMs, (expired) => {
+        io.to(roomCode).emit('room:rematch', expired);
+      });
+      if (!result.success || !result.session) {
+        callback({ success: false, error: result.error });
+        return;
+      }
+      const accepted = rematches.respond(roomCode, playerId, true);
+      const session = accepted.session ?? result.session;
+      const state = rematches.snapshot(session);
+      io.to(roomCode).emit('room:rematch', state);
+      if (session.status === 'accepted') {
+        startRematchGame(roomCode);
+      }
+      callback({ success: true, deadlineTs: session.deadlineTs });
+    });
+
+    socket.on('room:rematchRespond', (payload, callback) => {
+      if (!checkRateLimit(socket)) {
+        callback({ success: false, error: 'Rate limit exceeded' });
+        return;
+      }
+      const validationResult = RematchRespondPayloadSchema.safeParse(payload);
+      if (!validationResult.success) {
+        callback({ success: false, error: 'Invalid payload' });
+        return;
+      }
+      const roomCode = socketToRoom.get(socket.id);
+      const playerId = socketToPlayer.get(socket.id);
+      if (!roomCode || !playerId) {
+        callback({ success: false, error: 'Not in a room' });
+        return;
+      }
+      const result = rematches.respond(roomCode, playerId, validationResult.data.accept);
+      if (!result.success || !result.session) {
+        callback({ success: false, error: result.error });
+        return;
+      }
+      const state: RematchStatePayload = rematches.snapshot(result.session);
+      io.to(roomCode).emit('room:rematch', state);
+      if (result.session.status === 'accepted') {
+        startRematchGame(roomCode);
+      }
+      callback({ success: true, deadlineTs: result.session.deadlineTs });
     });
 
     socket.on('room:leave', () => {
@@ -1073,11 +1378,46 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     app,
     httpServer,
     io,
-    start: () => {
+    diceAudit,
+    inviteLog,
+    recentOpponents,
+    rematches,
+    capacity,
+    finishMatchForTests(roomCode: string): boolean {
+      const game = gameRegistry.getGame(roomCode);
+      const room = roomRegistry.getRoom(roomCode);
+      if (!game || !room) {
+        return false;
+      }
+      game.state = {
+        ...game.state,
+        phase: 'finished',
+        winner: game.state.turn,
+        placements: game.state.placements.length > 0 ? game.state.placements : [game.state.turn],
+      };
+      room.status = 'finished';
+      recentOpponents.recordMatch(
+        room.players
+          .filter((player) => player.status !== 'ai-substitute')
+          .map((player) => opponentIdentity(player.id, player.displayName)),
+      );
+      const placements = game.state.placements.map((color, idx) => ({
+        playerId: room.players.find((p) => p.color === color)?.id || '',
+        color,
+        placement: idx + 1,
+      }));
+      io.to(roomCode).emit('game:over', {
+        winnerId: room.players.find((p) => p.color === game.state.winner)?.id || '',
+        placements,
+      });
+      return true;
+    },
+    start: async () => {
+      await maybeAttachRedisAdapter(io);
       return new Promise<void>((resolve) => {
         httpServer.listen(port, () => {
-          console.log(`🎲 Ludi server running on http://localhost:${port}`);
-          console.log(`🔌 Socket.IO ready for connections`);
+          console.log(`Ludi server running on http://localhost:${port}`);
+          console.log(`Socket.IO ready for connections`);
           resolve();
         });
       });
@@ -1085,6 +1425,8 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     stop: () => {
       return new Promise<void>((resolve, reject) => {
         clearInterval(cleanupInterval);
+        diceAudit.close();
+        rematches.close();
         io.close();
         httpServer.close((err) => {
           if (err) reject(err);

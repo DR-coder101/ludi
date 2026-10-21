@@ -1,4 +1,4 @@
-import { randomInt } from 'crypto';
+import { randomUUID } from 'crypto';
 import type { GameState, Color, TokenPos, LegalMove } from '@ludi/protocol';
 import { 
   createGame, 
@@ -8,6 +8,7 @@ import {
   type GameConfig,
   type GameState as RulesGameState,
 } from '@ludi/rules';
+import { rulesRngFromDie } from './dice/rollDie.js';
 
 export interface DisconnectGrace {
   color: Color;
@@ -19,6 +20,8 @@ export interface DisconnectGrace {
 export interface GameManager {
   state: GameState;
   startedAt: Date;
+  matchId: string;
+  throwIndex: number;
   moveTimer: NodeJS.Timeout | null;
   disconnectGraces: Map<Color, DisconnectGrace>;
   aiSubstitutes: Set<Color>;
@@ -50,6 +53,8 @@ export class GameManagerRegistry {
     this.games.set(roomCode, {
       state: gameState,
       startedAt: new Date(),
+      matchId: randomUUID(),
+      throwIndex: 0,
       moveTimer: null,
       disconnectGraces: new Map(),
       aiSubstitutes: new Set(),
@@ -84,9 +89,9 @@ export class GameManagerRegistry {
 
     this.clearTimers(game);
 
-    const rng = () => randomInt(0, 6) / 6;
-    const result = rollDice(this.toRulesState(game.state), rng);
+    const result = rollDice(this.toRulesState(game.state), rulesRngFromDie);
     game.state = this.fromRulesState(result.state);
+    game.throwIndex += 1;
 
     return { success: true, values: result.values };
   }
