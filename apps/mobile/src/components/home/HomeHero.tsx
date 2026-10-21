@@ -1,12 +1,27 @@
 import React from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, Platform, StyleSheet, Text, View, type ImageStyle } from 'react-native';
 import { color, font } from '../../theme/tokens';
 import { antonBold } from '../../theme/antonBold';
 
-export const HERO = { width: 390, height: 220 } as const;
+export const HERO = { width: 390, height: 248 } as const;
 
 const DICE = require('../../../assets/home/dice.png');
 const PIECES = require('../../../assets/home/pieces-row.png');
+
+const DICE_W = 176;
+const DICE_H = Math.round((DICE_W * 597) / 1016);
+const PIECES_W = 250;
+const PIECES_H = Math.round((PIECES_W * 435) / 1580);
+
+const renderShadow: ImageStyle = Platform.select({
+  web: { filter: 'drop-shadow(0 12px 18px rgba(0, 0, 0, 0.62))' } as ImageStyle,
+  default: {
+    shadowColor: color.bg,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.5,
+    shadowRadius: 14,
+  },
+});
 
 export function HomeHero() {
   return (
@@ -15,7 +30,6 @@ export function HomeHero() {
       accessibilityRole="header"
       accessibilityLabel="Ludi. Jamaican Rules. Four corners, one board."
     >
-      <View style={styles.glow} />
       <View style={styles.sticker}>
         <Text style={styles.stickerText}>JAMAICAN RULES</Text>
       </View>
@@ -28,9 +42,18 @@ export function HomeHero() {
         FOUR CORNERS <Text style={styles.tagDot}>•</Text> ONE BOARD
       </Text>
       <View style={styles.stage}>
-        <Image source={DICE} style={styles.dice} resizeMode="contain" accessibilityIgnoresInvertColors />
-        <Image source={PIECES} style={styles.pieces} resizeMode="contain" accessibilityIgnoresInvertColors />
-        <View style={styles.stageFloor} />
+        <Image
+          source={DICE}
+          style={styles.dice}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+        />
+        <Image
+          source={PIECES}
+          style={styles.pieces}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+        />
       </View>
     </View>
   );
@@ -41,15 +64,7 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingTop: 4,
-    paddingBottom: 4,
-  },
-  glow: {
-    position: 'absolute',
-    top: 72,
-    width: 280,
-    height: 160,
-    borderRadius: 140,
-    backgroundColor: 'rgba(255, 208, 0, 0.12)',
+    paddingBottom: 2,
   },
   sticker: {
     zIndex: 2,
@@ -114,29 +129,24 @@ const styles = StyleSheet.create({
   },
   stage: {
     width: 320,
-    height: 140,
+    height: DICE_H + PIECES_H - 28,
     alignItems: 'center',
     justifyContent: 'flex-end',
+    overflow: 'visible',
   },
   dice: {
     position: 'absolute',
-    top: 4,
-    width: 150,
-    height: 74,
-    transform: [{ translateX: 12 }],
+    top: 0,
+    width: DICE_W,
+    height: DICE_H,
+    transform: [{ translateX: 17 }],
+    ...renderShadow,
   },
   pieces: {
-    width: 210,
-    height: 78,
-    transform: [{ translateX: 6 }],
+    width: PIECES_W,
+    height: PIECES_H,
+    transform: [{ translateX: 9 }],
     zIndex: 2,
-  },
-  stageFloor: {
-    position: 'absolute',
-    bottom: 4,
-    width: 220,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: 'rgba(255, 208, 0, 0.12)',
+    ...renderShadow,
   },
 });

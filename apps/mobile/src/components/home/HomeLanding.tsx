@@ -10,6 +10,7 @@ import { Icon, type IconName } from '../game/Icon';
 import { PressScale } from './PressScale';
 import { cssShadow } from './cssShadow';
 import { HomeHero } from './HomeHero';
+import { LobbyWash } from './LobbyWash';
 import {
   leaderboardEmptyCopy,
   onlineLabel,
@@ -85,7 +86,9 @@ export function HomeLanding(props: HomeLandingProps) {
   return (
     <View style={styles.screen}>
       <StatusBar style="light" />
+      <LobbyWash />
       <ScrollView
+        style={styles.scroll}
         contentContainerStyle={{
           paddingTop: insets.top + 6,
           paddingBottom: insets.bottom + 16,
@@ -616,7 +619,11 @@ function podiumSlots(board: Leaderboard): Array<Leaderboard['entries'][number] |
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: color.bg,
+    backgroundColor: color.homeWash,
+  },
+  scroll: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
   hud: {
     flexDirection: 'row',
@@ -765,7 +772,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 12,
+    paddingVertical: 13,
   },
   darkBtn: {
     backgroundColor: color.bg,
@@ -774,9 +781,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 208, 0, 0.45)',
   },
   darkBtnText: {
-    fontFamily: font.display,
-    ...antonBold,
-    fontSize: 12,
+    fontFamily: font.sticker,
+    fontSize: 13,
+    letterSpacing: 0.8,
     color: color.goldArcade,
   },
   goldBtn: {
@@ -786,9 +793,9 @@ const styles = StyleSheet.create({
     borderColor: '#FFF8D0',
   },
   goldBtnText: {
-    fontFamily: font.display,
-    ...antonBold,
-    fontSize: 12,
+    fontFamily: font.sticker,
+    fontSize: 13,
+    letterSpacing: 0.8,
     color: color.bg,
   },
   quick: {
@@ -1118,12 +1125,12 @@ const styles = StyleSheet.create({
   notifyBtn: {
     backgroundColor: '#F5D76E',
     borderRadius: 12,
-    paddingHorizontal: 8,
+    paddingHorizontal: 10,
   },
   notifyText: {
-    fontFamily: font.display,
-    ...antonBold,
-    fontSize: 11,
+    fontFamily: font.sticker,
+    fontSize: 12,
+    letterSpacing: 0.7,
     color: color.bg,
   },
   dock: {

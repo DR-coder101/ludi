@@ -6,6 +6,7 @@ import type { Color as EngineColor } from '@ludi/rules';
 
 export const color = {
   bg: '#0B0B0C',
+  homeWash: '#080A0C',
   ink: '#141416',
   yard: '#0E0E10',
   line: 'rgba(255,255,255,0.08)',
