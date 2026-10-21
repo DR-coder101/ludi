@@ -8,32 +8,30 @@ import { layout, TURN_ORDER, color, font } from '../../theme/tokens';
 import { useLudiFonts } from '../../theme/fonts';
 import { ScreenBackdrop } from './ScreenBackdrop';
 import { TopBar } from './TopBar';
-import { SideRail, type RailItem } from './SideRail';
 import { TurnCard } from './TurnCard';
 import { PlayerStrip, type TurnTimer } from './PlayerStrip';
 import { Equalizer } from './Equalizer';
-import { CallBar, type CallBarProps } from '../video/CallBar';
+import { ActionDock } from './ActionDock';
+import { LeaveConfirm } from './LeaveConfirm';
+import { boardChrome, speakingSeat } from './boardChrome';
+import type { CallBarProps } from '../video/CallBar';
 import type { SeatVideo } from '../video/seatVideo';
 import { turnCopy } from './turnCopy';
 import { activeDie, canPickDie, diceFaces, moveForToken, type DieIndex } from './diceModel';
 
 export interface BoardScreenProps {
   state: GameState;
-  /** Legal moves this device may make now; empty while someone else acts. */
   moves: MoveLike[];
-  /** Colour played on this device; null for pass-and-play, where every turn is local. */
   me: Color | null;
   names: Partial<Record<Color, string>>;
   muted?: Partial<Record<Color, boolean>>;
   roomCode: string | null;
-  /** Last throw, kept after the engine clears `dice` on an auto-pass. */
   lastRoll: readonly [number, number] | null;
   rollKey: number;
   timer?: TurnTimer | null;
   hop?: HopAnimation | null;
   onHopDone?: () => void;
   onRoll?: () => void;
-  /** Plays one die of the current throw. */
   onMove?: (move: MoveLike) => void;
   onMenu?: () => void;
   onProfile?: () => void;
@@ -42,29 +40,46 @@ export interface BoardScreenProps {
   call?: CallBarProps | null;
   seats?: Partial<Record<Color, SeatVideo>>;
   notice?: string | null;
-  /** Overrides device safe-area insets (the dev preview simulates an iPhone frame on web). */
   insets?: { top: number; bottom: number };
-  /** Toasts, banners and sheets drawn above the board. */
   children?: ReactNode;
+  leaveOpen?: boolean;
 }
 
 const MAX_COLUMN = 520;
 
 export function BoardScreen(props: BoardScreenProps) {
-  const { state, moves, me, names, muted, roomCode, lastRoll, rollKey, timer, hop, onHopDone } = props;
+  const { state, moves, me, names, muted, roomCode, lastRoll, rollKey, hop, onHopDone } = props;
   const { onRoll, onMove, onMenu, onProfile, voice, chat, call, seats, notice, children } = props;
   const fontsReady = useLudiFonts();
   const device = useSafeAreaInsets();
   const insets = props.insets ?? device;
   const { width, height } = useWindowDimensions();
+  const [leaving, setLeaving] = useState(!!props.leaveOpen);
 
   const columnWidth = Math.min(width, MAX_COLUMN);
-  const topBarTop = insets.top + 7;
-  const boardTop = topBarTop + layout.topBarHeight + layout.topBarGap;
-  const bottomPad = Math.max(insets.bottom - 10, 8);
-  const roomForBoard = height - boardTop - layout.boardGap - layout.lowerHeight - bottomPad;
-  const boardSize = Math.floor(Math.max(240, Math.min(columnWidth - layout.boardInset * 2, roomForBoard)));
-  const lowerTop = boardTop + boardSize + layout.boardGap;
+  const live = !!call;
+  const chrome = boardChrome({
+    live,
+    roomCode,
+    chat: !!chat,
+    speaking: speakingSeat(seats, names),
+  });
+  const dockH = chrome.dock.length > 0 ? layout.dockHeight : 0;
+  const bottomPad = Math.max(insets.bottom - 8, 8);
+  const chromeH =
+    insets.top +
+    7 +
+    layout.topBarHeight +
+    layout.topBarGap +
+    layout.boardGap +
+    layout.soundHeight +
+    layout.stripGap +
+    40 +
+    layout.stripGap +
+    layout.turnCardHeight +
+    (dockH ? layout.stripGap + dockH : 0) +
+    bottomPad;
+  const boardSize = Math.floor(Math.max(240, Math.min(columnWidth - 24, height - chromeH)));
 
   const isMine = me === null || state.turn === me;
   const awaitingRoll = state.phase === 'awaiting_roll';
@@ -96,78 +111,50 @@ export function BoardScreen(props: BoardScreenProps) {
       }
     : undefined;
 
-  const left: RailItem[] = [
-    { key: 'players', icon: 'users', label: 'Players', sub: `${seatedOrder.length}/4`, subTone: 'cream' },
-    voice
-      ? {
-          key: 'voice',
-          icon: 'mic',
-          label: 'Voice',
-          sub: voice.on ? 'On' : 'Off',
-          subTone: voice.on ? 'green' : 'muted',
-          tone: voice.on ? 'voice' : 'dark',
-          a11y: voice.on ? 'Mute microphone' : 'Unmute microphone',
-          onPress: voice.onToggle,
-        }
-      : { key: 'voice', icon: 'mic', label: 'Voice', sub: 'Off', subTone: 'muted' },
-    { key: 'chat', icon: 'chat', label: 'Chat', badge: chat?.unread || undefined, onPress: chat?.onToggle },
-  ];
-  const right: RailItem[] = [
-    { key: 'emojis', icon: 'smile', label: 'Emojis' },
-    { key: 'roll', icon: 'dice', label: 'Roll Dice', tone: canRoll ? 'gold' : 'dark', onPress: canRoll ? onRoll : undefined },
-    { key: 'settings', icon: 'gear', label: 'Settings' },
-  ];
-
   return (
     <View style={styles.screen}>
       <ScreenBackdrop />
       {fontsReady ? (
-        <View style={[styles.column, { width: columnWidth }]}>
-          <View style={[styles.topBar, { top: topBarTop }]}>
-            <TopBar roomCode={roomCode} onMenu={onMenu} onProfile={onProfile} />
+        <View style={[styles.column, { width: columnWidth, paddingBottom: bottomPad }]}>
+          <View style={[styles.top, { paddingTop: insets.top + 7 }]}>
+            <TopBar live={live} roomCode={roomCode} onLeave={() => setLeaving(true)} onProfile={onProfile} />
           </View>
-          <View style={[styles.board, { top: boardTop, left: (columnWidth - boardSize) / 2 }]}>
+          <View style={styles.boardWrap}>
             <BoardView
               size={boardSize}
               model={model}
-              labels={{ names, me, muted: muted ?? {}, video: roomCode !== null, seats }}
+              labels={{ names, me, muted: muted ?? {}, video: live, seats }}
               onTokenPress={onTokenPress}
               hop={hop}
               onHopDone={onHopDone}
             />
           </View>
-          <View style={[styles.lower, { top: lowerTop }]}>
-            <View style={[styles.rail, { left: layout.railInset }]}>
-              <SideRail items={left} />
-            </View>
-            <View style={[styles.rail, { right: layout.railInset }]}>
-              <SideRail items={right} />
-            </View>
-            <View style={styles.centre}>
-              <TurnCard
-                copy={copy}
-                dice={diceFaces(state.dice, lastRoll)}
-                rollKey={rollKey}
-                idle={awaitingRoll}
-                activeDie={activeMoves.length > 0 ? active : null}
-                onRoll={canRoll ? onRoll : undefined}
-                onPickDie={pickable ? (die) => setPick({ rollKey, die }) : undefined}
-              />
-              <View style={styles.strip}>
-                {call ? (
-                  <CallBar {...call} />
-                ) : (
-                  <PlayerStrip order={seatedOrder} turn={state.turn} names={names} timer={timer} />
-                )}
-              </View>
-              {call ? null : (
-                <View style={styles.eq}>
-                  <Equalizer width={columnWidth - CENTRE_INSET * 2} />
-                </View>
-              )}
-            </View>
+          <View style={styles.lower}>
+            <Equalizer mode={chrome.sound} />
+            <PlayerStrip order={seatedOrder} turn={state.turn} names={names} me={me} />
+            <TurnCard
+              copy={copy}
+              dice={diceFaces(state.dice, lastRoll)}
+              rollKey={rollKey}
+              idle={awaitingRoll}
+              activeDie={activeMoves.length > 0 ? active : null}
+              onRoll={canRoll ? onRoll : undefined}
+              onPickDie={pickable ? (die) => setPick({ rollKey, die }) : undefined}
+            />
+            <ActionDock
+              keys={chrome.dock}
+              voiceOn={call?.micOn ?? voice?.on ?? false}
+              cameraOn={call?.cameraOn ?? false}
+              unread={chat?.unread ?? 0}
+              onVoice={call?.onMic ?? voice?.onToggle}
+              onCamera={call?.onCamera}
+              onChat={chat?.onToggle}
+            />
           </View>
         </View>
+      ) : null}
+      {leaving ? (
+        <LeaveConfirm body={chrome.leaveBody} onLeave={onMenu} onStay={() => setLeaving(false)} />
       ) : null}
       {notice ? (
         <View style={styles.notice} pointerEvents="none">
@@ -179,8 +166,6 @@ export function BoardScreen(props: BoardScreenProps) {
   );
 }
 
-const CENTRE_INSET = layout.railInset + layout.railWidth + layout.railInset;
-
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -190,40 +175,20 @@ const styles = StyleSheet.create({
   column: {
     flex: 1,
   },
-  topBar: {
-    position: 'absolute',
-    left: 12,
-    right: 12,
+  top: {
+    paddingHorizontal: 12,
   },
-  board: {
-    position: 'absolute',
+  boardWrap: {
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingTop: layout.topBarGap,
   },
   lower: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-  },
-  rail: {
-    position: 'absolute',
-    top: 4,
-  },
-  centre: {
-    position: 'absolute',
-    top: 4,
-    left: CENTRE_INSET,
-    right: CENTRE_INSET,
-  },
-  strip: {
-    position: 'absolute',
-    top: layout.turnCardHeight + layout.stripGap,
-    left: 0,
-    right: 0,
-  },
-  eq: {
-    position: 'absolute',
-    top: layout.turnCardHeight + layout.stripGap + 70,
-    left: 0,
-    right: 0,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    gap: 8,
+    flexGrow: 1,
+    justifyContent: 'flex-end',
   },
   notice: {
     position: 'absolute',
