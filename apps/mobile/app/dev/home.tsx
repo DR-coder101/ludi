@@ -1,28 +1,45 @@
 import { Platform } from 'react-native';
-import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, Stack, useRouter } from 'expo-router';
 import { HomeLanding } from '../../src/components/home/HomeLanding';
+import { emptyLeaderboard } from '../../src/home/homeModel';
 
-/** iPhone 14 safe area, so web screenshots line up with the 390×844 mockup. */
 const PHONE_INSETS = { top: 47, bottom: 34 };
 const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 
-/** Visual QA for the home screen: /dev/home, or /dev/home?state=signedin for the account variant. */
 export default function HomePreview() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ state?: string }>();
 
   if (!ENABLED) return <Redirect href="/" />;
 
   return (
     <HomeLanding
-      signedIn={params.state === 'signedin'}
-      onOnline={() => router.push('/')}
-      onLocal={() => router.push('/game?colors=red,green,yellow,blue')}
-      onSignIn={() => router.push('/auth/signin')}
-      onSignUp={() => router.push('/auth/signup')}
-      onProfile={() => router.push('/profile')}
-      onHistory={() => router.push('/history')}
+      profile={{ name: 'Guest', title: null, level: 1, initials: 'GU' }}
+      streakDays={null}
+      hasUnread={false}
+      onlineCount={0}
+      ranked={false}
+      leaderboard={emptyLeaderboard('weekly', null, '2026-W43')}
+      leaderboardTab="weekly"
+      hometown={null}
+      tournamentNotify={false}
       insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
+      onCreateRoom={() => router.push('/')}
+      onOpenJoin={() => undefined}
+      onCloseJoin={() => undefined}
+      onJoinCodeChange={() => undefined}
+      onJoinSubmit={() => undefined}
+      onQuickMatch={() => router.push('/')}
+      onVsBots={() => router.push('/')}
+      onPassAndPlay={() => router.push('/game?colors=red,green,yellow,blue')}
+      onLeaderboardTab={() => undefined}
+      onNotifyTournaments={() => undefined}
+      onOpenSettings={() => undefined}
+      onCloseSettings={() => undefined}
+      onPickHometown={() => undefined}
+      onOpenNotes={() => undefined}
+      onCloseNotes={() => undefined}
+      onLobby={() => router.push('/dev/home')}
+      onRanks={() => router.push('/dev/home')}
     >
       <Stack.Screen options={{ headerShown: false }} />
     </HomeLanding>

@@ -27,6 +27,13 @@ export const color = {
   silver: '#D9DCE1',
   hot: '#FF3B7F',
   white: '#FFFFFF',
+  /** Home lobby v2 (approved mockup). */
+  magenta: '#FF1361',
+  orange: '#FB923C',
+  card: '#181E24',
+  surface: '#12161A',
+  emerald: '#00B04F',
+  goldArcade: '#FFD000',
 } as const;
 
 /** Piece colours as drawn; engine ids map onto these via PLACES. */
