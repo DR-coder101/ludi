@@ -30,7 +30,8 @@ export type IconName =
   | 'robot'
   | 'ranking'
   | 'trophy'
-  | 'bolt';
+  | 'bolt'
+  | 'speaker';
 
 function glyph(name: IconName) {
   switch (name) {
@@ -154,9 +155,9 @@ function glyph(name: IconName) {
         </>
       );
     case 'leave':
-      return (
-        <Path d="M4.8 14.2c.6-1.6 2.4-2.7 4.4-2.7h5.6c2 0 3.8 1.1 4.4 2.7M6.6 16.6c.4-1.5 2-2.5 3.8-2.5h3.2c1.8 0 3.4 1 3.8 2.5" />
-      );
+      return <Path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l-5-5 5-5M5 12h12" />;
+    case 'speaker':
+      return <Path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0014 8v8a4.5 4.5 0 002.5-4z" />;
     case 'bell':
       return (
         <>

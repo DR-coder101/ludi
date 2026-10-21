@@ -29,7 +29,7 @@ export function turnCopy(input: TurnCopyInput): TurnCopy {
   const { phase, dice, consecutiveSixes, turn, winner, isMine, name, canBringOut, canPickDie } = input;
   const place = PLACES[turn].full.toUpperCase();
   const who = name?.trim() ? name.trim().toUpperCase() : null;
-  const kicker = who ? `${place} · ${who}` : place;
+  const kicker = who ? `${place} • ${who}` : place;
   const actor = who ?? place;
 
   if (phase === 'finished') {
@@ -42,7 +42,7 @@ export function turnCopy(input: TurnCopyInput): TurnCopy {
     if (isMine) {
       return bonus
         ? { kicker, title: 'ROLL AGAIN!', sub: 'You threw a 6 — bonus roll', cta: 'TAP TO ROLL' }
-        : { kicker, title: "IT'S YOUR TURN", sub: 'Tap the dice to roll', cta: 'TAP TO ROLL' };
+        : { kicker, title: "IT'S YOUR TURN", sub: 'Tap the dice or roll button', cta: 'TAP TO ROLL' };
     }
     return { kicker, title: `${actor}'S TURN`, sub: bonus ? 'Bonus roll coming' : 'Waiting for the roll', cta: null };
   }

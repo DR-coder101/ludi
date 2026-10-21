@@ -19,6 +19,7 @@ const MOCKUP_TIMER: Record<FixtureName, number> = {
   start: 140 / 150.8,
   mid: 110 / 150.8,
   video: 140 / 150.8,
+  leave: 140 / 150.8,
 };
 /** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
 const PHONE_INSETS = { top: 47, bottom: 34 };
@@ -29,17 +30,17 @@ export default function BoardPreview() {
   const router = useRouter();
   const params = useLocalSearchParams<{ state?: string }>();
   const fixture: FixtureName =
-    params.state === 'mid' ? 'mid' : params.state === 'video' ? 'video' : 'start';
+    params.state === 'mid' ? 'mid' : params.state === 'video' ? 'video' : params.state === 'leave' ? 'leave' : 'start';
   const [state, setState] = useState<GameState>(() => boardFixture(fixture));
   const [lastRoll, setLastRoll] = useState<[number, number] | null>(
-    fixture === 'mid' ? MID_ROLL : fixture === 'video' ? VIDEO_ROLL : null,
+    fixture === 'mid' ? MID_ROLL : fixture === 'video' || fixture === 'leave' ? VIDEO_ROLL : null,
   );
   const [rollKey, setRollKey] = useState(0);
   const [hop, setHop] = useState<{ anim: HopAnimation; next: GameState } | null>(null);
 
   useEffect(() => {
     setState(boardFixture(fixture));
-    setLastRoll(fixture === 'mid' ? MID_ROLL : fixture === 'video' ? VIDEO_ROLL : null);
+    setLastRoll(fixture === 'mid' ? MID_ROLL : fixture === 'video' || fixture === 'leave' ? VIDEO_ROLL : null);
     setHop(null);
   }, [fixture]);
 
@@ -81,8 +82,9 @@ export default function BoardPreview() {
         onMenu={() => router.back()}
         voice={{ on: true, onToggle: () => {} }}
         chat={{ unread: 3, onToggle: () => {} }}
-        call={fixture === 'video' ? VIDEO_FIXTURE_CALL : undefined}
-        seats={fixture === 'video' ? VIDEO_FIXTURE_SEATS : undefined}
+        call={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_CALL : undefined}
+        seats={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_SEATS : undefined}
+        leaveOpen={fixture === 'leave'}
         insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
       />
     </>

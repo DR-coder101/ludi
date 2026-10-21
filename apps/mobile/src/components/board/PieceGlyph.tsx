@@ -48,6 +48,7 @@ export const PieceGlyph = React.memo(function PieceGlyph({ piece, cx, cy, r, sta
         strokeOpacity={0.9}
         strokeWidth={Math.max(0.8, r * 0.1)}
       />
+      <Circle cx={cx} cy={cy} r={r * 0.3} fill={p.hi} opacity={0.85} />
       <Circle cx={cx} cy={cy} r={r * 0.62} fill="none" stroke={p.lo} strokeOpacity={0.55} strokeWidth={r * 0.12} />
       <Circle cx={cx} cy={cy} r={r * 0.52} fill="none" stroke={color.white} strokeOpacity={0.28} strokeWidth={r * 0.06} />
       <Ellipse cx={cx - r * 0.18} cy={cy - r * 0.42} rx={r * 0.55} ry={r * 0.3} fill="url(#spec)" opacity={0.8} />

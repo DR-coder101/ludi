@@ -1,32 +1,37 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { color } from '../../theme/tokens';
+import { StyleSheet, Text, View } from 'react-native';
+import Svg, { Rect } from 'react-native-svg';
+import { boardFont, color } from '../../theme/tokens';
+import { Icon } from './Icon';
+import type { SoundMode } from './boardChrome';
 
-const BARS = 34;
-const BAR_MAX = 4;
+const HEIGHTS = [6, 10, 16, 22, 14, 26, 18, 30, 20, 12, 24, 28, 16, 10, 22, 26, 14, 8, 18, 12, 6];
+const BAR = 4;
 const GAP = 3;
-const HEIGHT = 18;
-const heights = Array.from({ length: BARS }, (_, i) => 4 + Math.abs(Math.sin(i * 1.7) * Math.cos(i * 0.45)) * 14);
+const HEIGHT = 30;
 
-/**
- * Static voice equaliser strip under the player order, as drawn in the mockups.
- * Bars are 4 wide but shrink to fit, like the pack's flex row does in the 222px column.
- */
-export function Equalizer({ width }: { width: number }) {
-  const bar = Math.min(BAR_MAX, (width - (BARS - 1) * GAP) / BARS);
-  const total = BARS * bar + (BARS - 1) * GAP;
+export function Equalizer({ mode }: { mode: SoundMode }) {
+  const voice = mode.kind === 'voice';
+  const tint = voice ? mode.tint : color.gold;
+  const label = voice ? `${mode.name.toUpperCase()} SPEAKING` : 'GAME SOUND';
+  const total = HEIGHTS.length * BAR + (HEIGHTS.length - 1) * GAP;
   return (
     <View style={styles.wrap} pointerEvents="none">
+      <View style={[styles.badge, { borderColor: tint, backgroundColor: voice ? 'rgba(230,26,53,0.2)' : 'rgba(255,209,0,0.15)' }]}>
+        <Icon name={voice ? 'mic' : 'speaker'} size={12} color={tint} strokeWidth={2} />
+      </View>
+      <Text style={[styles.label, { color: tint }]}>{label}</Text>
       <Svg width={total} height={HEIGHT}>
-        <Defs>
-          <LinearGradient id="eq" x1="0" y1="1" x2="0" y2="0">
-            <Stop offset="0" stopColor={color.green} />
-            <Stop offset="1" stopColor={color.gold} />
-          </LinearGradient>
-        </Defs>
-        {heights.map((h, i) => (
-          <Rect key={i} x={i * (bar + GAP)} y={HEIGHT - h} width={bar} height={h} rx={2} fill="url(#eq)" />
+        {HEIGHTS.map((h, i) => (
+          <Rect
+            key={i}
+            x={i * (BAR + GAP)}
+            y={HEIGHT - h}
+            width={BAR}
+            height={h}
+            rx={2}
+            fill={tint}
+          />
         ))}
       </Svg>
     </View>
@@ -35,8 +40,23 @@ export function Equalizer({ width }: { width: number }) {
 
 const styles = StyleSheet.create({
   wrap: {
-    height: HEIGHT,
+    height: 36,
+    flexDirection: 'row',
     alignItems: 'center',
-    opacity: 0.55,
+    justifyContent: 'center',
+    gap: 8,
+  },
+  badge: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    fontFamily: boardFont.bodyBlack,
+    fontSize: 9,
+    letterSpacing: 1,
   },
 });

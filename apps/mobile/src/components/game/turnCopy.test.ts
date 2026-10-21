@@ -17,14 +17,14 @@ describe('turnCopy', () => {
   it('matches board-start.png for Kingston awaiting a roll', () => {
     expect(
       turnCopy({ ...base, phase: 'awaiting_roll', dice: null, turn: 'red', isMine: true, name: 'Dean' }),
-    ).toEqual({ kicker: 'KINGSTON · DEAN', title: "IT'S YOUR TURN", sub: 'Tap the dice to roll', cta: 'TAP TO ROLL' });
+    ).toEqual({ kicker: 'KINGSTON • DEAN', title: "IT'S YOUR TURN", sub: 'Tap the dice or roll button', cta: 'TAP TO ROLL' });
   });
 
   it('board-midgame.png with two dice: a throw showing a 6 with yard pieces available', () => {
     expect(
       turnCopy({ ...base, phase: 'awaiting_move', dice: fresh(6, 3), turn: 'red', isMine: true, name: 'Dean', canBringOut: true }),
     ).toEqual({
-      kicker: 'KINGSTON · DEAN',
+      kicker: 'KINGSTON • DEAN',
       title: 'YOU ROLLED 6 + 3!',
       sub: 'Play both — bring one out?',
       cta: 'PICK A PIECE',
@@ -56,7 +56,7 @@ describe('turnCopy', () => {
 
   it('names the place and player when another device has the turn', () => {
     const copy = turnCopy({ ...base, phase: 'awaiting_move', dice: fresh(4, 1), turn: 'green', isMine: false, name: 'Shanice' });
-    expect(copy.kicker).toBe('NEGRIL · SHANICE');
+    expect(copy.kicker).toBe('NEGRIL • SHANICE');
     expect(copy.title).toBe('SHANICE ROLLED 4 + 1');
     expect(copy.cta).toBeNull();
   });

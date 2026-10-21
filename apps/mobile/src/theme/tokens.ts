@@ -66,14 +66,47 @@ export interface Place {
   piece: PieceColor;
   corner: Corner;
   pin: PinKey;
+  compass: string;
 }
 
 /** Engine colour → place. Clockwise turn order is Kingston → Negril → Montego Bay → Ocho Rios. */
 export const PLACES: Record<EngineColor, Place> = {
-  yellow: { lines: ['MONTEGO', 'BAY'], full: 'Montego Bay', short: 'MOBAY', piece: 'gold', corner: 'TL', pin: 'montego' },
-  blue: { lines: ['OCHO', 'RIOS'], full: 'Ocho Rios', short: 'OCHI', piece: 'green', corner: 'TR', pin: 'ocho' },
-  green: { lines: ['NEGRIL'], full: 'Negril', short: 'NEGRIL', piece: 'black', corner: 'BL', pin: 'negril' },
-  red: { lines: ['KINGSTON'], full: 'Kingston', short: 'KINGSTON', piece: 'red', corner: 'BR', pin: 'kingston' },
+  yellow: {
+    lines: ['MONTEGO', 'BAY'],
+    full: 'Montego Bay',
+    short: 'MOBAY',
+    piece: 'gold',
+    corner: 'TL',
+    pin: 'montego',
+    compass: 'NORTH-WEST',
+  },
+  blue: {
+    lines: ['OCHO', 'RIOS'],
+    full: 'Ocho Rios',
+    short: 'OCHI',
+    piece: 'green',
+    corner: 'TR',
+    pin: 'ocho',
+    compass: 'NORTH-EAST',
+  },
+  green: {
+    lines: ['NEGRIL'],
+    full: 'Negril',
+    short: 'NEGRIL',
+    piece: 'black',
+    corner: 'BL',
+    pin: 'negril',
+    compass: 'SOUTH-WEST',
+  },
+  red: {
+    lines: ['KINGSTON'],
+    full: 'Kingston',
+    short: 'KINGSTON',
+    piece: 'red',
+    corner: 'BR',
+    pin: 'kingston',
+    compass: 'SOUTH-EAST',
+  },
 };
 
 /** Engine turn order, clockwise on the board: Kingston, Negril, Montego Bay, Ocho Rios. */
@@ -85,6 +118,14 @@ export const font = {
   body: 'Inter_500Medium',
   bodySemi: 'Inter_600SemiBold',
   bodyBold: 'Inter_700Bold',
+} as const;
+
+/** Board v3 chrome. Home, lobby, and win keep Anton. */
+export const boardFont = {
+  display: 'BebasNeue_400Regular',
+  body: 'Montserrat_600SemiBold',
+  bodyBold: 'Montserrat_700Bold',
+  bodyBlack: 'Montserrat_900Black',
 } as const;
 
 export const motion = {
@@ -103,17 +144,19 @@ export const motion = {
 
 export const layout = {
   topBarHeight: 56,
-  topBarGap: 12,
-  boardInset: 4,
-  boardBevel: 4,
-  boardGap: 18,
+  topBarGap: 8,
+  boardInset: 12,
+  boardBevel: 6,
+  boardGap: 10,
   railWidth: 64,
   railInset: 10,
   railGap: 14,
-  railButton: 48,
-  topButton: 42,
-  turnCardHeight: 172,
-  stripGap: 12,
-  /** Rails + turn card + player strip + equaliser. */
-  lowerHeight: 280,
+  railButton: 44,
+  topButton: 40,
+  turnCardHeight: 168,
+  stripGap: 8,
+  soundHeight: 36,
+  dockHeight: 68,
+  /** Sound + strip + turn card + dock + gaps. */
+  lowerHeight: 340,
 } as const;

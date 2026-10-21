@@ -135,7 +135,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     left: 4,
-    backgroundColor: color.hot,
+    backgroundColor: color.red,
     borderRadius: 4,
     paddingHorizontal: 4,
     paddingVertical: 1,

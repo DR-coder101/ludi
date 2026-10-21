@@ -2,7 +2,7 @@ import { createGame, type Color, type GameState, type TokenPos } from '@ludi/rul
 import type { SeatVideo } from '../components/video/seatVideo';
 import type { CallBarProps } from '../components/video/CallBar';
 
-export type FixtureName = 'start' | 'mid' | 'video';
+export type FixtureName = 'start' | 'mid' | 'video' | 'leave';
 
 /** Players from the approved mockups, by engine colour. */
 export const MOCKUP_NAMES: Record<Color, string> = {
@@ -36,10 +36,10 @@ export const VIDEO_ROLL: [number, number] = [6, 2];
 
 /** Four tile states from the 2026-10-09 board video mockup. */
 export const VIDEO_FIXTURE_SEATS: Record<Color, SeatVideo> = {
-  yellow: { kind: 'live', name: 'Marcus', you: false, muted: false, speaking: true },
+  yellow: { kind: 'live', name: 'Marcus', you: false, muted: false, speaking: false },
   green: { kind: 'live', name: 'Shanice', you: false, muted: false, speaking: false },
   blue: { kind: 'camOff', name: 'Andre', you: false, muted: true, speaking: false, initial: 'A' },
-  red: { kind: 'live', name: 'Dean', you: true, muted: false, speaking: false },
+  red: { kind: 'live', name: 'Dean', you: true, muted: false, speaking: true },
 };
 
 export const VIDEO_FIXTURE_CALL: CallBarProps = {
@@ -64,7 +64,7 @@ export function boardFixture(name: FixtureName): GameState {
     },
   });
   if (name === 'start') return base;
-  if (name === 'video') {
+  if (name === 'video' || name === 'leave') {
     return {
       ...base,
       phase: 'awaiting_move',

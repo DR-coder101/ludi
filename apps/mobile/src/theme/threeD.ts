@@ -1,4 +1,4 @@
-export type Button3DTone = 'gold' | 'dark' | 'green';
+export type Button3DTone = 'gold' | 'dark' | 'green' | 'red';
 export type Card3DTone = 'gold' | 'green' | 'carbon';
 
 export interface FaceStop {
@@ -97,6 +97,25 @@ export const BUTTON_3D: Record<Button3DTone, Button3DRecipe> = {
     highlight: 'rgba(255, 255, 255, 0.3)',
     radius: 16,
   },
+  red: {
+    face: [
+      { offset: '0%', color: '#FF4A5F' },
+      { offset: '50%', color: '#E61A35' },
+      { offset: '100%', color: '#A50F22' },
+    ],
+    border: 'rgba(255, 255, 255, 0.28)',
+    lip: '#6B0714',
+    lipRest: 5,
+    lipPressed: 1,
+    pressY: 4,
+    glow: '0 10px 18px rgba(0,0,0,0.5)',
+    glowColor: '#000000',
+    glowY: 10,
+    glowBlur: 18,
+    glowOpacity: 0.5,
+    highlight: 'rgba(255, 255, 255, 0.4)',
+    radius: 16,
+  },
 };
 
 export const CARD_3D: Record<Card3DTone, Card3DRecipe> = {
@@ -142,22 +161,22 @@ export const CARD_3D: Record<Card3DTone, Card3DRecipe> = {
   },
   carbon: {
     face: [
-      { offset: '0%', color: '#18181B' },
-      { offset: '100%', color: '#121214' },
+      { offset: '0%', color: '#18211E' },
+      { offset: '100%', color: '#0D1210' },
     ],
     axis: 'br',
-    border: '#27272A',
-    borderWidth: 1,
-    radius: 16,
+    border: '#2B3B35',
+    borderWidth: 2,
+    radius: 24,
     padding: 12,
-    lip: null,
-    lipRest: 0,
-    glow: '0 10px 20px rgba(0,0,0,0.45)',
+    lip: '#050607',
+    lipRest: 8,
+    glow: '0 14px 28px rgba(0,0,0,0.6)',
     glowColor: '#000000',
-    glowY: 10,
-    glowBlur: 20,
-    glowOpacity: 0.45,
-    highlight: 'rgba(255, 255, 255, 0.08)',
+    glowY: 14,
+    glowBlur: 28,
+    glowOpacity: 0.6,
+    highlight: 'rgba(255, 255, 255, 0.12)',
   },
 };
 
