@@ -1,54 +1,42 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { color, font, layout } from '../../theme/tokens';
+import { boardFont, color, layout } from '../../theme/tokens';
+import { Button3D } from '../ui/Button3D';
+import { Icon } from './Icon';
 import { RoundButton } from './RoundButton';
 
 interface TopBarProps {
-  /** Online room code; null for pass-and-play on one device. */
   roomCode: string | null;
-  onMenu?: () => void;
+  live?: boolean;
+  onLeave?: () => void;
   onProfile?: () => void;
 }
 
-function PlateFace() {
-  return (
-    <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-      <Defs>
-        <LinearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
-          <Stop offset="0" stopColor="#1b1b1e" />
-          <Stop offset="1" stopColor="#0f0f11" />
-        </LinearGradient>
-      </Defs>
-      <Rect width="100%" height="100%" fill="url(#plate)" />
-    </Svg>
-  );
-}
-
-/** Menu button, "LUDI LIVE" plate with room code, profile button. */
-export function TopBar({ roomCode, onMenu, onProfile }: TopBarProps) {
+export function TopBar({ roomCode, live = false, onLeave, onProfile }: TopBarProps) {
   return (
     <View style={styles.bar}>
-      <RoundButton icon="menu" size={layout.topButton} label="Leave game" onPress={onMenu} />
-      <View style={styles.plateShadow}>
-        <View style={styles.plate}>
-          <PlateFace />
-          <Text style={styles.brand}>
-            LUDI <Text style={styles.brandLive}>LIVE</Text>
-          </Text>
+      <Button3D tone="red" compact label="Leave game" onPress={onLeave} style={styles.leave}>
+        <Icon name="leave" size={16} color="#FECACA" strokeWidth={2.5} />
+        <Text style={styles.leaveText}>LEAVE</Text>
+      </Button3D>
+      <View style={styles.plate}>
+        <Text style={styles.brand}>
+          LUDI{live ? <Text style={styles.brandLive}> LIVE</Text> : null}
+        </Text>
+        <View style={styles.codeRow}>
           {roomCode ? (
-            <View style={styles.codeRow}>
+            <>
               <Text style={styles.codeLabel}>Room</Text>
               <Text style={styles.code}>{roomCode}</Text>
-              <View style={styles.live}>
-                <View style={styles.liveDot} />
-                <Text style={styles.liveText}>LIVE</Text>
-              </View>
-            </View>
+              {live ? (
+                <View style={styles.live}>
+                  <View style={styles.liveDot} />
+                  <Text style={styles.liveText}>LIVE</Text>
+                </View>
+              ) : null}
+            </>
           ) : (
-            <View style={styles.codeRow}>
-              <Text style={styles.codeLabel}>Pass & Play</Text>
-            </View>
+            <Text style={styles.codeLabel}>Pass & Play</Text>
           )}
         </View>
       </View>
@@ -63,30 +51,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
   },
-  plateShadow: {
-    borderRadius: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 9,
-    elevation: 8,
+  leave: {
+    minWidth: 88,
+  },
+  leaveText: {
+    fontFamily: boardFont.display,
+    fontSize: 16,
+    letterSpacing: 1,
+    color: '#FECACA',
   },
   plate: {
-    height: 54,
-    minWidth: 170,
-    paddingHorizontal: 16,
-    borderRadius: 14,
+    flexGrow: 1,
+    minWidth: 0,
+    height: 48,
+    paddingHorizontal: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(254,209,0,0.35)',
-    overflow: 'hidden',
+    borderColor: '#283833',
+    backgroundColor: '#151E1B',
     alignItems: 'center',
     justifyContent: 'center',
   },
   brand: {
-    fontFamily: font.display,
-    fontSize: 17,
-    lineHeight: 19,
+    fontFamily: boardFont.display,
+    fontSize: 18,
+    lineHeight: 20,
     letterSpacing: 2,
     color: color.gold,
   },
@@ -97,17 +88,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginTop: 4,
+    marginTop: 2,
   },
   codeLabel: {
-    fontFamily: font.body,
-    fontSize: 12,
+    fontFamily: boardFont.bodyBold,
+    fontSize: 10,
     color: color.creamSoft,
+    textTransform: 'uppercase',
   },
   code: {
-    fontFamily: font.sticker,
-    fontSize: 12.5,
-    letterSpacing: 1.5,
+    fontFamily: boardFont.bodyBlack,
+    fontSize: 11,
+    letterSpacing: 1.4,
     color: color.white,
   },
   live: {
@@ -118,7 +110,7 @@ const styles = StyleSheet.create({
     paddingRight: 6,
     paddingVertical: 2,
     borderRadius: 9,
-    backgroundColor: color.hot,
+    backgroundColor: color.red,
   },
   liveDot: {
     width: 5,
@@ -127,9 +119,9 @@ const styles = StyleSheet.create({
     backgroundColor: color.white,
   },
   liveText: {
-    fontFamily: font.sticker,
-    fontSize: 8.5,
-    letterSpacing: 0.5,
+    fontFamily: boardFont.bodyBlack,
+    fontSize: 8,
+    letterSpacing: 0.4,
     color: color.white,
   },
 });
