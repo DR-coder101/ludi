@@ -20,20 +20,21 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body, #root { width: 100%; height: 100%; background: #000; overflow: hidden; }
+html, body, #root { width: 100%; height: 100%; margin: 0; background: transparent; overflow: hidden; }
 body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
 
 .stage {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  place-items: center;
-  background: #000;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: transparent;
 }
 .canvas {
   width: 1080px;
   height: 1920px;
-  position: relative;
+  position: absolute;
+  left: 50%;
+  top: 50%;
   overflow: hidden;
   background: var(--canvas);
   transform-origin: center center;
@@ -898,3 +899,49 @@ body { font-family: var(--font); font-weight: var(--black-w); color: #fff; }
   .intro-stripe:not(.drawn) { animation: none; clip-path: inset(0 0 0 0); }
   .intro-glint { animation: none; display: none; }
 }
+
+/* local: 3D turn card below the board */
+.turn-card3d { width: 880px; flex-shrink: 0; margin-top: 10px; border-radius: 30px; background: #111; padding: 0 0 12px; box-shadow: 0 0 40px rgba(254, 209, 0, 0.45), 0 18px 30px rgba(0,0,0,0.55); }
+.tc3d-face { display: flex; align-items: center; gap: 22px; padding: 18px 26px; border-radius: 30px; border: 5px solid #111;
+  background: linear-gradient(180deg, #ffe55c 0%, #fed100 45%, #f0b800 100%);
+  box-shadow: inset 0 4px 0 rgba(255,255,255,0.65), inset 0 -8px 0 rgba(0,0,0,0.18), 0 10px 0 #009b3a; }
+.tc3d-info { flex: 1; min-width: 0; color: #111; }
+.tc3d-top { display: flex; align-items: center; gap: 12px; }
+.tc3d-lbl { background: #111; color: var(--gold); border-radius: 10px; padding: 3px 14px; font-size: 24px; letter-spacing: 1px; white-space: nowrap; }
+.tc3d-timer { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 32px; white-space: nowrap; }
+.tc3d-name { display: flex; align-items: center; gap: 12px; margin-top: 6px; min-width: 0; }
+.tc3d-dot { width: 26px; height: 26px; border-radius: 50%; border: 4px solid #111; flex: 0 0 26px; }
+.tc3d-handle { font-size: 50px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.tc3d-track { height: 12px; background: rgba(17,17,17,0.25); border-radius: 999px; margin: 8px 0; overflow: hidden; border: 2px solid #111; }
+.tc3d-fill { height: 100%; background: #009b3a; }
+.tc3d-cmds { font-size: 24px; font-weight: 800; white-space: nowrap; }
+.chip.dark { background: #111; color: var(--gold); }
+.tc3d-dice { display: flex; gap: 18px; flex: 0 0 auto; }
+.tc3d-dice .die-slot, .tc3d-dice .die-face { width: 120px; height: 120px; flex-basis: 120px; }
+.tc3d-dice .die-face { background: linear-gradient(160deg, #ffffff 0%, #f3eee2 55%, #d9d2c0 100%); box-shadow: inset 0 3px 0 #fff, inset 0 -6px 0 rgba(0,0,0,0.15), 0 8px 0 #111; padding: 18px; transform: rotate(-6deg); }
+.tc3d-dice .die-slot + .die-slot .die-face { transform: rotate(7deg); }
+.tc3d-dice .die-row { height: 20px; }
+.tc3d-dice .die-face .pip { width: 20px; height: 20px; flex-basis: 20px; }
+.die-face.blank { align-items: center; justify-content: center; }
+.die-q { font-size: 64px; color: #b9b2a2; line-height: 1; }
+.ptag .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+/* local: paused banner */
+.paused-banner { position: absolute; left: 100px; width: 880px; top: 600px; z-index: 20; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 30px 24px 34px; border-radius: 34px; border: 6px solid #111; background: rgba(17,17,17,0.9);
+  box-shadow: 0 0 0 6px #fed100, 0 14px 0 #009b3a, 0 20px 40px rgba(0,0,0,0.6); text-align: center; }
+.paused-word { font-size: 120px; line-height: 0.95; color: #fed100; letter-spacing: 6px; }
+.paused-why { font-size: 40px; color: #fff; font-weight: 800; }
+/* local: winner card fixes */
+.stay-badge.float { top: auto; bottom: -34px; right: 24px; }
+.winner-name-row { max-width: 100%; min-width: 0; }
+.winner-disc { flex: 0 0 96px; }
+.winner-name { font-size: 112px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; padding-bottom: 10px; }
+.winner-card { padding-bottom: 58px; }
+
+.winner-card { min-height: 0; padding-bottom: 64px; }
+.stay-badge.float { bottom: -30px; }
+
+.winner-card .stay-badge.float { position: static; order: 99; align-self: flex-end; margin: 6px 0 0; transform: rotate(4deg); font-size: 26px; padding: 8px 18px; }
+.winner-card { padding-bottom: 24px; }
+

@@ -79,9 +79,26 @@ export async function startAdminHost(opts: {
   if (username) runtime.setUsername(username);
 
   let emitLive: (events: unknown[]) => void = () => {};
+  // LOCAL: pause info for the overlay (reason + frozen turn time)
+  let lastStatusPhase = '';
+  let pausedAt: number | null = null;
+  let pauseReason: 'manual' | 'tiktok' = 'manual';
+  const pauseInfo = () => {
+    const snap = runtime.live.snapshot();
+    if (!snap.paused) { pausedAt = null; return { paused: false, reason: null, turnLeftMs: null }; }
+    if (pausedAt === null) pausedAt = Date.now();
+    const reason = pauseReason;
+    return { paused: true, reason, turnLeftMs: snap.turnEndsAt === null ? null : Math.max(0, snap.turnEndsAt - pausedAt) };
+  };
 
   const adapter = createDefaultAdapter({ source, username: username || 'streamer' });
-  adapter.onStatus((status) => runtime.setStatus(status));
+  adapter.onStatus((status) => {
+    lastStatusPhase = status.phase;
+    const wasPaused = runtime.live.snapshot().paused;
+    runtime.setStatus(status);
+    if (!wasPaused && runtime.live.snapshot().paused) pauseReason = 'tiktok';
+    emitLive([]);
+  });
   adapter.onCommand((command) => {
     const events = runtime.live.handleChat({
       platform: command.platform,
@@ -135,6 +152,7 @@ export async function startAdminHost(opts: {
         json(res, 400, { ok: false, error: 'confirm required' });
         return;
       }
+      if (parsed.data.type === 'pause' && !runtime.live.snapshot().paused) pauseReason = 'manual';
       runtime.handleAdmin(parsed.data);
       emitLive([]);
       json(res, 200, { ok: true, snapshot: runtime.live.snapshot() });
@@ -181,14 +199,17 @@ export async function startAdminHost(opts: {
 
   const io = new Server(http, { cors: { origin: '*' } });
   emitLive = (events) => {
-    io.emit('live', { snapshot: runtime.live.snapshot(), events });
+    io.emit('live', { snapshot: runtime.live.snapshot(), events, pause: pauseInfo() });
   };
   io.on('connection', (socket) => {
-    socket.emit('live', { snapshot: runtime.live.snapshot(), events: [] });
+    socket.emit('live', { snapshot: runtime.live.snapshot(), events: [], pause: pauseInfo() });
   });
+  let lastPaused = runtime.live.snapshot().paused;
   const timer = setInterval(() => {
     const events = runtime.live.tick();
-    if (events.length > 0) emitLive(events);
+    const nowPaused = runtime.live.snapshot().paused;
+    if (events.length > 0 || nowPaused !== lastPaused) emitLive(events);
+    lastPaused = nowPaused;
   }, 100);
 
   const listenOn = (port: number) =>
