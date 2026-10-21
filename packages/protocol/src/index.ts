@@ -66,6 +66,9 @@ export const RoomStateSchema = z.object({
 });
 export type RoomState = z.infer<typeof RoomStateSchema>;
 
+/** Returned on room:create / room:join when the server is at capacity. */
+export const SERVERS_BUSY = 'servers busy';
+
 export interface RoomCreateResponse {
   success: boolean;
   roomCode?: string;
@@ -233,6 +236,8 @@ export interface ClientToServerEvents {
   'room:updateHouseRules': (payload: HouseRulesUpdatePayload, callback: (response: HouseRulesUpdateResponse) => void) => void;
   'room:ready': () => void;
   'room:leave': () => void;
+  'room:rematchOffer': (payload: RematchOfferPayload, callback: (response: RematchCommandResponse) => void) => void;
+  'room:rematchRespond': (payload: RematchRespondPayload, callback: (response: RematchCommandResponse) => void) => void;
   'game:roll': (payload: GameRollPayload, callback: (response: GameRollResponse) => void) => void;
   'game:move': (payload: GameMovePayload, callback: (response: GameMoveResponse) => void) => void;
   'chat:send': (message: string) => void;
@@ -250,6 +255,7 @@ export interface ServerToClientEvents {
   'game:tokenMoved': (payload: TokenMovedPayload) => void;
   'game:turnChanged': (payload: TurnChangedPayload) => void;
   'game:over': (payload: GameOverPayload) => void;
+  'room:rematch': (payload: RematchStatePayload) => void;
   'chat:message': (message: string, playerId: PlayerId) => void;
   'player:connectionChanged': (playerId: PlayerId, connected: boolean) => void;
   'player:statusChanged': (payload: PlayerStatusChangedPayload) => void;
@@ -421,3 +427,75 @@ export const LiveFrameSchema = z.object({
   events: z.array(LiveEventSchema),
 });
 export type LiveFrame = z.infer<typeof LiveFrameSchema>;
+
+export const RematchOfferPayloadSchema = z.object({});
+export type RematchOfferPayload = z.infer<typeof RematchOfferPayloadSchema>;
+
+export const RematchRespondPayloadSchema = z.object({
+  accept: z.boolean(),
+});
+export type RematchRespondPayload = z.infer<typeof RematchRespondPayloadSchema>;
+
+export interface RematchCommandResponse {
+  success: boolean;
+  error?: string;
+  deadlineTs?: number;
+}
+
+export const RematchStatusSchema = z.enum(['pending', 'accepted', 'declined', 'expired']);
+export type RematchStatus = z.infer<typeof RematchStatusSchema>;
+
+export interface RematchStatePayload {
+  roomCode: string;
+  status: RematchStatus;
+  acceptedPlayerIds: string[];
+  requiredPlayerIds: string[];
+  deadlineTs?: number;
+}
+
+export const InviteCreatePayloadSchema = z.object({
+  displayName: z.string().min(1).max(50),
+  houseRules: HouseRulesSchema.optional(),
+  inviterId: z.string().min(1).max(80).optional(),
+});
+export type InviteCreatePayload = z.infer<typeof InviteCreatePayloadSchema>;
+
+export interface InviteCreateResponse {
+  success: boolean;
+  code?: string;
+  shareUrl?: string;
+  sessionToken?: string;
+  playerId?: string;
+  inviterId?: string;
+  error?: string;
+}
+
+export const InviteEventKindSchema = z.enum(['invite_sent', 'invite_opened', 'invite_joined']);
+export type InviteEventKind = z.infer<typeof InviteEventKindSchema>;
+
+export interface InviteEvent {
+  kind: InviteEventKind;
+  code: string;
+  inviterId: string;
+  at: string;
+}
+
+export interface DiceAuditRecord {
+  matchId: string;
+  turn: number;
+  playerId: string;
+  value: number;
+  timestamp: string;
+}
+
+export interface RecentOpponent {
+  id: string;
+  displayName: string;
+  blocked: boolean;
+}
+
+export interface RecentOpponentsResponse {
+  success: boolean;
+  opponents?: RecentOpponent[];
+  error?: string;
+}
