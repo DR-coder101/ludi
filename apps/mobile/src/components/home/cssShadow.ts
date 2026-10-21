@@ -14,7 +14,6 @@ export function cssShadow(x: number, y: number, blur: number, shadowColor: strin
   };
 }
 
-/** `inset 0 1px 0`: the sliver between a rounded rect and the same rect moved down 1px. */
 export function topHighlightPath(w: number, h: number, r: number): string {
   const rect = (y: number) =>
     `M${r} ${y}H${w - r}A${r} ${r} 0 0 1 ${w} ${y + r}V${y + h - r}A${r} ${r} 0 0 1 ${w - r} ${y + h}H${r}A${r} ${r} 0 0 1 0 ${y + h - r}V${y + r}A${r} ${r} 0 0 1 ${r} ${y}Z`;

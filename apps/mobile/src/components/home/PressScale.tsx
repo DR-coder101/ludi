@@ -10,13 +10,10 @@ interface PressScaleProps {
   onPress?: () => void;
   busy?: boolean;
   style?: StyleProp<ViewStyle>;
-  /** Layout style for the pressable itself (flex in a row). */
   containerStyle?: StyleProp<ViewStyle>;
-  /** Receives the 0→1 press progress, for pressed-state overlays. */
   children: (pressed: SharedValue<number>) => ReactNode;
 }
 
-/** Button press from tokens.md: scale 0.97 over 90 ms with a light haptic. */
 export function PressScale({ label, hint, onPress, busy, style, containerStyle, children }: PressScaleProps) {
   const pressed = useSharedValue(0);
   const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: 1 - pressed.value * (1 - motion.pressScale) }] }));

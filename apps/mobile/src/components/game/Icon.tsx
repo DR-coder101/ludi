@@ -32,7 +32,6 @@ export type IconName =
   | 'trophy'
   | 'bolt';
 
-/** Stroke icons from the design pack (24×24, round caps). */
 function glyph(name: IconName) {
   switch (name) {
     case 'menu':

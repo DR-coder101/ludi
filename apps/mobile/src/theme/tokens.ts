@@ -27,7 +27,6 @@ export const color = {
   silver: '#D9DCE1',
   hot: '#FF3B7F',
   white: '#FFFFFF',
-  /** Home lobby v2 (approved mockup). */
   magenta: '#FF1361',
   orange: '#FB923C',
   card: '#181E24',
@@ -99,13 +98,6 @@ export const motion = {
   pressMs: 90,
   /** Dice tumble before the face settles. */
   diceRollMs: 650,
-  /** Home speaker cone: kick out, decay, rest (one cycle ≈ 1.25 s, half-time at ~96 BPM). */
-  kickMs: 90,
-  kickDecayMs: 420,
-  kickRestMs: 740,
-  kickScale: 0.014,
-  /** Home vinyl ring, one full turn. */
-  vinylTurnMs: 40000,
 } as const;
 
 export const layout = {

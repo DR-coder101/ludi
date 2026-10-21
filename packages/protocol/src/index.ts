@@ -500,7 +500,6 @@ export interface RecentOpponentsResponse {
   error?: string;
 }
 
-/** Hide the live-player count until at least this many sockets are connected. */
 export const ONLINE_COUNT_VISIBLE_MIN = 20;
 
 export function visibleOnlineCount(count: number): number | null {
