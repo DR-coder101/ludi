@@ -387,6 +387,7 @@ export type LiveAdminAction = z.infer<typeof LiveAdminActionSchema>;
 
 export const LivePhaseSchema = z.enum(['INTRO', 'WAITING', 'COUNTDOWN', 'PLAYING', 'WINNER']);
 export const TownIdSchema = z.enum(['kingston', 'ochoRios', 'montegoBay', 'negril']);
+export type TownId = z.infer<typeof TownIdSchema>;
 
 export const OccupantSchema = z.object({
   platform: z.string(),
@@ -497,4 +498,88 @@ export interface RecentOpponentsResponse {
   success: boolean;
   opponents?: RecentOpponent[];
   error?: string;
+}
+
+/** Hide the live-player count until at least this many sockets are connected. */
+export const ONLINE_COUNT_VISIBLE_MIN = 20;
+
+export function visibleOnlineCount(count: number): number | null {
+  if (!Number.isFinite(count) || count < ONLINE_COUNT_VISIBLE_MIN) {
+    return null;
+  }
+  return Math.floor(count);
+}
+
+export const PlayerPrefsSchema = z.object({
+  hometown: TownIdSchema.nullable(),
+  tournamentNotify: z.boolean(),
+});
+export type PlayerPrefs = z.infer<typeof PlayerPrefsSchema>;
+
+export const UpdatePlayerPrefsPayloadSchema = z.object({
+  hometown: TownIdSchema.nullable().optional(),
+  tournamentNotify: z.boolean().optional(),
+});
+export type UpdatePlayerPrefsPayload = z.infer<typeof UpdatePlayerPrefsPayloadSchema>;
+
+export interface PlayerPrefsResponse {
+  success: boolean;
+  prefs?: PlayerPrefs;
+  error?: string;
+}
+
+export const LeaderboardScopeSchema = z.enum(['weekly', 'town']);
+export type LeaderboardScope = z.infer<typeof LeaderboardScopeSchema>;
+
+export const LeaderboardEntrySchema = z.object({
+  userId: z.string(),
+  displayName: z.string(),
+  initials: z.string(),
+  hometown: TownIdSchema.nullable(),
+  points: z.number().int(),
+  rank: z.number().int().positive(),
+});
+export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
+
+export const LeaderboardSchema = z.object({
+  scope: LeaderboardScopeSchema,
+  week: z.string(),
+  town: TownIdSchema.nullable(),
+  entries: z.array(LeaderboardEntrySchema),
+  you: z.object({
+    rank: z.number().int().positive().nullable(),
+    points: z.number().int().nonnegative(),
+    entry: LeaderboardEntrySchema.nullable(),
+  }),
+});
+export type Leaderboard = z.infer<typeof LeaderboardSchema>;
+
+export interface LeaderboardResponse {
+  success: boolean;
+  leaderboard?: Leaderboard;
+  error?: string;
+}
+
+export interface PresenceResponse {
+  success: boolean;
+  count?: number;
+  error?: string;
+}
+
+export const CasualMatchPayloadSchema = z.object({
+  displayName: z.string().min(1).max(50),
+});
+export type CasualMatchPayload = z.infer<typeof CasualMatchPayloadSchema>;
+
+export interface CasualMatchResponse {
+  success: boolean;
+  code?: string;
+  sessionToken?: string;
+  playerId?: string;
+  error?: string;
+}
+
+export interface HomeFlagsResponse {
+  success: boolean;
+  ranked: boolean;
 }
