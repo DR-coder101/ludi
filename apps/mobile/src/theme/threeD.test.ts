@@ -11,6 +11,9 @@ describe('Stitch 3D recipes', () => {
     expect(BUTTON_3D.dark.lipRest).toBe(6);
     expect(BUTTON_3D.green.lip).toBe('#006028');
     expect(BUTTON_3D.green.lipRest).toBe(5);
+    expect(BUTTON_3D.red.lip).toBe('#6B0714');
+    expect(BUTTON_3D.red.lipRest).toBe(5);
+    expect(BUTTON_3D.red.face.map((stop) => stop.color)).toEqual(['#FF4A5F', '#E61A35', '#A50F22']);
   });
 
   it('prints the Stitch box-shadow strings for rest and press', () => {
@@ -20,11 +23,14 @@ describe('Stitch 3D recipes', () => {
     expect(button3DShadow('dark', true)).toBe('0 1px 0 0 #0B0E11');
     expect(button3DShadow('green', false)).toBe('0 5px 0 0 #006028, 0 8px 18px rgba(0, 176, 79, 0.4)');
     expect(button3DShadow('green', true)).toBe('0 1px 0 0 #006028');
+    expect(button3DShadow('red', false)).toBe('0 5px 0 0 #6B0714, 0 10px 18px rgba(0,0,0,0.5)');
+    expect(button3DShadow('red', true)).toBe('0 1px 0 0 #6B0714');
   });
 
   it('prints the Stitch card glow and green lip', () => {
     expect(card3DShadow('gold')).toBe('0 12px 28px rgba(255, 208, 0, 0.35)');
     expect(card3DShadow('green')).toBe('0 5px 0 0 #006028, 0 8px 18px rgba(0, 176, 79, 0.4)');
+    expect(card3DShadow('carbon')).toBe('0 8px 0 0 #050607, 0 14px 28px rgba(0,0,0,0.6)');
     expect(CARD_3D.gold.face[0]?.color).toBe('#FFD000');
     expect(CARD_3D.green.face.map((stop) => stop.color)).toEqual(['#0d1f14', '#102419', '#0a1510']);
   });

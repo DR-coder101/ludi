@@ -138,7 +138,13 @@ importers:
       '@expo-google-fonts/archivo-black':
         specifier: ^0.4.1
         version: 0.4.1
+      '@expo-google-fonts/bebas-neue':
+        specifier: ^0.4.1
+        version: 0.4.1
       '@expo-google-fonts/inter':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/montserrat':
         specifier: ^0.4.2
         version: 0.4.2
       '@expo/metro-runtime':
@@ -1629,8 +1635,14 @@ packages:
   '@expo-google-fonts/archivo-black@0.4.1':
     resolution: {integrity: sha512-Zi4M9NPyKBllCd8TobvYRRAAm/dbhnrYTywbkfGVOJ7cThEetli+jYBh/deAjzOEqYMTrlSM89uEiherIPjkpQ==}
 
+  '@expo-google-fonts/bebas-neue@0.4.1':
+    resolution: {integrity: sha512-Ibnf0EQgMUj01tT/ws64RlsMQmOvDP+UDFW93bld0C/WwaOaCGWKgNnqxNkKxmL73y2kpT8EB4dkSNUOyAOEJA==}
+
   '@expo-google-fonts/inter@0.4.2':
     resolution: {integrity: sha512-syfiImMaDmq7cFi0of+waE2M4uSCyd16zgyWxdPOY7fN2VBmSLKEzkfbZgeOjJq61kSqPBNNtXjggiQiSD6gMQ==}
+
+  '@expo-google-fonts/montserrat@0.4.2':
+    resolution: {integrity: sha512-Xyq7rKJhhZOE1Xk4wKSSVoUeOkFmQEMhtZ3pdFrgYckGZMs115Apmld1AI8Ju+yrl5GzDdfRCCqRr33dvEDYUA==}
 
   '@expo/bunyan@4.0.1':
     resolution: {integrity: sha512-+Lla7nYSiHZirgK+U/uYzsLv/X+HaJienbD5AKX1UQZHYfWaP+9uuQluRB4GrEVWF0GZ7vEVp/jzaOT9k/SQlg==}
@@ -7226,7 +7238,11 @@ snapshots:
 
   '@expo-google-fonts/archivo-black@0.4.1': {}
 
+  '@expo-google-fonts/bebas-neue@0.4.1': {}
+
   '@expo-google-fonts/inter@0.4.2': {}
+
+  '@expo-google-fonts/montserrat@0.4.2': {}
 
   '@expo/bunyan@4.0.1':
     dependencies:
