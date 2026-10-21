@@ -10,7 +10,8 @@
     "start:tsx": "tsx src/index.ts",
     "lint": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "load-test": "tsx scripts/load-test.ts"
   },
   "dependencies": {
     "@ludi/protocol": "workspace:*",
