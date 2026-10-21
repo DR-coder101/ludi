@@ -66,7 +66,6 @@ export const RoomStateSchema = z.object({
 });
 export type RoomState = z.infer<typeof RoomStateSchema>;
 
-/** Returned on room:create / room:join when the server is at capacity. */
 export const SERVERS_BUSY = 'servers busy';
 
 export interface RoomCreateResponse {

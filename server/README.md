@@ -44,11 +44,10 @@ LIVEKIT_URL=...                    # LiveKit server URL (e.g., wss://your-projec
 SUPABASE_URL=...                   # Supabase project URL (e.g., https://xxxxx.supabase.co)
 SUPABASE_SERVICE_ROLE_KEY=...      # Supabase service role key (NEVER expose to client)
 
-# Growth (all optional, off or local-only by default)
-LUDI_DICE_AUDIT_PATH=              # JSONL path for the append-only dice audit log
-LUDI_MAX_ROOMS=                    # When set, new room:create / room:join return "servers busy"
-LUDI_REDIS_ADAPTER=0               # Set to 1 to attach the Socket.IO Redis adapter
-LUDI_REDIS_URL=                    # redis:// URL used only when LUDI_REDIS_ADAPTER=1
+LUDI_DICE_AUDIT_PATH=
+LUDI_MAX_ROOMS=
+LUDI_REDIS_ADAPTER=0
+LUDI_REDIS_URL=
 
 # Note: The server will run without Supabase configured, but M5.1 features
 # (auth, profiles, match history) will be disabled.

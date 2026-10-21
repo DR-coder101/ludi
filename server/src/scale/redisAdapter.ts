@@ -6,10 +6,6 @@ export function redisAdapterEnabled(env: NodeJS.ProcessEnv = process.env): boole
   return env[REDIS_ADAPTER_FLAG] === '1';
 }
 
-/**
- * Attaches Socket.IO Redis adapter when LUDI_REDIS_ADAPTER=1.
- * Off by default. Missing packages or LUDI_REDIS_URL leave the in-process adapter.
- */
 export async function maybeAttachRedisAdapter(
   io: Server,
   env: NodeJS.ProcessEnv = process.env,
