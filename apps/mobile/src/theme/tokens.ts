@@ -6,6 +6,7 @@ import type { Color as EngineColor } from '@ludi/rules';
 
 export const color = {
   bg: '#0B0B0C',
+  homeWash: '#080A0C',
   ink: '#141416',
   yard: '#0E0E10',
   line: 'rgba(255,255,255,0.08)',
@@ -27,6 +28,12 @@ export const color = {
   silver: '#D9DCE1',
   hot: '#FF3B7F',
   white: '#FFFFFF',
+  magenta: '#FF1361',
+  orange: '#FB923C',
+  card: '#181E24',
+  surface: '#12161A',
+  emerald: '#00B04F',
+  goldArcade: '#FFD000',
 } as const;
 
 /** Piece colours as drawn; engine ids map onto these via PLACES. */
@@ -92,13 +99,6 @@ export const motion = {
   pressMs: 90,
   /** Dice tumble before the face settles. */
   diceRollMs: 650,
-  /** Home speaker cone: kick out, decay, rest (one cycle ≈ 1.25 s, half-time at ~96 BPM). */
-  kickMs: 90,
-  kickDecayMs: 420,
-  kickRestMs: 740,
-  kickScale: 0.014,
-  /** Home vinyl ring, one full turn. */
-  vinylTurnMs: 40000,
 } as const;
 
 export const layout = {

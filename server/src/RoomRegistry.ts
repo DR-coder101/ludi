@@ -298,4 +298,8 @@ export class RoomRegistry {
   getRoomCount(): number {
     return this.rooms.size;
   }
+
+  listRooms(): RoomState[] {
+    return [...this.rooms.values()];
+  }
 }

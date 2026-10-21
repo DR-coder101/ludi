@@ -1,11 +1,11 @@
 # Home screen
 
-The landing screen offers online multiplayer, pass-and-play, and account entry. The rebuilt layout is the wordmark, two mode cards, and the sign-in strip on the marble backdrop.
+The landing screen is Dean's approved Home lobby: profile chip, LUDI hero, play-with-friends, quick match, vs bots, pass-and-play, weekly/town leaderboards, and a tournaments teaser.
 
 ## Sub-features
 
-- `home-guest` is signed-out `/dev/home`: ONLINE MULTIPLAYER, LOCAL PASS & PLAY, SIGN IN, SIGN UP.
-- `home-a11y` exposes the header "Ludi. Jamaican Ludo, Negril to Kingston. Four corners, one board."
+- `home-guest` is `/dev/home` with empty real-data states: Play with friends, Quick match, VS Bots, Pass & Play, empty leaderboards, Coming soon tournaments.
+- `home-a11y` exposes the header "Ludi. Jamaican Rules. Four corners, one board."
 
 ## How to get to it (user POV)
 

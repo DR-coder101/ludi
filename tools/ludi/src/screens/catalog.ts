@@ -31,7 +31,7 @@ export const SCREENS: readonly ScreenSpec[] = [
     path: '/dev/home',
     waitFor: {
       role: 'heading',
-      name: 'Ludi. Jamaican Ludo, Negril to Kingston. Four corners, one board.',
+      name: 'Ludi. Jamaican Rules. Four corners, one board.',
     },
     file: 'home.png',
   },

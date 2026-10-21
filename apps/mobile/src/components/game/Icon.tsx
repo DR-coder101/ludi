@@ -24,9 +24,14 @@ export type IconName =
   | 'refresh'
   | 'home'
   | 'flip'
-  | 'leave';
+  | 'leave'
+  | 'bell'
+  | 'key'
+  | 'robot'
+  | 'ranking'
+  | 'trophy'
+  | 'bolt';
 
-/** Stroke icons from the design pack (24×24, round caps). */
 function glyph(name: IconName) {
   switch (name) {
     case 'menu':
@@ -152,6 +157,43 @@ function glyph(name: IconName) {
       return (
         <Path d="M4.8 14.2c.6-1.6 2.4-2.7 4.4-2.7h5.6c2 0 3.8 1.1 4.4 2.7M6.6 16.6c.4-1.5 2-2.5 3.8-2.5h3.2c1.8 0 3.4 1 3.8 2.5" />
       );
+    case 'bell':
+      return (
+        <>
+          <Path d="M6 16h12l-1.2-2.2V10a4.8 4.8 0 1 0-9.6 0v3.8L6 16z" />
+          <Path d="M10 17.2a2 2 0 0 0 4 0" />
+        </>
+      );
+    case 'key':
+      return (
+        <>
+          <Circle cx={8} cy={14} r={3.2} />
+          <Path d="M11 14h9l-2 2.4M17.2 14v2.6" />
+        </>
+      );
+    case 'robot':
+      return (
+        <>
+          <Rect x={5} y={7} width={14} height={11} rx={2.4} />
+          <Path d="M12 7V4M8.5 12h.01M15.5 12h.01M9 15h6" strokeWidth={2.2} />
+        </>
+      );
+    case 'ranking':
+      return (
+        <>
+          <Path d="M5 18V11h4v7zM10 18V7h4v11zM15 18v-5h4v5z" />
+        </>
+      );
+    case 'trophy':
+      return (
+        <>
+          <Path d="M8 4h8v5a4 4 0 0 1-8 0V4z" />
+          <Path d="M8 6.5H5.5A2.5 2.5 0 0 0 8 9M16 6.5h2.5A2.5 2.5 0 0 1 16 9" />
+          <Path d="M12 13v3M9 20h6M10.5 20v-4h3v4" />
+        </>
+      );
+    case 'bolt':
+      return <Path d="M13 3L6 13h5l-1 8 8-12h-5z" />;
     default: {
       const _never: never = name;
       return _never;

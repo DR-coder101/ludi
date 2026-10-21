@@ -19,6 +19,12 @@ import type {
   InviteCreateResponse,
   RecentOpponentsResponse,
   RematchStatePayload,
+  LeaderboardResponse,
+  PresenceResponse,
+  PlayerPrefsResponse,
+  CasualMatchResponse,
+  HomeFlagsResponse,
+  MatchHistory,
 } from '@ludi/protocol';
 import { 
   RoomCreatePayloadSchema, 
@@ -36,6 +42,9 @@ import {
   InviteCreatePayloadSchema,
   RematchOfferPayloadSchema,
   RematchRespondPayloadSchema,
+  CasualMatchPayloadSchema,
+  UpdatePlayerPrefsPayloadSchema,
+  LeaderboardScopeSchema,
 } from '@ludi/protocol';
 import { createDiceAuditLog, type DiceAuditLog } from './dice/auditLog.js';
 import { createInviteLog } from './invite/inviteLog.js';
@@ -56,6 +65,10 @@ import { createMatchHistoryService, type MatchData } from './services/matchHisto
 import { buildFinishedMatch } from './buildFinishedMatch.js';
 import { verifyHandshakeUser } from './auth/verifyHandshakeUser.js';
 import { runInBackground } from './runInBackground.js';
+import { createPlayerPrefsStore } from './home/playerPrefs.js';
+import { createMatchLedger } from './home/matchLedger.js';
+import { rankWeekly, parseTown } from './home/leaderboard.js';
+import { findOpenPublicLobby, casualHouseRules } from './home/casualMatch.js';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from './db/types.js';
 
@@ -97,6 +110,9 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
   const playerToAuthUserId = new Map<string, string>();
   const inviteRooms = new Set<string>();
   const inviteInviterByCode = new Map<string, string>();
+  const publicRooms = new Set<string>();
+  const playerPrefs = createPlayerPrefsStore();
+  const matchLedger = createMatchLedger();
 
   const diceAudit = config.diceAudit ?? createDiceAuditLog({
     filePath: config.diceAuditPath ?? process.env.LUDI_DICE_AUDIT_PATH,
@@ -225,6 +241,119 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     inviteLog.record('invite_opened', code, rawInviter);
     const scheme = `ludi://room/${code}`;
     res.status(200).type('html').send(inviteLandingHtml(code, scheme));
+  });
+
+  app.get('/presence', (_req, res) => {
+    const response: PresenceResponse = {
+      success: true,
+      count: io.sockets.sockets.size,
+    };
+    res.json(response);
+  });
+
+  app.get('/home/flags', (_req, res) => {
+    const response: HomeFlagsResponse = {
+      success: true,
+      ranked: process.env.LUDI_RANKED === '1',
+    };
+    res.json(response);
+  });
+
+  app.get('/prefs', (req, res) => {
+    const viewerId = viewerIdFromRequest(req);
+    if (!viewerId) {
+      const response: PlayerPrefsResponse = { success: false, error: 'Missing player id' };
+      res.status(401).json(response);
+      return;
+    }
+    const response: PlayerPrefsResponse = { success: true, prefs: playerPrefs.get(viewerId) };
+    res.json(response);
+  });
+
+  app.put('/prefs', (req, res) => {
+    const viewerId = viewerIdFromRequest(req);
+    if (!viewerId) {
+      const response: PlayerPrefsResponse = { success: false, error: 'Missing player id' };
+      res.status(401).json(response);
+      return;
+    }
+    const parsed = UpdatePlayerPrefsPayloadSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      const response: PlayerPrefsResponse = { success: false, error: 'Invalid payload' };
+      res.status(400).json(response);
+      return;
+    }
+    const response: PlayerPrefsResponse = { success: true, prefs: playerPrefs.put(viewerId, parsed.data) };
+    res.json(response);
+  });
+
+  app.get('/leaderboard', (req, res) => {
+    const scopeParsed = LeaderboardScopeSchema.safeParse(req.query.scope ?? 'weekly');
+    if (!scopeParsed.success) {
+      const response: LeaderboardResponse = { success: false, error: 'Invalid scope' };
+      res.status(400).json(response);
+      return;
+    }
+    const town = parseTown(req.query.town);
+    if (scopeParsed.data === 'town' && !town) {
+      const response: LeaderboardResponse = { success: false, error: 'Missing town' };
+      res.status(400).json(response);
+      return;
+    }
+    const viewerId = viewerIdFromRequest(req) ?? null;
+    const now = new Date((config.now ?? Date.now)());
+    const leaderboard = rankWeekly({
+      matches: matchLedger.list(),
+      now,
+      viewerId,
+      scope: scopeParsed.data,
+      town,
+      prefsOf: (userId) => playerPrefs.get(userId),
+    });
+    const response: LeaderboardResponse = { success: true, leaderboard };
+    res.json(response);
+  });
+
+  app.post('/matchmaking/casual', (req, res) => {
+    const gate = rejectIfBusy();
+    if (gate.busy) {
+      const response: CasualMatchResponse = { success: false, error: gate.error };
+      res.status(503).json(response);
+      return;
+    }
+    const parsed = CasualMatchPayloadSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      const response: CasualMatchResponse = { success: false, error: 'Invalid payload' };
+      res.status(400).json(response);
+      return;
+    }
+    const sessionToken = roomRegistry.generateSessionToken();
+    const open = findOpenPublicLobby(roomRegistry.listRooms(), publicRooms);
+    if (open) {
+      const joined = roomRegistry.joinRoom(open.roomCode, parsed.data.displayName, sessionToken);
+      if (!joined.success || !joined.playerId) {
+        const response: CasualMatchResponse = { success: false, error: joined.error ?? 'Join failed' };
+        res.status(409).json(response);
+        return;
+      }
+      const response: CasualMatchResponse = {
+        success: true,
+        code: open.roomCode,
+        sessionToken,
+        playerId: joined.playerId,
+      };
+      res.status(200).json(response);
+      return;
+    }
+    const created = roomRegistry.createRoom(parsed.data.displayName, casualHouseRules(), sessionToken);
+    publicRooms.add(created.roomCode);
+    const response: CasualMatchResponse = {
+      success: true,
+      code: created.roomCode,
+      sessionToken,
+      playerId: created.playerId,
+    };
+    res.status(201).json(response);
   });
 
   app.get('/opponents/recent', (req, res) => {
@@ -539,6 +668,34 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     return playerToAuthUserId.get(playerId) ?? null;
   }
 
+  function rememberFinishedMatch(room: RoomState, match: MatchData): void {
+    const names = new Map<string, string>();
+    for (const player of room.players) {
+      names.set(player.id, player.displayName);
+      const authId = historyUserId(player.id);
+      if (authId) {
+        names.set(authId, player.displayName);
+      }
+    }
+    const history: MatchHistory = {
+      id: `${match.roomCode}:${match.endedAt.toISOString()}`,
+      startedAt: match.startedAt.toISOString(),
+      endedAt: match.endedAt.toISOString(),
+      winnerId: match.winnerId,
+      winnerIsBot: match.winnerId == null,
+      houseRules: match.houseRules,
+      players: match.players
+        .filter((player): player is MatchData['players'][number] & { userId: string } => typeof player.userId === 'string')
+        .map((player) => ({
+          userId: player.userId,
+          displayName: names.get(player.userId) ?? 'Player',
+          color: player.color,
+          finalPosition: player.finalPosition,
+        })),
+    };
+    matchLedger.add(history);
+  }
+
   async function persistMatchHistory(match: MatchData): Promise<void> {
     if (!matchHistoryService) {
       return;
@@ -678,8 +835,11 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
         game.startedAt,
         historyUserId,
       );
-      if (match !== null && matchHistoryService) {
-        runInBackground(`match-history:${match.roomCode}`, () => persistMatchHistory(match));
+      if (match !== null) {
+        rememberFinishedMatch(room, match);
+        if (matchHistoryService) {
+          runInBackground(`match-history:${match.roomCode}`, () => persistMatchHistory(match));
+        }
       }
       return;
     }
@@ -1380,6 +1540,9 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     io,
     diceAudit,
     inviteLog,
+    playerPrefs,
+    matchLedger,
+    publicRooms,
     recentOpponents,
     rematches,
     capacity,
