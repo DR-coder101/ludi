@@ -180,6 +180,12 @@ export async function startAdminHost(opts: {
       json(res, 200, { ok: true, events: result.events, snapshot: result.after });
       return;
     }
+    if (url.pathname === '/overlay') {
+      // Trailing slash so the overlay's relative asset paths resolve under /overlay/.
+      res.writeHead(302, { location: `/overlay/${url.search}` });
+      res.end();
+      return;
+    }
     if (url.pathname === '/overlay' || url.pathname.startsWith('/overlay/')) {
       runtime.noteOverlayHit();
       if (!overlayDir) {

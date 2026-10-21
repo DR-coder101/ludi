@@ -2,8 +2,9 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  // The admin host serves the overlay under /overlay/.
-  base: '/overlay/',
+  // Relative asset paths: the admin host serves the overlay under /overlay/,
+  // and the screens check serves the build from the root.
+  base: './',
   plugins: [react()],
   server: {
     host: '127.0.0.1',
