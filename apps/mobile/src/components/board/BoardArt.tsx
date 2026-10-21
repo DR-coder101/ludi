@@ -34,7 +34,7 @@ import type { BoardModel, YardView } from './boardModel';
 import { PieceDefs, PieceGlyph } from './PieceGlyph';
 import { JAMAICA } from './jamaica';
 import { islandTransform, MiniMap } from './MiniMap';
-import { accent, color, font, PLACES, piece as PIECE, TURN_ORDER, type Corner, type PieceColor } from '../../theme/tokens';
+import { accent, boardFont, color, font, PLACES, piece as PIECE, TURN_ORDER, type Corner, type PieceColor } from '../../theme/tokens';
 
 export const C = 20;
 export const UNITS = 380;
@@ -42,7 +42,7 @@ const YARD = 8 * C;
 
 export const TRACK_PIECE_R = 7.4;
 export const YARD_PIECE_R = 9.6;
-export const YARD_PORTRAIT = { dx: 90, dy: 13, w: 57, h: 70 } as const;
+export const YARD_PORTRAIT = { dx: 92, dy: 14, w: 54, h: 72 } as const;
 
 type Dir = 'right' | 'down' | 'left' | 'up';
 const ROT: Record<Dir, number> = { right: 0, down: 90, left: 180, up: 270 };
@@ -100,12 +100,15 @@ const TrackCells = React.memo(function TrackCells() {
     <G>
       {TRACK_CELLS.map(({ row, col }) => {
         const fill = STRIPE[outerIndex(row, col) % 4];
+        const x = col * C + 0.5;
+        const y = row * C + 0.5;
+        const s = C - 1;
         return (
           <G key={`t${row}-${col}`}>
-            <Rect x={col * C} y={row * C} width={C} height={C} fill={fill} />
-            {fill !== color.bg ? (
-              <Rect x={col * C} y={row * C} width={C} height={C} fill="url(#halftone-s)" opacity={0.1} />
-            ) : null}
+            <Rect x={x} y={y} width={s} height={s} rx={2.4} fill={fill} />
+            {fill !== color.bg ? <Rect x={x} y={y} width={s} height={s} rx={2.4} fill="url(#halftone-s)" opacity={0.1} /> : null}
+            <Path d={`M${x + 1.2} ${y + 1.1}h${s - 2.4}`} stroke="rgba(255,255,255,0.35)" strokeWidth={0.8} />
+            <Path d={`M${x + 1.2} ${y + s - 1.2}h${s - 2.4}`} stroke="rgba(0,0,0,0.35)" strokeWidth={1.2} />
           </G>
         );
       })}
@@ -265,37 +268,66 @@ function MicGlyph({ x, y, muted }: { x: number; y: number; muted: boolean }) {
   );
 }
 
-/** Player video tile placeholder: silhouette, name bar, and with video on, mic state and a LIVE badge on the active player. */
-function VideoTile({ id, x, y, name, tint, active, muted, video }: { id: string; x: number; y: number; name: string; tint: string; active: boolean; muted: boolean; video: boolean }) {
+function VideoTile({
+  id,
+  x,
+  y,
+  name,
+  tint,
+  you,
+  muted,
+  video,
+}: {
+  id: string;
+  x: number;
+  y: number;
+  name: string;
+  tint: string;
+  you: boolean;
+  muted: boolean;
+  video: boolean;
+}) {
   const w = YARD_PORTRAIT.w;
   const h = YARD_PORTRAIT.h;
   const mid = x + w / 2;
   return (
     <G>
       <Defs>
+        <LinearGradient id={`av-${id}`} x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor={tint} />
+          <Stop offset="1" stopColor="#1a0c0e" />
+        </LinearGradient>
         <ClipPath id={`clip-${id}`}>
-          <Rect x={x} y={y} width={w} height={h} rx={7} />
+          <Rect x={x} y={y} width={w} height={h} rx={8} />
         </ClipPath>
       </Defs>
-      <Rect x={x} y={y} width={w} height={h} rx={7} fill="url(#vid)" />
-      <G clipPath={`url(#clip-${id})`} fill="#7b7d83">
-        <Circle cx={mid} cy={y + h * 0.4} r={w * 0.19} />
-        <Ellipse cx={mid} cy={y + h * 0.98} rx={w * 0.4} ry={h * 0.3} />
-        <Rect x={x} y={y + h - 15} width={w} height={15} fill="#000" opacity={0.55} />
+      <Rect x={x} y={y + 3} width={w} height={h} rx={8} fill="#050607" />
+      <Rect x={x} y={y} width={w} height={h} rx={8} fill={`url(#av-${id})`} />
+      <G clipPath={`url(#clip-${id})`} fill="#7a4a24">
+        <Circle cx={mid} cy={y + h * 0.38} r={w * 0.22} />
+        <Ellipse cx={mid} cy={y + h * 0.98} rx={w * 0.38} ry={h * 0.28} />
+        <Rect x={x} y={y + h - 16} width={w} height={16} fill="#000" opacity={0.7} />
       </G>
-      <Rect x={x} y={y} width={w} height={h} rx={7} fill="none" stroke={tint} strokeWidth={active ? 2.2 : 1.3} />
-      <Text x={x + 5} y={y + h - 4.5} fontFamily={font.bodyBold} fontSize={7.6} fill={color.white}>
+      <Rect x={x} y={y} width={w} height={h} rx={8} fill="none" stroke={tint} strokeWidth={2} />
+      <Text
+        x={mid}
+        y={y + h - 5}
+        fontFamily={boardFont.bodyBlack}
+        fontSize={8}
+        fill={color.white}
+        textAnchor="middle"
+      >
         {name}
       </Text>
-      {video ? <MicGlyph x={x + w - 11} y={y + h - 12.5} muted={muted} /> : null}
-      {video && active ? (
+      {you ? (
         <G>
-          <Rect x={x + 4} y={y + 4} width={20} height={9} rx={4.5} fill={color.hot} />
-          <Text x={x + 14} y={y + 10.6} fontFamily={font.sticker} fontSize={5.6} fill={color.white} textAnchor="middle">
-            LIVE
+          <Rect x={x + 3} y={y + 3} width={18} height={8} rx={3} fill={color.red} />
+          <Text x={x + 12} y={y + 9} fontFamily={boardFont.bodyBlack} fontSize={6} fill={color.white} textAnchor="middle">
+            YOU
           </Text>
         </G>
       ) : null}
+      {video ? <MicGlyph x={x + w - 12} y={y + 3} muted={muted} /> : null}
     </G>
   );
 }
@@ -336,9 +368,8 @@ function Yard({ view, labels }: { view: YardView; labels: YardLabels }) {
   const y = tl.row * C;
   const [ox, oy] = outerCorner(place.corner, x, y);
   const id = place.pin;
-  const fs = place.lines.length > 1 ? 19.5 : place.lines[0].length > 6 ? 20 : 24;
-  const mapY = y + 33 + (place.lines.length - 1) * (fs - 1) + 7;
-  const name = labels.names[engine];
+  const mapY = y + 22 + place.lines.length * 14 + 14;
+  const name = labels.names[engine] ?? place.full;
   const gridLines = [1, 2, 3, 4, 5, 6, 7];
 
   return (
@@ -358,7 +389,7 @@ function Yard({ view, labels }: { view: YardView; labels: YardLabels }) {
           <Rect x={x} y={y} width={YARD} height={YARD} />
         </ClipPath>
       </Defs>
-      <Rect x={x} y={y} width={YARD} height={YARD} fill={color.yard} />
+      <Rect x={x} y={y} width={YARD} height={YARD} fill={view.active ? '#1e1315' : '#171f1b'} />
       {gridLines.map((i) => (
         <G key={i}>
           <Line x1={x + i * C} y1={y} x2={x + i * C} y2={y + YARD} stroke={color.white} strokeOpacity={0.05} strokeWidth={0.6} />
@@ -372,7 +403,7 @@ function Yard({ view, labels }: { view: YardView; labels: YardLabels }) {
         height={YARD}
         fill={`url(#ht-${id})`}
         mask={`url(#hm-${id})`}
-        opacity={p === 'black' ? 0.2 : 0.3}
+        opacity={p === 'black' ? 0.16 : 0.22}
       />
       <G clipPath={`url(#yc-${id})`}>
         {[1, 2, 3, 4, 5].map((i) => (
@@ -381,37 +412,34 @@ function Yard({ view, labels }: { view: YardView; labels: YardLabels }) {
       </G>
       {view.active ? (
         <G>
-          <Rect x={x + 5} y={y + 5} width={150} height={150} rx={9} fill="none" stroke={a} strokeOpacity={0.12} strokeWidth={10} />
-          <Rect x={x + 5} y={y + 5} width={150} height={150} rx={9} fill="none" stroke={a} strokeOpacity={0.22} strokeWidth={6} />
+          <Rect x={x + 5} y={y + 5} width={150} height={150} rx={10} fill="none" stroke={a} strokeOpacity={0.18} strokeWidth={8} />
         </G>
       ) : null}
-      <Rect x={x + 5} y={y + 5} width={150} height={150} rx={9} fill="none" stroke={a} strokeWidth={view.active ? 2.6 : 1.6} />
-      <Rect
-        x={x + 8.5}
-        y={y + 8.5}
-        width={143}
-        height={143}
-        rx={6.5}
-        fill="none"
-        stroke={a}
-        strokeOpacity={0.35}
-        strokeWidth={0.7}
-        strokeDasharray="1.5 2.5"
-      />
+      <Rect x={x + 5} y={y + 5} width={150} height={150} rx={10} fill="none" stroke={a} strokeWidth={view.active ? 2.8 : 2} />
       {place.lines.map((ln, i) => (
-        <Text key={ln} x={x + 14} y={y + 33 + i * (fs - 1)} fontFamily={font.display} fontSize={fs} fill={a} letterSpacing={0.3}>
+        <Text key={ln} x={x + 12} y={y + 28 + i * 14} fontFamily={boardFont.display} fontSize={15} fill={a} letterSpacing={0.4}>
           {ln}
         </Text>
       ))}
-      <MiniMap pin={place.pin} x={x + 14} y={mapY} w={62} pinColor={a} />
+      <Circle cx={x + 15} cy={y + 22 + place.lines.length * 14} r={1.6} fill={view.active ? color.red : a} />
+      <Text
+        x={x + 20}
+        y={y + 25 + place.lines.length * 14}
+        fontFamily={boardFont.bodyBold}
+        fontSize={8}
+        fill={view.active ? '#F87171' : '#9CA3AF'}
+      >
+        {view.active ? 'TURN ACTIVE' : place.compass}
+      </Text>
+      <MiniMap pin={place.pin} x={x + 12} y={mapY} w={56} pinColor={color.white} pinStroke={color.bg} base={a} />
       {view.seated && (labels.seats?.[engine]?.kind ?? 'none') === 'none' ? (
         <VideoTile
           id={id}
           x={x + YARD_PORTRAIT.dx}
           y={y + YARD_PORTRAIT.dy}
-          name={`${name ?? place.full}${labels.me === engine ? ' · You' : ''}`}
+          name={name}
           tint={a}
-          active={view.active}
+          you={labels.me === engine}
           muted={labels.muted[engine] ?? false}
           video={labels.video}
         />

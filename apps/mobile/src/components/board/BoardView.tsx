@@ -160,15 +160,14 @@ function Bevel({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
       <Defs>
-        <LinearGradient id="bevel" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#2a2a2e" />
-          <Stop offset="0.6" stopColor="#050506" />
-          <Stop offset="1" stopColor="#1c1c1f" />
+        <LinearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#1a221f" />
+          <Stop offset="1" stopColor="#0c1210" />
         </LinearGradient>
       </Defs>
-      <Rect width={size} height={size} rx={10} fill="url(#bevel)" />
-      <Rect x={0.5} y={0.5} width={size - 1} height={size - 1} rx={9.5} fill="none" stroke={color.gold} strokeOpacity={0.25} strokeWidth={1} />
-      <Rect x={8} y={1} width={size - 16} height={1} fill={color.white} opacity={0.12} />
+      <Rect width={size} height={size} rx={16} fill="url(#bevel)" />
+      <Rect x={1} y={1} width={size - 2} height={size - 2} rx={15} fill="none" stroke="#2C3D38" strokeWidth={2} />
+      <Rect x={10} y={2} width={size - 20} height={2} fill={color.white} opacity={0.15} />
     </Svg>
   );
 }
@@ -240,16 +239,17 @@ export function BoardView({ size, model, labels, onTokenPress, hop, onHopDone }:
 
 const styles = StyleSheet.create({
   frame: {
-    borderRadius: 10,
+    borderRadius: 16,
     padding: layout.boardBevel,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 18 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
+    backgroundColor: '#0c1210',
+    shadowColor: '#3B2A00',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
     elevation: 16,
   },
   inner: {
-    borderRadius: 6,
+    borderRadius: 10,
     overflow: 'hidden',
   },
   ripple: {
