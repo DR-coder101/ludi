@@ -1,7 +1,7 @@
 import { motion, useReducedMotion } from 'motion/react';
 import { BADGE_WINNER_CAN_STAY, TOWN } from '../theme.js';
 import type { OverlayView, SeatView } from '../view/types.js';
-import { CheckIcon, CrownIcon, DieFiveAltIcon, DieFiveIcon, UsersIcon } from '../icons.js';
+import { CheckIcon, CrownIcon, UsersIcon } from '../icons.js';
 
 type Waiting = Extract<OverlayView, { kind: 'waiting' }>;
 
@@ -78,13 +78,22 @@ export function WaitingScreen({ view, settle }: Props) {
         </div>
       </div>
       <div className="sky-window">
-        <div className="dice-peek">
-          <span className="die-peek a">
-            <DieFiveIcon size={78} />
-          </span>
-          <span className="die-peek b">
-            <DieFiveAltIcon size={62} />
-          </span>
+        <div className="howto-card" data-safe="how-to-play">
+          <div className="howto-head">
+            <span className="howto-title">HOW TO PLAY</span>
+            <span className="howto-flag">
+              <i className="g" />
+              <i className="y" />
+              <i className="k" />
+            </span>
+          </div>
+          <ol className="howto-list">
+            <li><b>1</b><span>Type <em>!join</em> to play (4 per game)</span></li>
+            <li><b>2</b><span>On your turn type <em>!roll</em></span></li>
+            <li><b>3</b><span>Then <em>!move 1-4</em> to pick a piece</span></li>
+            <li><b>4</b><span>A <strong>6</strong> brings a piece out · land on someone to send them home</span></li>
+            <li><b>5</b><span>Get all 4 home to win · winner types <em>!stay</em> to keep their seat</span></li>
+          </ol>
         </div>
       </div>
       <div className={`join-pill${pulse ? ' pulse' : ''}`} data-safe="join-pill">
