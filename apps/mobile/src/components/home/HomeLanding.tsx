@@ -8,9 +8,10 @@ import { antonBold } from '../../theme/antonBold';
 import { useLudiFonts } from '../../theme/fonts';
 import { Icon, type IconName } from '../game/Icon';
 import { PressScale } from './PressScale';
-import { cssShadow } from './cssShadow';
 import { HomeHero } from './HomeHero';
 import { LobbyWash } from './LobbyWash';
+import { Button3D } from '../ui/Button3D';
+import { Card3D } from '../ui/Card3D';
 import {
   leaderboardEmptyCopy,
   onlineLabel,
@@ -221,7 +222,7 @@ function FriendsCard({
   onJoin: () => void;
 }) {
   return (
-    <View style={[styles.friends, cssShadow(0, 12, 28, color.goldArcade, 0.28, 8)]}>
+    <Card3D tone="gold">
       <View style={styles.friendsHead}>
         <View style={styles.friendsIcon}>
           <Icon name="users" size={22} color={color.goldArcade} />
@@ -232,24 +233,20 @@ function FriendsCard({
         </View>
       </View>
       <View style={styles.friendsRow}>
-        <PressScale label="Create room" busy={busy} onPress={onCreate} containerStyle={{ flex: 1 }} style={styles.darkBtn}>
-          {() => (
-            <View style={styles.btnInner}>
-              <Icon name="plus" size={14} color={color.goldArcade} />
-              <Text style={styles.darkBtnText}>CREATE ROOM</Text>
-            </View>
-          )}
-        </PressScale>
-        <PressScale label="Join code" onPress={onJoin} containerStyle={{ flex: 1 }} style={styles.goldBtn}>
-          {() => (
-            <View style={styles.btnInner}>
-              <Icon name="key" size={14} color={color.bg} />
-              <Text style={styles.goldBtnText}>JOIN CODE</Text>
-            </View>
-          )}
-        </PressScale>
+        <Button3D tone="dark" label="Create room" busy={busy} onPress={onCreate} style={{ flex: 1 }}>
+          <Icon name="plus" size={14} color={color.goldArcade} />
+          <Text style={styles.darkBtnText} numberOfLines={1}>
+            CREATE ROOM
+          </Text>
+        </Button3D>
+        <Button3D tone="gold" label="Join code" onPress={onJoin} style={{ flex: 1 }}>
+          <Icon name="key" size={14} color={color.bg} />
+          <Text style={styles.goldBtnText} numberOfLines={1}>
+            JOIN CODE
+          </Text>
+        </Button3D>
       </View>
-    </View>
+    </Card3D>
   );
 }
 
@@ -265,30 +262,28 @@ function QuickMatchCard({
   onPress: () => void;
 }) {
   return (
-    <PressScale label="Quick match" busy={busy} onPress={onPress} style={styles.quick}>
-      {() => (
-        <View style={styles.quickInner}>
-          <View style={styles.quickIcon}>
-            <Icon name="globe" size={22} color={color.bg} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <View style={styles.quickTitleRow}>
-              <Text style={styles.quickTitle}>QUICK MATCH</Text>
-              <View style={styles.instant}>
-                <Icon name="bolt" size={9} color={color.emerald} />
-                <Text style={styles.instantText}>INSTANT</Text>
-              </View>
-            </View>
-            <View style={styles.quickMeta}>
-              {online ? <Text style={styles.onlineText}>{online}</Text> : null}
-              {online && ranked ? <Text style={styles.metaDot}>•</Text> : null}
-              {ranked ? <Text style={styles.rankedText}>Ranked</Text> : null}
-            </View>
-          </View>
-          <Icon name="chevron" size={18} color="#6EE7B7" />
+    <Card3D tone="green" label="Quick match" onPress={busy ? undefined : onPress}>
+      <View style={styles.quickInner}>
+        <View style={styles.quickIcon}>
+          <Icon name="globe" size={22} color={color.bg} />
         </View>
-      )}
-    </PressScale>
+        <View style={{ flex: 1 }}>
+          <View style={styles.quickTitleRow}>
+            <Text style={styles.quickTitle}>QUICK MATCH</Text>
+            <View style={styles.instant}>
+              <Icon name="bolt" size={9} color={color.emerald} />
+              <Text style={styles.instantText}>INSTANT</Text>
+            </View>
+          </View>
+          <View style={styles.quickMeta}>
+            {online ? <Text style={styles.onlineText}>{online}</Text> : null}
+            {online && ranked ? <Text style={styles.metaDot}>•</Text> : null}
+            {ranked ? <Text style={styles.rankedText}>Ranked</Text> : null}
+          </View>
+        </View>
+        <Icon name="chevron" size={18} color="#6EE7B7" />
+      </View>
+    </Card3D>
   );
 }
 
@@ -441,19 +436,16 @@ function TournamentsCard({
           <Icon name="crown" size={20} color={color.bg} />
         </View>
         <Text style={styles.tourneyCopy}>Town-vs-town tournaments are coming</Text>
-        <PressScale
+        <Button3D
+          tone="gold"
+          compact
           label={notified ? 'Notified' : 'Notify me'}
           busy={busy || notified}
           onPress={notified ? undefined : onNotify}
-          style={styles.notifyBtn}
         >
-          {() => (
-            <View style={styles.btnInner}>
-              <Icon name="bell" size={12} color={color.bg} />
-              <Text style={styles.notifyText}>{notified ? 'NOTIFIED' : 'NOTIFY ME'}</Text>
-            </View>
-          )}
-        </PressScale>
+          <Icon name="bell" size={12} color={color.bg} />
+          <Text style={styles.notifyText}>{notified ? 'NOTIFIED' : 'NOTIFY ME'}</Text>
+        </Button3D>
       </View>
     </View>
   );
@@ -553,13 +545,9 @@ function JoinSheet({
             style={styles.input}
             accessibilityLabel="Room code"
           />
-          <PressScale label="Join room" onPress={onSubmit} style={styles.goldBtn}>
-            {() => (
-              <View style={styles.sheetBtn}>
-                <Text style={styles.goldBtnText}>JOIN ROOM</Text>
-              </View>
-            )}
-          </PressScale>
+          <Button3D tone="gold" label="Join room" onPress={onSubmit}>
+            <Text style={styles.goldBtnText}>JOIN ROOM</Text>
+          </Button3D>
         </Pressable>
       </Pressable>
     </Modal>
@@ -731,13 +719,6 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: color.red,
   },
-  friends: {
-    backgroundColor: color.goldArcade,
-    borderRadius: 24,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#FFF3A0',
-  },
   friendsHead: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -767,30 +748,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 10,
   },
-  btnInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 13,
-  },
-  darkBtn: {
-    backgroundColor: color.bg,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 208, 0, 0.45)',
-  },
   darkBtnText: {
     fontFamily: font.sticker,
     fontSize: 13,
     letterSpacing: 0.8,
     color: color.goldArcade,
-  },
-  goldBtn: {
-    backgroundColor: '#F5D76E',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#FFF8D0',
   },
   goldBtnText: {
     fontFamily: font.sticker,
@@ -798,17 +760,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     color: color.bg,
   },
-  quick: {
-    backgroundColor: '#102419',
-    borderRadius: 18,
-    borderWidth: 2,
-    borderColor: 'rgba(0, 176, 79, 0.8)',
-  },
   quickInner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 14,
   },
   quickIcon: {
     width: 48,
@@ -1122,11 +1077,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: color.cream,
   },
-  notifyBtn: {
-    backgroundColor: '#F5D76E',
-    borderRadius: 12,
-    paddingHorizontal: 10,
-  },
   notifyText: {
     fontFamily: font.sticker,
     fontSize: 12,
@@ -1200,10 +1150,6 @@ const styles = StyleSheet.create({
     fontFamily: font.bodyBold,
     letterSpacing: 2,
     fontSize: 18,
-  },
-  sheetBtn: {
-    paddingVertical: 12,
-    alignItems: 'center',
   },
   townRow: {
     paddingVertical: 12,
