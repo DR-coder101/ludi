@@ -13,7 +13,16 @@ type Props = {
   settle: boolean;
 };
 
-function DieFace({ value }: { value: number }) {
+function DieFace({ value }: { value: number | null }) {
+  if (value === null) {
+    return (
+      <div className="die-slot">
+        <div className="die-face blank" data-pips="0" aria-label="die not rolled">
+          <span className="die-q">?</span>
+        </div>
+      </div>
+    );
+  }
   const n = Math.min(6, Math.max(1, value));
   const pip = (kind: 'ink' | 'hot' | 'off', key: string) => (
     <span key={key} className={`pip${kind === 'off' ? ' off' : kind === 'hot' ? ' hot' : ''}`} />
@@ -115,25 +124,6 @@ export function GameScreen({ view, events, settle }: Props) {
           </div>
         </div>
       </div>
-      <div className="turn-bar" data-safe="turn-bar" style={{ background: view.turn.hex }}>
-        <div className="turn-info">
-          <div className="turn-name-row">
-            <span className="turn-lbl">TURN</span>
-            <span className="turn-player">{view.turn.handle}</span>
-            <span className="turn-timer">
-              <ClockIcon size={26} color="#fff" />
-              {view.turn.timerLabel}
-            </span>
-          </div>
-          <div className="turn-track">
-            <div className="turn-fill" style={{ width: `${Math.round(view.turn.fillRatio * 100)}%` }} />
-          </div>
-          <div className="turn-cmds">
-            Type <span className="chip gold">!roll</span> then <span className="chip white">!move 1-4</span>
-          </div>
-        </div>
-        <DieFace value={view.dice?.[0] ?? 5} />
-      </div>
       <div className="player-tags" data-safe="player-tags">
         {view.seats.map((s) => (
           <div key={s.town} className={`ptag town-${s.town}`}>
@@ -166,6 +156,33 @@ export function GameScreen({ view, events, settle }: Props) {
             </div>
           </motion.div>
         ) : null}
+      </div>
+      <div className="turn-card3d" data-safe="turn-bar">
+        <div className="tc3d-face">
+          <div className="tc3d-info">
+            <div className="tc3d-top">
+              <span className="tc3d-lbl">IT'S YOUR TURN</span>
+              <span className="tc3d-timer">
+                <ClockIcon size={28} color="#111" />
+                {view.turn.timerLabel}
+              </span>
+            </div>
+            <div className="tc3d-name">
+              <span className="tc3d-dot" style={{ background: view.turn.hex }} />
+              <span className="tc3d-handle">{view.turn.handle}</span>
+            </div>
+            <div className="tc3d-track">
+              <div className="tc3d-fill" style={{ width: `${Math.round(view.turn.fillRatio * 100)}%` }} />
+            </div>
+            <div className="tc3d-cmds">
+              Type <span className="chip dark">!roll</span> then <span className="chip white">!move 1-4</span>
+            </div>
+          </div>
+          <div className="tc3d-dice">
+            <DieFace value={view.dice?.[0] ?? null} />
+            <DieFace value={view.dice?.[1] ?? null} />
+          </div>
+        </div>
       </div>
       <div className="event-row">
         {view.captureText ? (

@@ -5,7 +5,7 @@ import { CANVAS } from './theme.js';
 import { project } from './view/project.js';
 import { parseQuery } from './connect/query.js';
 import { demoFrame } from './connect/fixtures.js';
-import { connectLive } from './connect/socket.js';
+import { connectLive, type PauseInfo } from './connect/socket.js';
 import { Backdrop } from './screens/Backdrop.js';
 import { IntroScreen } from './screens/IntroScreen.js';
 import { WaitingScreen } from './screens/WaitingScreen.js';
@@ -34,6 +34,7 @@ export function App() {
   const scale = useScale();
   const [snapshot, setSnapshot] = useState<LiveGameState | null>(null);
   const [events, setEvents] = useState<LiveEvent[]>([]);
+  const [pause, setPause] = useState<PauseInfo>({ paused: false, reason: null, turnLeftMs: null });
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -44,9 +45,10 @@ export function App() {
       return;
     }
     const url = query.ws ?? window.location.origin;
-    return connectLive(url, (next, ev) => {
+    return connectLive(url, (next, ev, p) => {
       setSnapshot(next);
       setEvents(ev);
+      setPause(p);
     });
   }, [query.demo, query.ws]);
 
@@ -56,7 +58,11 @@ export function App() {
     return () => window.clearInterval(id);
   }, [query.demo]);
 
-  const intent = query.demo ? demoFrame(query.demo).intent : { now };
+  const frozenNow =
+    pause.paused && snapshot?.turnEndsAt != null
+      ? snapshot.turnEndsAt - (pause.turnLeftMs ?? 0)
+      : now;
+  const intent = query.demo ? demoFrame(query.demo).intent : { now: frozenNow };
   const view = snapshot ? project(snapshot, events, intent) : null;
   const bg = query.bg ?? defaultBackdrop;
   const tint =
@@ -73,13 +79,21 @@ export function App() {
       <div
         className="canvas"
         data-overlay-root="1"
-        style={{ transform: `scale(${scale})` }}
+        style={{ transform: `translate(-50%, -50%) scale(${scale})` }}
       >
         <Backdrop src={bg} tint={tint} />
         {view?.kind === 'intro' ? <IntroScreen settle={query.settle} /> : null}
         {view?.kind === 'waiting' ? <WaitingScreen view={view} settle={query.settle} /> : null}
         {view?.kind === 'countdown' ? <CountdownScreen view={view} settle={query.settle} /> : null}
         {view?.kind === 'game' ? <GameScreen view={view} events={events} settle={query.settle} /> : null}
+        {pause.paused && !query.demo ? (
+          <div className="paused-banner" data-safe="paused-banner" data-reason={pause.reason ?? 'manual'}>
+            <span className="paused-word">PAUSED</span>
+            <span className="paused-why">
+              {pause.reason === 'tiktok' ? 'Reconnecting to TikTok LIVE\u2026' : 'The streamer paused the game'}
+            </span>
+          </div>
+        ) : null}
         {view?.kind === 'winner' ? <WinnerScreen view={view} settle={query.settle} /> : null}
         {query.safe ? <SafeZone /> : null}
       </div>

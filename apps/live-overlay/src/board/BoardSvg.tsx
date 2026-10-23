@@ -27,6 +27,9 @@ const PIECE = {
   black: { hi: '#7A7D84', mid: '#26272B', lo: '#050506', rim: '#C9CDD4' },
 } as const;
 
+// One shared size for all yard names: largest at which MONTEGO BAY fits the 130px label box.
+const YARD_LABEL_FS = 19;
+
 const PLACE: Record<Color, { lines: string[]; piece: keyof typeof PIECE; corner: 'TL' | 'TR' | 'BL' | 'BR'; pin: keyof typeof JAMAICA_PINS; acc: string }> = {
   yellow: { lines: ['MONTEGO', 'BAY'], piece: 'gold', corner: 'TL', pin: 'montego', acc: '#FED100' },
   blue: { lines: ['OCHO', 'RIOS'], piece: 'green', corner: 'TR', pin: 'ocho', acc: '#19C45A' },
@@ -352,11 +355,11 @@ export function BoardSvg({ active, pieces }: Props) {
         const y = r0 * 20;
         const yk = YARD / 160;
         const isActive = e === active;
-        const two = pl.lines.length > 1;
-        const fs = two ? 30 : pl.lines[0]!.length > 6 ? 31 : 36;
-        const ty0 = two ? 40 : 44;
-        const mw = two ? 80 : 96;
-        const mapY = y + ty0 + (pl.lines.length - 1) * (fs - 1) + 8;
+        const label = pl.lines.join(' ');
+      const fs = YARD_LABEL_FS;
+      const ty0 = 44;
+      const mw = 96;
+      const mapY = y + ty0 + 8;
         const pin = JAMAICA_PINS[pl.pin];
         const ox = pl.corner === 'TR' || pl.corner === 'BR' ? x + 160 : x;
         const oy = pl.corner === 'BL' || pl.corner === 'BR' ? y + 160 : y;
@@ -468,11 +471,11 @@ export function BoardSvg({ active, pieces }: Props) {
               strokeWidth="0.7"
               strokeDasharray="1.5 2.5"
             />
-            {pl.lines.map((ln, i) => (
+            {[label].map((ln) => (
               <text
                 key={ln}
                 x={x + 14}
-                y={y + ty0 + i * (fs - 1)}
+                y={y + ty0}
                 fontFamily="Baloo 2, sans-serif"
                 fontWeight={800}
                 fontSize={fs}
