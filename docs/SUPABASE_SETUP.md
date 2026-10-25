@@ -71,8 +71,10 @@ Success. No rows returned
 
 - **RLS Policies**: Security rules that restrict data access:
   - Users can read any profile
-  - Users can only update their own profile
+  - Signed-in users can only update their own profile
+  - Anonymous JWTs cannot update `users`
   - Users can only read matches they participated in
+  - `rooms` has RLS enabled and no client policies
 
 ### 4. Get Your API Credentials
 
@@ -393,10 +395,12 @@ As the schema evolves, apply migrations via:
 
 The schema includes RLS policies that:
 - Allow users to read any profile (needed for lobby and game UI)
-- Restrict users to updating only their own profile
+- Restrict signed-in users to updating only their own profile
+- Deny anonymous JWT writes on `users` (guest profile writes use the service role)
 - Restrict match history to participants
+- Enable RLS on `rooms` with no client policies (the mobile app never queries that table)
 
-For production, review and test RLS policies carefully.
+Existing projects also need `server/database/002_enable_rooms_rls.sql` in the SQL Editor. Do not apply it from CI.
 
 ## Troubleshooting
 
