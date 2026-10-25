@@ -253,7 +253,9 @@ describe('guest match history persist', () => {
     expect(participantIds).not.toContain(guest.userId);
     expect(participantIds.every((id) => id === null || isPostgresUuid(id))).toBe(true);
 
-    const historyRes = await fetch(`${baseUrl}/matches/${encodeURIComponent(guest.userId)}`);
+    const historyRes = await fetch(`${baseUrl}/matches/${encodeURIComponent(guest.userId)}`, {
+      headers: { Authorization: `Bearer ${guest.accessToken}` },
+    });
     const historyBody = (await historyRes.json()) as {
       success: boolean;
       matches?: Array<{ players: Array<{ userId: string }> }>;
@@ -287,7 +289,9 @@ describe('guest match history persist', () => {
     expect(participantIds).not.toContain(playerId);
     expect(participantIds.every((id) => id === null || isPostgresUuid(id))).toBe(true);
 
-    const historyRes = await fetch(`${baseUrl}/matches/${encodeURIComponent(guest.userId)}`);
+    const historyRes = await fetch(`${baseUrl}/matches/${encodeURIComponent(guest.userId)}`, {
+      headers: { Authorization: `Bearer ${guest.accessToken}` },
+    });
     const historyBody = (await historyRes.json()) as {
       success: boolean;
       matches?: Array<{ players: Array<{ userId: string }> }>;

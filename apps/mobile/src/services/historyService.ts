@@ -4,6 +4,7 @@
  */
 
 import type { MatchHistoryResponse, MatchHistory } from '@ludi/protocol';
+import { authHeaders } from '../net/authHeaders';
 
 const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
@@ -18,7 +19,7 @@ class HistoryServiceImpl implements HistoryService {
 
     const response = await fetch(url.toString(), {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
     });
 
     const data: MatchHistoryResponse = await response.json();

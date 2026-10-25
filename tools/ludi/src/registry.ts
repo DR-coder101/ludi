@@ -26,6 +26,7 @@ import {
 import {
   readBridge,
   readLive,
+  readSession,
   resolveLiveUrl,
   resolveRunDir,
   resolveServerUrl,
@@ -485,8 +486,13 @@ const httpMatches: Command = {
     const userId = encodeURIComponent(str(args, 'user-id'));
     const limit = num(args, 'limit');
     const target = `${url}/matches/${userId}?limit=${limit}`;
+    const accessToken = readSession(resolveRunDir(ctx.runDir)).access_token;
     try {
-      const res = await fetch(target);
+      const headers: Record<string, string> = {};
+      if (typeof accessToken === 'string' && accessToken.length > 0) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+      const res = await fetch(target, { headers });
       const body = await res.json();
       return ok({ status: res.status, body, url: target });
     } catch (e) {

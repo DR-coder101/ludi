@@ -63,7 +63,11 @@ import { createAuthService } from './services/auth.js';
 import { createProfileService } from './services/profile.js';
 import { createMatchHistoryService, type MatchData } from './services/matchHistory.js';
 import { buildFinishedMatch } from './buildFinishedMatch.js';
-import { verifyHandshakeUser } from './auth/verifyHandshakeUser.js';
+import {
+  readBearerAccessToken,
+  verifyAccessToken,
+  verifyHandshakeUser,
+} from './auth/verifyHandshakeUser.js';
 import { runInBackground } from './runInBackground.js';
 import { createPlayerPrefsStore } from './home/playerPrefs.js';
 import { createMatchLedger } from './home/matchLedger.js';
@@ -579,14 +583,40 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     }
   });
 
+  async function requireSelfUser(
+    req: express.Request,
+    res: express.Response,
+  ): Promise<string | null> {
+    const authedUserId = await verifyAccessToken(
+      supabase,
+      readBearerAccessToken(
+        typeof req.headers.authorization === 'string' ? req.headers.authorization : undefined,
+      ),
+    );
+    if (!authedUserId) {
+      res.status(401).json({ success: false, error: 'Missing or invalid authorization' });
+      return null;
+    }
+    if (authedUserId !== req.params.userId) {
+      res.status(403).json({ success: false, error: 'Forbidden' });
+      return null;
+    }
+    return authedUserId;
+  }
+
   app.get('/profile/:userId', async (req, res) => {
     if (!profileService) {
       res.status(503).json({ success: false, error: 'Profile service not available' } as ProfileResponse);
       return;
     }
 
+    const userId = await requireSelfUser(req, res);
+    if (!userId) {
+      return;
+    }
+
     try {
-      const profile = await profileService.getProfile(req.params.userId);
+      const profile = await profileService.getProfile(userId);
       res.json({ success: true, profile } as ProfileResponse);
     } catch (err: any) {
       res.status(404).json({ success: false, error: err.message } as ProfileResponse);
@@ -599,6 +629,11 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       return;
     }
 
+    const userId = await requireSelfUser(req, res);
+    if (!userId) {
+      return;
+    }
+
     const validationResult = UpdateProfilePayloadSchema.safeParse(req.body);
     if (!validationResult.success) {
       res.status(400).json({ success: false, error: 'Invalid payload' } as ProfileResponse);
@@ -606,7 +641,7 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
     }
 
     try {
-      const profile = await profileService.updateProfile(req.params.userId, validationResult.data);
+      const profile = await profileService.updateProfile(userId, validationResult.data);
       res.json({ success: true, profile } as ProfileResponse);
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message } as ProfileResponse);
@@ -619,9 +654,14 @@ export function createLudiServer(portOrConfig: number | ServerConfig = 3000) {
       return;
     }
 
+    const userId = await requireSelfUser(req, res);
+    if (!userId) {
+      return;
+    }
+
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
-      const matches = await matchHistoryService.getUserMatches(req.params.userId, limit);
+      const matches = await matchHistoryService.getUserMatches(userId, limit);
       res.json({ success: true, matches } as MatchHistoryResponse);
     } catch (err: any) {
       res.status(500).json({ success: false, error: err.message } as MatchHistoryResponse);
