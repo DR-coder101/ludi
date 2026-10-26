@@ -19,10 +19,18 @@ CREATE POLICY "Users can view any profile"
   ON users FOR SELECT
   USING (true);
 
--- Users can update their own profile
+-- Signed-in users can update their own profile. Anonymous JWTs cannot.
+-- Guest display-name writes go through the server service role.
 CREATE POLICY "Users can update own profile"
   ON users FOR UPDATE
-  USING (auth.uid() = id);
+  USING (
+    auth.uid() = id
+    AND COALESCE((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+  )
+  WITH CHECK (
+    auth.uid() = id
+    AND COALESCE((auth.jwt() ->> 'is_anonymous')::boolean, false) = false
+  );
 
 -- Rooms table (persistent record of game rooms)
 CREATE TABLE IF NOT EXISTS rooms (
@@ -32,6 +40,9 @@ CREATE TABLE IF NOT EXISTS rooms (
   status TEXT NOT NULL DEFAULT 'lobby',
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- No client policies. apps/mobile never queries rooms. Server uses service_role.
+ALTER TABLE rooms ENABLE ROW LEVEL SECURITY;
 
 -- Matches table (completed game records)
 CREATE TABLE IF NOT EXISTS matches (
