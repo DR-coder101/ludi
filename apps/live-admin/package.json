@@ -13,6 +13,9 @@
     "lint": "tsc --noEmit",
     "pack:win": "node scripts/pack-win.mjs"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@fontsource/baloo-2": "^5.2.6",
     "@ludi/live-connector": "workspace:*",

@@ -11,6 +11,9 @@
     "lint": "tsc --noEmit",
     "test": "vitest run"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@babel/runtime": "^7.29.7",
     "@config-plugins/react-native-webrtc": "10.0.0",

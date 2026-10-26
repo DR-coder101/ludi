@@ -33,7 +33,7 @@ ludi-monorepo/
 
 ## Prerequisites
 
-- **Node.js**: 20.x or higher
+- **Node.js**: 22.x or higher
 - **pnpm**: 9.x or higher
 - **iOS**: Xcode 15+ and iOS Simulator (for iOS development)
 - **Android**: Android Studio and Android Emulator (for Android development)

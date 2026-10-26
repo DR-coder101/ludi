@@ -12,6 +12,9 @@
     "test:watch": "vitest",
     "lint": "tsc --noEmit"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@ludi/rules": "workspace:*"
   },
