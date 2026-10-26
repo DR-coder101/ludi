@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createMockStorage, createMockSupabaseClient } from '../db/mock.js';
 import { createAuthService } from '../services/auth.js';
-import { verifyHandshakeUser } from './verifyHandshakeUser.js';
+import { readBearerAccessToken, verifyAccessToken, verifyHandshakeUser } from './verifyHandshakeUser.js';
 
 describe('verifyHandshakeUser', () => {
   it('returns null for a forged userId with no access token', async () => {
@@ -49,5 +49,21 @@ describe('verifyHandshakeUser', () => {
     });
 
     expect(userId).toBeNull();
+  });
+
+  it('reads a bearer access token and verifies it', async () => {
+    const storage = createMockStorage();
+    const supabase = createMockSupabaseClient(storage);
+    const auth = createAuthService(supabase);
+    const guest = await auth.createGuest('Bearer');
+
+    const token = readBearerAccessToken(`Bearer ${guest.accessToken}`);
+    expect(token).toBe(guest.accessToken);
+    expect(readBearerAccessToken(undefined)).toBeNull();
+    expect(readBearerAccessToken('Basic abc')).toBeNull();
+
+    const userId = await verifyAccessToken(supabase, token);
+    expect(userId).toBe(guest.userId);
+    expect(await verifyAccessToken(supabase, 'not-a-real-token')).toBeNull();
   });
 });

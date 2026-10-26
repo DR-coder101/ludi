@@ -4,6 +4,7 @@
  */
 
 import type { ProfileResponse, UserProfile } from '@ludi/protocol';
+import { authHeaders } from '../net/authHeaders';
 
 const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
@@ -16,7 +17,7 @@ class ProfileServiceImpl implements ProfileService {
   async getProfile(userId: string): Promise<UserProfile> {
     const response = await fetch(`${SERVER_URL}/profile/${userId}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
     });
 
     const data: ProfileResponse = await response.json();
@@ -31,7 +32,7 @@ class ProfileServiceImpl implements ProfileService {
   async updateProfile(userId: string, updates: { displayName?: string; avatarUrl?: string | null }): Promise<UserProfile> {
     const response = await fetch(`${SERVER_URL}/profile/${userId}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(updates),
     });
 

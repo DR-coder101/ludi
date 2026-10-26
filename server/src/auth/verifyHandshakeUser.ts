@@ -15,15 +15,19 @@ function readAccessToken(handshakeAuth: unknown): string | null {
   return accessToken;
 }
 
-export async function verifyHandshakeUser(
-  supabase: SupabaseClient<Database> | null,
-  handshakeAuth: unknown,
-): Promise<string | null> {
-  if (!supabase) {
+export function readBearerAccessToken(authorization: string | undefined): string | null {
+  if (typeof authorization !== 'string') {
     return null;
   }
-  const accessToken = readAccessToken(handshakeAuth);
-  if (accessToken === null) {
+  const match = /^Bearer\s+(\S+)/i.exec(authorization);
+  return match?.[1] ?? null;
+}
+
+export async function verifyAccessToken(
+  supabase: SupabaseClient<Database> | null,
+  accessToken: string | null,
+): Promise<string | null> {
+  if (!supabase || accessToken === null) {
     return null;
   }
   try {
@@ -35,4 +39,11 @@ export async function verifyHandshakeUser(
   } catch {
     return null;
   }
+}
+
+export async function verifyHandshakeUser(
+  supabase: SupabaseClient<Database> | null,
+  handshakeAuth: unknown,
+): Promise<string | null> {
+  return verifyAccessToken(supabase, readAccessToken(handshakeAuth));
 }
