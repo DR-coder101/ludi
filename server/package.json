@@ -13,6 +13,9 @@
     "test:watch": "vitest",
     "load-test": "tsx scripts/load-test.ts"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@ludi/protocol": "workspace:*",
     "@ludi/rules": "workspace:*",

@@ -10,6 +10,9 @@
   "scripts": {
     "lint": "tsc --noEmit"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "typescript": "^5.5.0"

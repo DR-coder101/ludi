@@ -13,6 +13,9 @@
     "lint": "tsc --noEmit",
     "start": "tsx src/bin.ts"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "dependencies": {
     "@ludi/board-geometry": "workspace:*",
     "@ludi/protocol": "workspace:*",

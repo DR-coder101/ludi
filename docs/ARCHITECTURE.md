@@ -208,7 +208,7 @@ M1–M3 are the core risk. Get two phones playing a complete online match before
 
 ## 7. Environment & Setup (for Cursor agents)
 
-- Node 20+, pnpm 9+
+- Node 22+, pnpm 9+
 - Env vars: `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `LIVEKIT_URL`, `DATABASE_URL`, `PORT`
 - Mobile env vars: `EXPO_PUBLIC_SERVER_URL`, `EXPO_PUBLIC_LIVEKIT_URL`
 - Dev commands: `pnpm dev:server`, `pnpm dev:mobile`, `pnpm test:rules`

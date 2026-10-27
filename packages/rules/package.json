@@ -13,6 +13,9 @@
     "lint": "tsc --noEmit",
     "demo": "tsx scripts/demo-game.ts"
   },
+  "engines": {
+    "node": ">=22"
+  },
   "devDependencies": {
     "@types/node": "^20.14.0",
     "tsx": "^4.23.13",

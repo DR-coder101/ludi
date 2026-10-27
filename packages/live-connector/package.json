@@ -19,7 +19,7 @@
     "start": "tsx src/cli.ts"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22"
   },
   "dependencies": {
     "tiktok-live-connector": "2.4.0",
