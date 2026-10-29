@@ -10,7 +10,7 @@ Drive Ludi the way Dean's app does. The agent-reachable surface is the **`ludi`*
 Two modules:
 
 - Server: HTTP + Socket.IO (`ludi server`, `ludi session`, `ludi room`, `ludi match`, `ludi play`).
-- Screens: Expo web export of `apps/mobile` plus headless Chromium (`ludi screens`). Fixed phone size 390×844 @2x. Compares to committed **web** baselines. Overlay: Vite build of `apps/live-overlay` at 1080×1920 (`ludi screens check --target overlay`). Compares to committed **overlay** baselines and reports Wonder-diff. Admin: Vite build of `apps/live-admin` (`ludi screens check --target admin`). Compares to committed **admin** baselines and reports mockup-diff against `docs/live/admin/`.
+- Screens: Expo web export of `apps/mobile` plus headless Chromium (`ludi screens`). Fixed phone size 390×844 @2x. Compares to committed **web** baselines. Tablet: the same `/dev` fixtures at Android 10" dp 800×1280 and 1280×800 (`ludi screens check --target tablet`). Pixelmatches **tablet** baselines and runs overflow, board-square, tap-size, and clip assertions. Overlay: Vite build of `apps/live-overlay` at 1080×1920 (`ludi screens check --target overlay`). Compares to committed **overlay** baselines and reports Wonder-diff. Admin: Vite build of `apps/live-admin` (`ludi screens check --target admin`). Compares to committed **admin** baselines and reports mockup-diff against `docs/live/admin/`.
 
 Never invent `ludi-verify` or `verify` as a command name. Subcommands hang under `ludi`.
 
@@ -38,7 +38,9 @@ pnpm -s ludi -- screens doctor --output json
 
 `screens doctor` is ready when `data.worth_driving` is true. Chromium missing: `pnpm --dir tools/ludi exec playwright install chromium`.
 
-`ludi screens check` exports Expo web with `EXPO_PUBLIC_DEV_ROUTES=1`, serves the export, screenshots `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/win`, then pixelmatches `baselines/web/`. Pass `--url http://127.0.0.1:4173` to reuse an export already being served.
+`ludi screens check` exports Expo web with `EXPO_PUBLIC_DEV_ROUTES=1`, serves the export, screenshots `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win`, then pixelmatches `baselines/web/`. Pass `--url http://127.0.0.1:4173` to reuse an export already being served.
+
+`ludi screens check --target tablet` exports Expo web with `EXPO_PUBLIC_DEV_ROUTES=1`, screenshots the five `/dev` fixtures at 800×1280 and 1280×800 (dpr 1), pixelmatches `baselines/tablet/`, and runs layout assertions. There is no `/dev/capture` fixture. Known layout failures live in `TABLET_KNOWN_FAILURES`. A listed failure that starts passing fails CI until the row is removed.
 
 `ludi screens check --target overlay` builds `apps/live-overlay`, serves it, screenshots the five demo fixtures at 1080×1920, pixelmatches `baselines/overlay/`, reports Wonder-diff against `docs/live/wonder/`, and fails if a `[data-safe]` box leaves x 100-980 / y 40-1380.
 
@@ -117,6 +119,7 @@ pnpm -s ludi -- screens check --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- screens check --screen board-start --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- screens check --target overlay --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- screens check --target admin --run-dir "$RUN_DIR" --output json
+pnpm -s ludi -- screens check --target tablet --run-dir "$RUN_DIR" --output json
 ```
 
 Compose server recipes when a feature file says so: `ludi server` → `ludi session open` → `ludi room …` → `ludi match …`.
@@ -130,7 +133,7 @@ Screen drift exits with code 5 (`CONFLICT`). The hint names the diff PNG under `
 ## Evidence
 
 - Exercise the real user path. Server: room create → ready → match, not internal setters. Screens: the `/dev/*` fixture routes that mount the same `HomeLanding`, `LobbyRoom`, `BoardScreen`, and `WinScreen` components as production.
-- Capture action and resulting state: command stdout JSON plus `"$RUN_DIR/evidence/<feature>.json"`. Screens also write `"$RUN_DIR/evidence/screens/<id>.png"` and, on drift, `"$RUN_DIR/evidence/screens/<id>.diff.png"`.
+- Capture action and resulting state: command stdout JSON plus `"$RUN_DIR/evidence/<feature>.json"`. Screens also write `"$RUN_DIR/evidence/screens/<id>.png"` and, on drift, `"$RUN_DIR/evidence/screens/<id>.diff.png"`. Tablet writes `"$RUN_DIR/evidence/tablet/<id>-<viewport>.png"` and `"$RUN_DIR/evidence/tablet.json"`.
 - Proof standards: bots filled / game phase / turn results in the evidence file; doctor `worth_driving` before drive; exit code 0 on success; screen pixels within `MAX_DIFF_RATIO` (0.5%) of `baselines/web`.
 - Named proof location for this skill's bootstrap run: `.cursor/skills/verify-ludi/artifacts/`.
 

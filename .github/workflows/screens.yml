@@ -61,6 +61,8 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
       - name: Compare Expo web screens to baselines
         run: pnpm -s ludi -- screens check --output json --run-dir "$RUNNER_TEMP/ludi-screens"
+      - name: Compare tablet layout screens to baselines
+        run: pnpm -s ludi -- screens check --target tablet --output json --run-dir "$RUNNER_TEMP/ludi-tablet"
       - name: Compare overlay screens to baselines
         run: pnpm -s ludi -- screens check --target overlay --output json --run-dir "$RUNNER_TEMP/ludi-overlay"
       - name: Compare admin screens to baselines
@@ -77,4 +79,7 @@ jobs:
             ${{ runner.temp }}/ludi-overlay/overlay-build.log
             ${{ runner.temp }}/ludi-admin/evidence/admin/
             ${{ runner.temp }}/ludi-admin/admin-build.log
+            ${{ runner.temp }}/ludi-tablet/evidence/tablet/
+            ${{ runner.temp }}/ludi-tablet/evidence/tablet.json
+            ${{ runner.temp }}/ludi-tablet/expo-export.log
           if-no-files-found: ignore
