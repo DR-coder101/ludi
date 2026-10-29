@@ -2,6 +2,7 @@
   "expo": {
     "name": "Ludi",
     "slug": "ludi",
+    "owner": "dmr101",
     "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -45,7 +46,13 @@
       "expo-router",
       "expo-dev-client",
       "@livekit/react-native-expo-plugin",
-      "@config-plugins/react-native-webrtc"
-    ]
+      "@config-plugins/react-native-webrtc",
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "def44941-7233-41c1-881e-70585b22aa26"
+      }
+    }
   }
 }
