@@ -1,10 +1,4 @@
-import { spawn } from 'node:child_process';
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-} from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { err, ok, planned, type Ctx, type Result } from '../command.js';
 import { ensureRunDir, resolveRunDir } from '../runDir.js';
@@ -13,6 +7,7 @@ import {
   findRepoRoot,
   isAdminScreen,
   isOverlayScreen,
+  isTabletTarget,
   mobileDir,
   overlayBaselineDir,
   overlayDir,
@@ -21,6 +16,8 @@ import {
   PHONE,
   SCREEN_IDS,
   screensToRun,
+  tabletBaselineDir,
+  tabletShotsToRun,
   webBaselineDir,
   adminDir,
   adminBaselineDir,
@@ -29,56 +26,14 @@ import {
   type ScreenSpec,
 } from './catalog.js';
 import { comparePng, type CompareResult } from './compare.js';
+import { exportWeb } from './exportWeb.js';
 import { serveExport } from './serve.js';
 import { planOverlayCheck, runOverlayCheck } from './overlay.js';
 import { planAdminCheck, runAdminCheck } from './admin.js';
+import { planTabletCheck, runTabletCheck } from './tablet.js';
 
 function fail(code: string, message: string, hint: string): Result {
   return err(code, message, hint);
-}
-
-async function exportWeb(opts: {
-  mobile: string;
-  dist: string;
-  logPath: string;
-}): Promise<void> {
-  mkdirSync(opts.dist, { recursive: true });
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      'pnpm',
-      ['exec', 'expo', 'export', '--platform', 'web', '--output-dir', opts.dist],
-      {
-        cwd: opts.mobile,
-        env: {
-          ...process.env,
-          CI: '1',
-          EXPO_NO_TELEMETRY: '1',
-          EXPO_PUBLIC_DEV_ROUTES: '1',
-        },
-        stdio: ['ignore', 'pipe', 'pipe'],
-      },
-    );
-    const chunks: Buffer[] = [];
-    child.stdout?.on('data', (d: Buffer) => chunks.push(d));
-    child.stderr?.on('data', (d: Buffer) => chunks.push(d));
-    const timer = setTimeout(() => {
-      child.kill('SIGTERM');
-      reject(new Error(`expo export timed out after 180s; see ${opts.logPath}`));
-    }, 180_000);
-    child.on('error', (e) => {
-      clearTimeout(timer);
-      reject(e);
-    });
-    child.on('close', (code) => {
-      clearTimeout(timer);
-      writeFileSync(opts.logPath, Buffer.concat(chunks));
-      if (code === 0) resolve();
-      else reject(new Error(`expo export exited ${code}; see ${opts.logPath}`));
-    });
-  });
-  if (!existsSync(join(opts.dist, 'index.html'))) {
-    throw new Error(`expo export wrote no index.html under ${opts.dist}`);
-  }
 }
 
 async function captureScreens(opts: {
@@ -131,6 +86,9 @@ export function planScreensCheck(args: {
   const target =
     args.target ??
     (isOverlayScreen(args.screen) ? 'overlay' : isAdminScreen(args.screen) ? 'admin' : 'web');
+  if (isTabletTarget(target)) {
+    return planTabletCheck(args);
+  }
   if (target === 'overlay' || isOverlayScreen(args.screen)) {
     return planOverlayCheck(args);
   }
@@ -233,6 +191,14 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
     ok: adminCount === ADMIN_SCREEN_IDS.length,
     detail: `${adminCount}/${ADMIN_SCREEN_IDS.length} under ${adminBase}`,
   });
+  const tabletDir = tabletBaselineDir(root);
+  const tabletShots = tabletShotsToRun('all');
+  const tabletCount = tabletShots.filter((shot) => existsSync(join(tabletDir, shot.file))).length;
+  checks.push({
+    name: 'tablet_baselines',
+    ok: tabletCount === tabletShots.length,
+    detail: `${tabletCount}/${tabletShots.length} under ${tabletDir}`,
+  });
   let chromiumOk = false;
   let chromiumDetail = 'playwright not loaded';
   try {
@@ -248,7 +214,13 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
   }
   checks.push({ name: 'chromium', ok: chromiumOk, detail: chromiumDetail });
   const worthDriving = checks
-    .filter((c) => c.name !== 'web_baselines' && c.name !== 'overlay_baselines' && c.name !== 'admin_baselines')
+    .filter(
+      (c) =>
+        c.name !== 'web_baselines' &&
+        c.name !== 'overlay_baselines' &&
+        c.name !== 'admin_baselines' &&
+        c.name !== 'tablet_baselines',
+    )
     .every((c) => c.ok);
   if (!worthDriving) {
     return fail(
@@ -275,6 +247,9 @@ export async function runScreensCheck(
   const target = String(
     args.target ?? (isOverlayScreen(screen) ? 'overlay' : isAdminScreen(screen) ? 'admin' : 'web'),
   );
+  if (isTabletTarget(target)) {
+    return runTabletCheck(args, ctx);
+  }
   if (target === 'overlay' || isOverlayScreen(screen)) {
     return runOverlayCheck({ ...args, screen: screen === 'all' ? 'overlay' : screen }, ctx);
   }

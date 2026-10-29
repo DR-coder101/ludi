@@ -16,6 +16,8 @@ import {
   overlayScreensToRun,
   ADMIN_SCREENS,
   adminScreensToRun,
+  TABLET_VIEWPORTS,
+  tabletShotsToRun,
   findRepoRoot,
 } from '../src/screens/catalog.js';
 import { comparePng } from '../src/screens/compare.js';
@@ -83,6 +85,25 @@ describe('screen catalog', () => {
     expect(adminScreensToRun('dashboard')[0]?.mockup).toBe('live-dashboard.png');
     expect(adminScreensToRun('kick-confirm')[0]?.mockup).toBe('kick-player-confirm.png');
     expect(adminScreensToRun('settings')[0]?.viewport).toEqual({ width: 1024, height: 849 });
+  });
+
+  it('names tablet viewports and ten shots, skipping capture', () => {
+    expect(TABLET_VIEWPORTS).toEqual([
+      { id: 'portrait', width: 800, height: 1280, deviceScaleFactor: 1 },
+      { id: 'landscape', width: 1280, height: 800, deviceScaleFactor: 1 },
+    ]);
+    expect(tabletShotsToRun('all').map((shot) => shot.file)).toEqual([
+      'home-portrait.png',
+      'lobby-portrait.png',
+      'board-start-portrait.png',
+      'board-video-portrait.png',
+      'win-portrait.png',
+      'home-landscape.png',
+      'lobby-landscape.png',
+      'board-start-landscape.png',
+      'board-video-landscape.png',
+      'win-landscape.png',
+    ]);
   });
 
   it('keeps iPhone 14 web insets on every /dev fixture the 390×844 capture assumes', () => {
@@ -210,6 +231,40 @@ describe('ludi screens CLI', () => {
     ]);
     expect(actions.filter((a) => a.action === 'wonder_diff')).toHaveLength(5);
     expect(existsSync(join(runDir, 'overlay-dist'))).toBe(false);
+  });
+
+  it('tablet dry-run plans expo export plus ten screenshots', () => {
+    const runDir = join(root, '.tmp-tablet-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'screens',
+      'check',
+      '--target',
+      'tablet',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    const actions = body.planned_actions as Array<{ action: string; file?: string; screen?: string }>;
+    expect(actions[0]?.action).toBe('expo_export_web');
+    expect(actions.filter((action) => action.action === 'screenshot').map((action) => action.file)).toEqual([
+      'home-portrait.png',
+      'lobby-portrait.png',
+      'board-start-portrait.png',
+      'board-video-portrait.png',
+      'win-portrait.png',
+      'home-landscape.png',
+      'lobby-landscape.png',
+      'board-start-landscape.png',
+      'board-video-landscape.png',
+      'win-landscape.png',
+    ]);
+    expect(existsSync(join(runDir, 'web-dist'))).toBe(false);
   });
 
   it('admin dry-run plans a vite build, 13 captures, and mockup diffs', () => {

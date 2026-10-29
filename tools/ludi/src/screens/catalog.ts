@@ -355,3 +355,170 @@ export function adminScreensToRun(id: string): AdminScreenSpec[] {
 export function isAdminScreen(id: string): boolean {
   return id === 'admin' || ADMIN_SCREEN_IDS.includes(id as AdminScreenId);
 }
+
+export const MIN_TAP_DP = 44;
+export const BOARD_MIN_PX = 240;
+export const SQUARE_TOLERANCE_PX = 1.5;
+export const BOARD_PROBE_FLOOR_PX = 200;
+
+export type TabletViewportId = 'portrait' | 'landscape';
+
+export type TabletViewport = {
+  id: TabletViewportId;
+  width: number;
+  height: number;
+  deviceScaleFactor: 1;
+};
+
+export const TABLET_VIEWPORTS: readonly TabletViewport[] = [
+  { id: 'portrait', width: 800, height: 1280, deviceScaleFactor: 1 },
+  { id: 'landscape', width: 1280, height: 800, deviceScaleFactor: 1 },
+];
+
+export type LayoutCheckId = 'overflow-x' | 'board-square' | 'control' | 'clip';
+
+export type ControlSpec = {
+  role: 'button' | 'label';
+  name: string;
+  minTap: boolean;
+};
+
+export type ScreenLayoutSpec = {
+  screenId: ScreenId;
+  board: boolean;
+  controls: readonly ControlSpec[];
+};
+
+export type KnownFailure = {
+  viewport: TabletViewportId;
+  screenId: ScreenId;
+  check: LayoutCheckId;
+  name?: string;
+  reason: string;
+};
+
+const SCREEN_LAYOUT_BY_ID: Record<ScreenId, Omit<ScreenLayoutSpec, 'screenId'>> = {
+  home: {
+    board: false,
+    controls: [
+      { role: 'button', name: 'Create room', minTap: true },
+      { role: 'button', name: 'Join code', minTap: true },
+      { role: 'button', name: 'Quick match', minTap: true },
+      { role: 'button', name: 'VS BOTS', minTap: true },
+      { role: 'button', name: 'PASS & PLAY', minTap: true },
+    ],
+  },
+  lobby: {
+    board: false,
+    controls: [
+      { role: 'button', name: 'START GAME · 3 players', minTap: true },
+      { role: 'label', name: 'Montego Bay, open seat. Invite a friend', minTap: true },
+      { role: 'label', name: 'Ocho Rios: Shanice, Ready', minTap: true },
+      { role: 'label', name: 'Negril: Andre, Joined', minTap: true },
+      { role: 'label', name: 'Kingston: Dean (You), Host · Ready', minTap: true },
+    ],
+  },
+  'board-start': {
+    board: true,
+    controls: [{ role: 'button', name: 'Roll the dice', minTap: true }],
+  },
+  'board-video': {
+    board: true,
+    controls: [{ role: 'button', name: 'Mute microphone', minTap: true }],
+  },
+  win: {
+    board: false,
+    controls: [
+      { role: 'button', name: 'Rematch', minTap: true },
+      { role: 'button', name: 'Lobby', minTap: true },
+    ],
+  },
+};
+
+export const SCREEN_LAYOUT: readonly ScreenLayoutSpec[] = SCREEN_IDS.map((screenId) => ({
+  screenId,
+  ...SCREEN_LAYOUT_BY_ID[screenId],
+}));
+
+export const TABLET_KNOWN_FAILURES: readonly KnownFailure[] = [
+  {
+    viewport: 'portrait',
+    screenId: 'home',
+    check: 'control',
+    name: 'Create room',
+    reason: 'Create room is 361x42 at y 455. Height is under the 44dp tap rule.',
+  },
+  {
+    viewport: 'portrait',
+    screenId: 'home',
+    check: 'control',
+    name: 'Join code',
+    reason: 'Join code is 361x42 at y 455. Height is under the 44dp tap rule.',
+  },
+  {
+    viewport: 'landscape',
+    screenId: 'home',
+    check: 'control',
+    name: 'Create room',
+    reason: 'Create room is 601x42 at y 455. Height is under the 44dp tap rule.',
+  },
+  {
+    viewport: 'landscape',
+    screenId: 'home',
+    check: 'control',
+    name: 'Join code',
+    reason: 'Join code is 601x42 at y 455. Height is under the 44dp tap rule.',
+  },
+  {
+    viewport: 'landscape',
+    screenId: 'lobby',
+    check: 'clip',
+    name: 'START GAME · 3 players',
+    reason: 'START GAME is 408x60 at y 958 on the 800px landscape viewport, below the fold.',
+  },
+  {
+    viewport: 'portrait',
+    screenId: 'board-start',
+    check: 'control',
+    name: 'Roll the dice',
+    reason: 'Roll the dice is 120x42 at y 1117. Height is under the 44dp tap rule.',
+  },
+  {
+    viewport: 'landscape',
+    screenId: 'board-start',
+    check: 'control',
+    name: 'Roll the dice',
+    reason: 'Roll the dice is 120x42 at y 637. Height is under the 44dp tap rule.',
+  },
+];
+
+export type TabletShot = {
+  spec: ScreenSpec;
+  viewport: TabletViewport;
+  layout: ScreenLayoutSpec;
+  file: string;
+};
+
+export function tabletBaselineDir(root = findRepoRoot()): string {
+  return join(skillDir(root), 'baselines', 'tablet');
+}
+
+export function isTabletTarget(target: string | undefined): boolean {
+  return target === 'tablet';
+}
+
+export function tabletShotsToRun(screen: string): TabletShot[] {
+  const specs = screensToRun(screen);
+  const shots: TabletShot[] = [];
+  for (const viewport of TABLET_VIEWPORTS) {
+    for (const spec of specs) {
+      shots.push({
+        spec,
+        viewport,
+        layout: { screenId: spec.id, ...SCREEN_LAYOUT_BY_ID[spec.id] },
+        file: `${spec.id}-${viewport.id}.png`,
+      });
+    }
+  }
+  return shots;
+}
