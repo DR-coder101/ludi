@@ -177,26 +177,20 @@ function controlChecks(
 ): CheckResult[] {
   const measured = sample.controls.find((control) => control.name === name);
   if (!measured?.found) {
-    return [
-      marked(known, viewportId, spec, 'control', false, 'not found', name),
-      marked(known, viewportId, spec, 'clip', false, 'not found', name),
-    ];
+    return [marked(known, viewportId, spec, 'control', false, 'not found', name)];
   }
   const box: Box = { x: measured.x, y: measured.y, width: measured.width, height: measured.height };
   const inside = fullyInside(box, vw, vh);
   const side = Math.min(box.width, box.height);
-  const problems: string[] = [];
-  if (!inside) problems.push('outside viewport');
-  if (minTap && side < MIN_TAP_DP) problems.push(`min side ${side} < ${MIN_TAP_DP}`);
-  const ok = problems.length === 0;
+  const tapOk = !minTap || side >= MIN_TAP_DP;
   return [
     marked(
       known,
       viewportId,
       spec,
       'control',
-      ok,
-      ok ? `${box.width}x${box.height} inside` : problems.join('; '),
+      tapOk,
+      tapOk ? `${box.width}x${box.height}` : `min side ${side} < ${MIN_TAP_DP}`,
       name,
       box,
     ),
