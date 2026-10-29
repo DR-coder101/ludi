@@ -359,8 +359,7 @@ export function isAdminScreen(id: string): boolean {
 export const MIN_TAP_DP = 44;
 export const BOARD_MIN_PX = 240;
 export const SQUARE_TOLERANCE_PX = 1.5;
-/** Probe floor. The 240px rule lives in evaluateLayout, so a small board is still measured. */
-export const BOARD_DETECT_MIN_PX = 200;
+export const BOARD_PROBE_FLOOR_PX = 200;
 
 export type TabletViewportId = 'portrait' | 'landscape';
 
@@ -379,7 +378,7 @@ export const TABLET_VIEWPORTS: readonly TabletViewport[] = [
 export type LayoutCheckId = 'overflow-x' | 'board-square' | 'control' | 'clip';
 
 export type ControlSpec = {
-  role: 'button' | 'none';
+  role: 'button' | 'label';
   name: string;
   minTap: boolean;
 };
@@ -413,10 +412,10 @@ const SCREEN_LAYOUT_BY_ID: Record<ScreenId, Omit<ScreenLayoutSpec, 'screenId'>> 
     board: false,
     controls: [
       { role: 'button', name: 'START GAME · 3 players', minTap: true },
-      { role: 'none', name: 'Montego Bay, open seat. Invite a friend', minTap: true },
-      { role: 'none', name: 'Ocho Rios: Shanice, Ready', minTap: true },
-      { role: 'none', name: 'Negril: Andre, Joined', minTap: true },
-      { role: 'none', name: 'Kingston: Dean (You), Host · Ready', minTap: true },
+      { role: 'label', name: 'Montego Bay, open seat. Invite a friend', minTap: true },
+      { role: 'label', name: 'Ocho Rios: Shanice, Ready', minTap: true },
+      { role: 'label', name: 'Negril: Andre, Joined', minTap: true },
+      { role: 'label', name: 'Kingston: Dean (You), Host · Ready', minTap: true },
     ],
   },
   'board-start': {

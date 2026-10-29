@@ -17,7 +17,7 @@ import {
   type LayoutSample,
 } from './layout.js';
 import {
-  BOARD_DETECT_MIN_PX,
+  BOARD_PROBE_FLOOR_PX,
   SCREEN_IDS,
   SQUARE_TOLERANCE_PX,
   TABLET_KNOWN_FAILURES,
@@ -79,7 +79,7 @@ function controlLocator(page: Page, control: ControlSpec): Locator {
   switch (control.role) {
     case 'button':
       return page.getByRole('button', { name: control.name, exact: true });
-    case 'none':
+    case 'label':
       return page.getByLabel(control.name, { exact: true });
     default: {
       const unexpected: never = control.role;
@@ -124,7 +124,7 @@ async function measureFrame(page: Page): Promise<FrameMeasure> {
         board,
       };
     },
-    { minSide: BOARD_DETECT_MIN_PX, squareTol: SQUARE_TOLERANCE_PX },
+    { minSide: BOARD_PROBE_FLOOR_PX, squareTol: SQUARE_TOLERANCE_PX },
   );
 }
 
