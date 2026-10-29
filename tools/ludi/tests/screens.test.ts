@@ -233,6 +233,40 @@ describe('ludi screens CLI', () => {
     expect(existsSync(join(runDir, 'overlay-dist'))).toBe(false);
   });
 
+  it('tablet dry-run plans expo export plus ten screenshots', () => {
+    const runDir = join(root, '.tmp-tablet-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'screens',
+      'check',
+      '--target',
+      'tablet',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    const actions = body.planned_actions as Array<{ action: string; file?: string; screen?: string }>;
+    expect(actions[0]?.action).toBe('expo_export_web');
+    expect(actions.filter((action) => action.action === 'screenshot').map((action) => action.file)).toEqual([
+      'home-portrait.png',
+      'lobby-portrait.png',
+      'board-start-portrait.png',
+      'board-video-portrait.png',
+      'win-portrait.png',
+      'home-landscape.png',
+      'lobby-landscape.png',
+      'board-start-landscape.png',
+      'board-video-landscape.png',
+      'win-landscape.png',
+    ]);
+    expect(existsSync(join(runDir, 'web-dist'))).toBe(false);
+  });
+
   it('admin dry-run plans a vite build, 13 captures, and mockup diffs', () => {
     const runDir = join(root, '.tmp-admin-dry');
     rmSync(runDir, { recursive: true, force: true });
