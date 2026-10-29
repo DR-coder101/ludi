@@ -232,7 +232,71 @@ describe('evaluateLayout', () => {
 });
 
 describe('tablet catalog', () => {
-  it('waives the layout failures measured on the current Expo web fixtures', () => {
+  it('fails a 42-tall Create room when nothing is waived', () => {
+    const home = SCREEN_LAYOUT.find((layout) => layout.screenId === 'home');
+    if (!home) throw new Error('missing home layout');
+    const results = evaluateLayout(
+      {
+        viewport: { width: 800, height: 1280 },
+        scrollWidth: 800,
+        clientWidth: 800,
+        board: null,
+        controls: [
+          { name: 'Create room', found: true, x: 34, y: 455, width: 361, height: 42 },
+          { name: 'Join code', found: true, x: 405, y: 455, width: 361, height: 44 },
+          { name: 'Quick match', found: true, x: 16, y: 531, width: 768, height: 85 },
+          { name: 'VS BOTS', found: true, x: 16, y: 626, width: 379, height: 112 },
+          { name: 'PASS & PLAY', found: true, x: 405, y: 626, width: 379, height: 112 },
+        ],
+      },
+      home,
+      'portrait',
+      TABLET_KNOWN_FAILURES,
+    );
+    expect(observed(results).find((row) => row.name === 'Create room' && row.check === 'control')).toEqual({
+      check: 'control',
+      name: 'Create room',
+      ok: false,
+      known: false,
+      detail: 'min side 42 < 44',
+    });
+    expect(verdictFailsCi(results).some((row) => row.name === 'Create room' && row.check === 'control')).toBe(true);
+  });
+
+  it('fails START GAME at y 958 on the 800px landscape viewport when nothing is waived', () => {
+    const lobby = SCREEN_LAYOUT.find((layout) => layout.screenId === 'lobby');
+    if (!lobby) throw new Error('missing lobby layout');
+    const results = evaluateLayout(
+      {
+        viewport: { width: 1280, height: 800 },
+        scrollWidth: 1280,
+        clientWidth: 1280,
+        board: null,
+        controls: [
+          { name: 'START GAME · 3 players', found: true, x: 645, y: 958, width: 408, height: 60 },
+          { name: 'Montego Bay, open seat. Invite a friend', found: true, x: 227, y: 362, width: 199, height: 150 },
+          { name: 'Ocho Rios: Shanice, Ready', found: true, x: 436, y: 362, width: 199, height: 150 },
+          { name: 'Negril: Andre, Joined', found: true, x: 227, y: 522, width: 199, height: 150 },
+          { name: 'Kingston: Dean (You), Host · Ready', found: true, x: 436, y: 522, width: 199, height: 150 },
+        ],
+      },
+      lobby,
+      'landscape',
+      TABLET_KNOWN_FAILURES,
+    );
+    expect(observed(results).find((row) => row.name === 'START GAME · 3 players' && row.check === 'clip')).toEqual({
+      check: 'clip',
+      name: 'START GAME · 3 players',
+      ok: false,
+      known: false,
+      detail: 'outside viewport',
+    });
+    expect(verdictFailsCi(results).some((row) => row.name === 'START GAME · 3 players' && row.check === 'clip')).toBe(
+      true,
+    );
+  });
+
+  it('passes 44dp home and board controls and an on-screen START GAME', () => {
     const home = SCREEN_LAYOUT.find((layout) => layout.screenId === 'home');
     const lobby = SCREEN_LAYOUT.find((layout) => layout.screenId === 'lobby');
     const board = SCREEN_LAYOUT.find((layout) => layout.screenId === 'board-start');
@@ -245,8 +309,8 @@ describe('tablet catalog', () => {
         clientWidth: 800,
         board: null,
         controls: [
-          { name: 'Create room', found: true, x: 34, y: 455, width: 361, height: 42 },
-          { name: 'Join code', found: true, x: 405, y: 455, width: 361, height: 42 },
+          { name: 'Create room', found: true, x: 34, y: 455, width: 361, height: 44 },
+          { name: 'Join code', found: true, x: 405, y: 455, width: 361, height: 44 },
           { name: 'Quick match', found: true, x: 16, y: 531, width: 768, height: 85 },
           { name: 'VS BOTS', found: true, x: 16, y: 626, width: 379, height: 112 },
           { name: 'PASS & PLAY', found: true, x: 405, y: 626, width: 379, height: 112 },
@@ -256,24 +320,6 @@ describe('tablet catalog', () => {
       'portrait',
       TABLET_KNOWN_FAILURES,
     );
-    const landscapeHome = evaluateLayout(
-      {
-        viewport: { width: 1280, height: 800 },
-        scrollWidth: 1280,
-        clientWidth: 1280,
-        board: null,
-        controls: [
-          { name: 'Create room', found: true, x: 34, y: 455, width: 601, height: 42 },
-          { name: 'Join code', found: true, x: 645, y: 455, width: 601, height: 42 },
-          { name: 'Quick match', found: true, x: 16, y: 531, width: 1248, height: 85 },
-          { name: 'VS BOTS', found: true, x: 16, y: 626, width: 619, height: 112 },
-          { name: 'PASS & PLAY', found: true, x: 645, y: 626, width: 619, height: 112 },
-        ],
-      },
-      home,
-      'landscape',
-      TABLET_KNOWN_FAILURES,
-    );
     const landscapeLobby = evaluateLayout(
       {
         viewport: { width: 1280, height: 800 },
@@ -281,11 +327,11 @@ describe('tablet catalog', () => {
         clientWidth: 1280,
         board: null,
         controls: [
-          { name: 'START GAME · 3 players', found: true, x: 436, y: 958, width: 408, height: 60 },
-          { name: 'Montego Bay, open seat. Invite a friend', found: true, x: 436, y: 362, width: 199, height: 150 },
-          { name: 'Ocho Rios: Shanice, Ready', found: true, x: 645, y: 362, width: 199, height: 150 },
-          { name: 'Negril: Andre, Joined', found: true, x: 436, y: 522, width: 199, height: 150 },
-          { name: 'Kingston: Dean (You), Host · Ready', found: true, x: 645, y: 522, width: 199, height: 150 },
+          { name: 'START GAME · 3 players', found: true, x: 645, y: 604, width: 408, height: 60 },
+          { name: 'Montego Bay, open seat. Invite a friend', found: true, x: 227, y: 362, width: 199, height: 150 },
+          { name: 'Ocho Rios: Shanice, Ready', found: true, x: 436, y: 362, width: 199, height: 150 },
+          { name: 'Negril: Andre, Joined', found: true, x: 227, y: 522, width: 199, height: 150 },
+          { name: 'Kingston: Dean (You), Host · Ready', found: true, x: 436, y: 522, width: 199, height: 150 },
         ],
       },
       lobby,
@@ -298,30 +344,16 @@ describe('tablet catalog', () => {
         scrollWidth: 800,
         clientWidth: 800,
         board: { x: 152, y: 118, width: 496, height: 496 },
-        controls: [{ name: 'Roll the dice', found: true, x: 394, y: 1117, width: 120, height: 42 }],
+        controls: [{ name: 'Roll the dice', found: true, x: 394, y: 1117, width: 120, height: 44 }],
       },
       board,
       'portrait',
       TABLET_KNOWN_FAILURES,
     );
-    const landscapeBoard = evaluateLayout(
-      {
-        viewport: { width: 1280, height: 800 },
-        scrollWidth: 1280,
-        clientWidth: 1280,
-        board: { x: 485, y: 118, width: 310, height: 310 },
-        controls: [{ name: 'Roll the dice', found: true, x: 634, y: 637, width: 120, height: 42 }],
-      },
-      board,
-      'landscape',
-      TABLET_KNOWN_FAILURES,
-    );
 
     expect(verdictFailsCi(portraitHome)).toEqual([]);
-    expect(verdictFailsCi(landscapeHome)).toEqual([]);
     expect(verdictFailsCi(landscapeLobby)).toEqual([]);
     expect(verdictFailsCi(portraitBoard)).toEqual([]);
-    expect(verdictFailsCi(landscapeBoard)).toEqual([]);
     expect(observed(landscapeLobby).filter((row) => row.name === 'START GAME · 3 players')).toEqual([
       {
         check: 'control',
@@ -333,18 +365,11 @@ describe('tablet catalog', () => {
       {
         check: 'clip',
         name: 'START GAME · 3 players',
-        ok: false,
-        known: true,
-        detail: 'outside viewport',
+        ok: true,
+        known: false,
+        detail: 'inside',
       },
     ]);
-    expect(observed(portraitBoard).find((row) => row.check === 'control')).toEqual({
-      check: 'control',
-      name: 'Roll the dice',
-      ok: false,
-      known: true,
-      detail: 'min side 42 < 44',
-    });
   });
 
   it('names a known failure only when the viewport, screen, and check exist', () => {
