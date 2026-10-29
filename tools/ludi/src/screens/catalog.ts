@@ -355,3 +355,121 @@ export function adminScreensToRun(id: string): AdminScreenSpec[] {
 export function isAdminScreen(id: string): boolean {
   return id === 'admin' || ADMIN_SCREEN_IDS.includes(id as AdminScreenId);
 }
+
+export const MIN_TAP_DP = 44;
+export const BOARD_MIN_PX = 240;
+export const SQUARE_TOLERANCE_PX = 1.5;
+/** Probe floor. The 240px rule lives in evaluateLayout, so a small board is still measured. */
+export const BOARD_DETECT_MIN_PX = 200;
+
+export type TabletViewportId = 'portrait' | 'landscape';
+
+export type TabletViewport = {
+  id: TabletViewportId;
+  width: number;
+  height: number;
+  deviceScaleFactor: 1;
+};
+
+export const TABLET_VIEWPORTS: readonly TabletViewport[] = [
+  { id: 'portrait', width: 800, height: 1280, deviceScaleFactor: 1 },
+  { id: 'landscape', width: 1280, height: 800, deviceScaleFactor: 1 },
+];
+
+export type LayoutCheckId = 'overflow-x' | 'board-square' | 'control' | 'clip';
+
+export type ControlSpec = {
+  role: 'button' | 'none';
+  name: string;
+  minTap: boolean;
+};
+
+export type ScreenLayoutSpec = {
+  screenId: ScreenId;
+  board: boolean;
+  controls: readonly ControlSpec[];
+};
+
+export type KnownFailure = {
+  viewport: TabletViewportId;
+  screenId: ScreenId;
+  check: LayoutCheckId;
+  name?: string;
+  reason: string;
+};
+
+const SCREEN_LAYOUT_BY_ID: Record<ScreenId, Omit<ScreenLayoutSpec, 'screenId'>> = {
+  home: {
+    board: false,
+    controls: [
+      { role: 'button', name: 'Create room', minTap: true },
+      { role: 'button', name: 'Join code', minTap: true },
+      { role: 'button', name: 'Quick match', minTap: true },
+      { role: 'button', name: 'VS BOTS', minTap: true },
+      { role: 'button', name: 'PASS & PLAY', minTap: true },
+    ],
+  },
+  lobby: {
+    board: false,
+    controls: [
+      { role: 'button', name: 'START GAME · 3 players', minTap: true },
+      { role: 'button', name: 'Montego Bay, open seat. Invite a friend', minTap: true },
+      { role: 'none', name: 'Ocho Rios: Shanice, Ready', minTap: true },
+      { role: 'none', name: 'Negril: Andre, Joined', minTap: true },
+      { role: 'none', name: 'Kingston: Dean (You), Host · Ready', minTap: true },
+    ],
+  },
+  'board-start': {
+    board: true,
+    controls: [{ role: 'button', name: 'Roll the dice', minTap: true }],
+  },
+  'board-video': {
+    board: true,
+    controls: [{ role: 'button', name: 'Mute microphone', minTap: true }],
+  },
+  win: {
+    board: false,
+    controls: [
+      { role: 'button', name: 'Rematch', minTap: true },
+      { role: 'button', name: 'Lobby', minTap: true },
+    ],
+  },
+};
+
+export const SCREEN_LAYOUT: readonly ScreenLayoutSpec[] = SCREEN_IDS.map((screenId) => ({
+  screenId,
+  ...SCREEN_LAYOUT_BY_ID[screenId],
+}));
+
+export const TABLET_KNOWN_FAILURES: readonly KnownFailure[] = [];
+
+export type TabletShot = {
+  spec: ScreenSpec;
+  viewport: TabletViewport;
+  layout: ScreenLayoutSpec;
+  file: string;
+};
+
+export function tabletBaselineDir(root = findRepoRoot()): string {
+  return join(skillDir(root), 'baselines', 'tablet');
+}
+
+export function isTabletTarget(target: string | undefined): boolean {
+  return target === 'tablet';
+}
+
+export function tabletShotsToRun(screen: string): TabletShot[] {
+  const specs = screensToRun(screen);
+  const shots: TabletShot[] = [];
+  for (const viewport of TABLET_VIEWPORTS) {
+    for (const spec of specs) {
+      shots.push({
+        spec,
+        viewport,
+        layout: { screenId: spec.id, ...SCREEN_LAYOUT_BY_ID[spec.id] },
+        file: `${spec.id}-${viewport.id}.png`,
+      });
+    }
+  }
+  return shots;
+}
