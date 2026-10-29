@@ -2,6 +2,7 @@ import React, { type ReactNode, useId, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { BUTTON_3D, BUTTON_3D_PRESS_MS, button3DShadow, type Button3DTone } from '../../theme/threeD';
+import { layout } from '../../theme/tokens';
 import { cssShadow } from '../home/cssShadow';
 import { triggerHaptic } from '../../utils/gameAudio';
 import { FaceFill } from './FaceFill';
@@ -78,6 +79,8 @@ export function Button3D({
               borderRadius: radius,
               borderColor: recipe.border,
               backgroundColor: recipe.face[recipe.face.length - 1]?.color,
+              minHeight: layout.tapMin,
+              justifyContent: 'center',
               paddingVertical: compact ? 8 : 13,
               paddingHorizontal: compact ? 12 : 2,
               opacity: disabled ? 0.7 : 1,

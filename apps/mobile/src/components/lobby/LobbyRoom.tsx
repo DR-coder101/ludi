@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import type { Color, HouseRules } from '@ludi/protocol';
@@ -11,6 +11,16 @@ import { CodeCard } from './CodeCard';
 import { HouseRulesPicker } from './HouseRulesPicker';
 import { SeatCard } from './SeatCard';
 import { LobbyHeader, OptionToggle, RoomModeTabs, StartButton } from './LobbyControls';
+import {
+  lobbyArrangement,
+  lobbyColumnWidth,
+  lobbyPaneInner,
+  LOBBY_BOTTOM_GAP,
+  LOBBY_GAP,
+  LOBBY_SIDE,
+  LOBBY_TOP_GAP,
+  PANE_INNER,
+} from './lobbyLayout';
 import type { LobbySeat, RoomNote, StartCta } from './lobbyModel';
 
 interface Toggle {
@@ -41,24 +51,84 @@ export interface LobbyRoomProps {
   children?: ReactNode;
 }
 
-const MAX_COLUMN = 440;
-const SIDE = 16;
-const GAP = 10;
-/** Mockup offsets: header 7pt under the status bar, START GAME ends 12pt above the home indicator inset. */
-const TOP_GAP = 7;
-const BOTTOM_GAP = 12;
-
 export function LobbyRoom(props: LobbyRoomProps) {
   const { code, host, seats, note, start, starting, voice, video, houseRules, onHouseRulesChange, onBack, onCopy, onShare, onStart, onSelectSeat, children } = props;
   const fontsReady = useLudiFonts();
   const device = useSafeAreaInsets();
   const insets = props.insets ?? device;
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
 
-  const column = Math.min(width, MAX_COLUMN);
-  const inner = column - SIDE * 2;
-  const seatWidth = (inner - GAP) / 2;
+  const arrangement = lobbyArrangement({ width, height }, insets);
+  const column = lobbyColumnWidth(width, arrangement);
+  const inner = lobbyPaneInner(column, arrangement);
+  const headerInner = lobbyPaneInner(lobbyColumnWidth(width, 'stack'), 'stack');
+  const seatWidth = (inner - LOBBY_GAP) / 2;
   const players = seats.filter((s) => s.name != null).length;
+
+  const island = (
+    <>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle} accessibilityRole="header">
+          PICK YOUR CORNER
+        </Text>
+        <Text style={styles.sectionNote}>Laid out like the island</Text>
+      </View>
+      <View style={styles.grid}>
+        {seats.map((seat) => (
+          <SeatCard
+            key={seat.color}
+            seat={seat}
+            width={seatWidth}
+            onSelect={seat.name == null && !seat.you && onSelectSeat ? () => onSelectSeat(seat.color) : undefined}
+          />
+        ))}
+      </View>
+    </>
+  );
+
+  const rules = (
+    <>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle} accessibilityRole="header">
+          HOUSE RULES
+        </Text>
+      </View>
+      <HouseRulesPicker houseRules={houseRules} onChange={onHouseRulesChange} />
+      <View style={styles.spring} />
+      <View style={styles.options}>
+        <OptionToggle icon="mic" label="Voice" on={voice.on} onToggle={voice.onToggle} />
+        <OptionToggle icon="video" label="Video" on={video.on} onToggle={video.onToggle} />
+        <OptionToggle icon="lock" label="Private" on hint="Rooms are always private: only people with the code can join" />
+      </View>
+      <View style={styles.gap16}>
+        <StartButton cta={start} width={inner} busy={starting} onPress={onStart} />
+      </View>
+    </>
+  );
+
+  let body: ReactNode;
+  switch (arrangement) {
+    case 'split':
+      body = (
+        <View style={styles.splitRow}>
+          <View style={styles.pane}>{island}</View>
+          <View style={styles.pane}>{rules}</View>
+        </View>
+      );
+      break;
+    case 'stack':
+      body = (
+        <>
+          {island}
+          {rules}
+        </>
+      );
+      break;
+    default: {
+      const unexpected: never = arrangement;
+      throw new Error(`unknown lobby arrangement ${String(unexpected)}`);
+    }
+  }
 
   return (
     <View style={styles.screen}>
@@ -71,45 +141,33 @@ export function LobbyRoom(props: LobbyRoomProps) {
           showsVerticalScrollIndicator={false}
           alwaysBounceVertical={false}
         >
-          <View style={[styles.column, { width: column, paddingTop: insets.top + TOP_GAP, paddingBottom: insets.bottom + BOTTOM_GAP }]}>
-            <LobbyHeader onBack={onBack} />
-            <View style={styles.gap12}>
-              <RoomModeTabs host={host} />
-            </View>
-            <View style={styles.gap12}>
-              <CodeCard code={code} width={inner} players={players} note={note} onCopy={onCopy} onShare={onShare} />
-            </View>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle} accessibilityRole="header">
-                PICK YOUR CORNER
-              </Text>
-              <Text style={styles.sectionNote}>Laid out like the island</Text>
-            </View>
-            <View style={styles.grid}>
-              {seats.map((seat) => (
-                <SeatCard 
-                  key={seat.color} 
-                  seat={seat} 
-                  width={seatWidth} 
-                  onSelect={seat.name == null && !seat.you && onSelectSeat ? () => onSelectSeat(seat.color) : undefined}
+          <View
+            style={[
+              styles.column,
+              {
+                width: column,
+                paddingTop: insets.top + LOBBY_TOP_GAP,
+                paddingBottom: insets.bottom + LOBBY_BOTTOM_GAP,
+              },
+            ]}
+          >
+            <View style={[styles.headerBlock, { width: headerInner }]}>
+              <LobbyHeader onBack={onBack} />
+              <View style={styles.gap12}>
+                <RoomModeTabs host={host} />
+              </View>
+              <View style={styles.gap12}>
+                <CodeCard
+                  code={code}
+                  width={headerInner}
+                  players={players}
+                  note={note}
+                  onCopy={onCopy}
+                  onShare={onShare}
                 />
-              ))}
+              </View>
             </View>
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle} accessibilityRole="header">
-                HOUSE RULES
-              </Text>
-            </View>
-            <HouseRulesPicker houseRules={houseRules} onChange={onHouseRulesChange} />
-            <View style={styles.spring} />
-            <View style={styles.options}>
-              <OptionToggle icon="mic" label="Voice" on={voice.on} onToggle={voice.onToggle} />
-              <OptionToggle icon="video" label="Video" on={video.on} onToggle={video.onToggle} />
-              <OptionToggle icon="lock" label="Private" on hint="Rooms are always private: only people with the code can join" />
-            </View>
-            <View style={styles.gap16}>
-              <StartButton cta={start} width={inner} busy={starting} onPress={onStart} />
-            </View>
+            {body}
           </View>
         </ScrollView>
       ) : null}
@@ -130,8 +188,6 @@ export function LobbyLoading({
   onBack?: () => void; 
   children?: ReactNode;
 }) {
-  const { Pressable, StyleSheet: RNStyleSheet } = require('react-native');
-  
   if (error) {
     return (
       <View style={[styles.screen, styles.loading]}>
@@ -167,11 +223,6 @@ export function LobbyLoading({
   );
 }
 
-/**
- * Lobby line heights are Chrome's `normal` for each font and size, with ascent and
- * descent rounded separately (Inter 12 → 15, Archivo Black 10 → 11, Anton 20 → 31).
- * A smaller fractional value floors the half-leading and lifts web glyphs by 1px.
- */
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -186,7 +237,18 @@ const styles = StyleSheet.create({
   },
   column: {
     flexGrow: 1,
-    paddingHorizontal: SIDE,
+    paddingHorizontal: LOBBY_SIDE,
+  },
+  headerBlock: {
+    alignSelf: 'center',
+  },
+  splitRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: LOBBY_GAP,
+  },
+  pane: {
+    width: PANE_INNER,
   },
   gap12: {
     marginTop: 12,
@@ -204,7 +266,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: font.display,
-    // Mockup <h2> asks Anton for bold; antonBold synthesises on web/Android and keeps Anton on iOS.
     ...antonBold,
     fontSize: 20,
     lineHeight: 31,
@@ -220,9 +281,8 @@ const styles = StyleSheet.create({
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: GAP,
+    gap: LOBBY_GAP,
   },
-  /** Holds the toggles and START GAME at the bottom on tall screens; 12pt at 390×844. */
   spring: {
     flexGrow: 1,
     minHeight: 12,

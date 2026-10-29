@@ -152,6 +152,7 @@ export const layout = {
   railInset: 10,
   railGap: 14,
   railButton: 44,
+  tapMin: 44,
   topButton: 40,
   turnCardHeight: 168,
   stripGap: 8,

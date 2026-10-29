@@ -440,57 +440,7 @@ export const SCREEN_LAYOUT: readonly ScreenLayoutSpec[] = SCREEN_IDS.map((screen
   ...SCREEN_LAYOUT_BY_ID[screenId],
 }));
 
-export const TABLET_KNOWN_FAILURES: readonly KnownFailure[] = [
-  {
-    viewport: 'portrait',
-    screenId: 'home',
-    check: 'control',
-    name: 'Create room',
-    reason: 'Create room is 361x42 at y 455. Height is under the 44dp tap rule.',
-  },
-  {
-    viewport: 'portrait',
-    screenId: 'home',
-    check: 'control',
-    name: 'Join code',
-    reason: 'Join code is 361x42 at y 455. Height is under the 44dp tap rule.',
-  },
-  {
-    viewport: 'landscape',
-    screenId: 'home',
-    check: 'control',
-    name: 'Create room',
-    reason: 'Create room is 601x42 at y 455. Height is under the 44dp tap rule.',
-  },
-  {
-    viewport: 'landscape',
-    screenId: 'home',
-    check: 'control',
-    name: 'Join code',
-    reason: 'Join code is 601x42 at y 455. Height is under the 44dp tap rule.',
-  },
-  {
-    viewport: 'landscape',
-    screenId: 'lobby',
-    check: 'clip',
-    name: 'START GAME · 3 players',
-    reason: 'START GAME is 408x60 at y 958 on the 800px landscape viewport, below the fold.',
-  },
-  {
-    viewport: 'portrait',
-    screenId: 'board-start',
-    check: 'control',
-    name: 'Roll the dice',
-    reason: 'Roll the dice is 120x42 at y 1117. Height is under the 44dp tap rule.',
-  },
-  {
-    viewport: 'landscape',
-    screenId: 'board-start',
-    check: 'control',
-    name: 'Roll the dice',
-    reason: 'Roll the dice is 120x42 at y 637. Height is under the 44dp tap rule.',
-  },
-];
+export const TABLET_KNOWN_FAILURES: readonly KnownFailure[] = [];
 
 export type TabletShot = {
   spec: ScreenSpec;
