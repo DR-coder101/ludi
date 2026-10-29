@@ -223,11 +223,6 @@ export function LobbyLoading({
   );
 }
 
-/**
- * Lobby line heights are Chrome's `normal` for each font and size, with ascent and
- * descent rounded separately (Inter 12 → 15, Archivo Black 10 → 11, Anton 20 → 31).
- * A smaller fractional value floors the half-leading and lifts web glyphs by 1px.
- */
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
@@ -271,7 +266,6 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontFamily: font.display,
-    // Mockup <h2> asks Anton for bold; antonBold synthesises on web/Android and keeps Anton on iOS.
     ...antonBold,
     fontSize: 20,
     lineHeight: 31,
@@ -289,7 +283,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: LOBBY_GAP,
   },
-  /** Holds the toggles and START GAME at the bottom on tall screens; 12pt at 390×844. */
   spring: {
     flexGrow: 1,
     minHeight: 12,
