@@ -9,6 +9,15 @@ export interface MoveLike {
   dieIndex: 0 | 1;
   steps: number;
   resulting: TokenPos;
+  captures?: { color: Color; index: 0 | 1 | 2 | 3 };
+}
+
+/** Board mapping for sending a captured token back to its yard slot. */
+export interface CaptureReturn {
+  tokenIndex: number;
+  color: Color;
+  from: CellPosition;
+  slot: number;
 }
 
 export interface BoardPiece {
@@ -89,6 +98,13 @@ export function hopCells(from: TokenPos, to: TokenPos, color: Color): CellPositi
   }
   const end = cellOf(to, color);
   return end ? [end] : [];
+}
+
+export function captureReturn(
+  _state: GameState,
+  _captured: { color: Color; index: 0 | 1 | 2 | 3 },
+): CaptureReturn | null {
+  return null;
 }
 
 function pickHighlight(
