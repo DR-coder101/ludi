@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import Animated, {
@@ -12,8 +12,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import type { Color, GameState, TokenPos } from '@ludi/rules';
-import { YARDS, type CellPosition } from './boardLayout';
-import { cellOf, hopCells, type BoardModel } from './boardModel';
+import { YARDS } from './boardLayout';
+import { captureReturn, cellOf, hopCells, type BoardModel, type MoveLike } from './boardModel';
 import { BoardArt, C, pieceCentre, TRACK_PIECE_R, UNITS, yardPortraitRect, yardSlot, type YardLabels } from './BoardArt';
 import { SeatVideoTile } from '../video/SeatVideoTile';
 import { PieceDefs, PieceGlyph } from './PieceGlyph';
@@ -25,10 +25,15 @@ export interface HopAnimation {
   color: Color;
   /** Board-unit start point (cell centre or yard slot). */
   from: { x: number; y: number };
-  cells: CellPosition[];
+  /** Board-unit centres to hop through, including the landing. */
+  path: { x: number; y: number }[];
 }
 
-/** Hop for one engine move, starting from wherever the token is drawn now. */
+function yardDrawPoint(color: Color, slot: number): { x: number; y: number } {
+  const dest = yardSlot(color, slot);
+  return { x: dest.x, y: dest.y - 1 };
+}
+
 export function makeHop(state: GameState, tokenIndex: number, to: TokenPos): HopAnimation | null {
   const token = state.tokens[tokenIndex];
   if (!token) return null;
@@ -46,7 +51,34 @@ export function makeHop(state: GameState, tokenIndex: number, to: TokenPos): Hop
     if (!cell) return null;
     from = pieceCentre(cell.row, cell.col);
   }
-  return { tokenIndex, color: token.color, from, cells };
+  return { tokenIndex, color: token.color, from, path: cells.map((c) => pieceCentre(c.row, c.col)) };
+}
+
+function makeYardHop(state: GameState, tokenIndex: number): HopAnimation | null {
+  const token = state.tokens[tokenIndex];
+  if (!token) return null;
+  const home = captureReturn(state, { color: token.color, index: token.index });
+  if (!home) return null;
+  return {
+    tokenIndex,
+    color: token.color,
+    from: pieceCentre(home.from.row, home.from.col),
+    path: [yardDrawPoint(home.color, home.slot)],
+  };
+}
+
+export function makeMoveHops(state: GameState, move: MoveLike): HopAnimation[] {
+  const hops: HopAnimation[] = [];
+  const mover = makeHop(state, move.tokenIndex, move.resulting);
+  if (mover) hops.push(mover);
+  if (!move.captures) return hops;
+  const capturedIndex = state.tokens.findIndex(
+    (token) => token.color === move.captures!.color && token.index === move.captures!.index,
+  );
+  if (capturedIndex < 0) return hops;
+  const home = makeYardHop(state, capturedIndex);
+  if (home) hops.push(home);
+  return hops;
 }
 
 interface BoardViewProps {
@@ -55,8 +87,12 @@ interface BoardViewProps {
   model: BoardModel;
   labels: YardLabels;
   onTokenPress?: (tokenIndex: number) => void;
-  hop?: HopAnimation | null;
+  hop?: readonly HopAnimation[] | null;
   onHopDone?: () => void;
+}
+
+export function hopList(hop: readonly HopAnimation[] | null | undefined): HopAnimation[] {
+  return hop && hop.length > 0 ? [...hop] : [];
 }
 
 function Ripple({ x, y, r, tint }: { x: number; y: number; r: number; tint: string }) {
@@ -107,7 +143,7 @@ function Breathe({ engine, s }: { engine: Color; s: number }) {
 function HopPiece({ hop, s, onDone }: { hop: HopAnimation; s: number; onDone?: () => void }) {
   const reduce = useReducedMotion();
   const piece: PieceColor = PLACES[hop.color].piece;
-  const target = hop.cells.map((c) => pieceCentre(c.row, c.col));
+  const target = hop.path;
   const end = target[target.length - 1] ?? hop.from;
   const x = useSharedValue((reduce ? end.x : hop.from.x) * s);
   const y = useSharedValue((reduce ? end.y : hop.from.y) * s);
@@ -156,6 +192,26 @@ function HopPiece({ hop, s, onDone }: { hop: HopAnimation; s: number; onDone?: (
   );
 }
 
+function HopLayer({ hops, s, onDone }: { hops: HopAnimation[]; s: number; onDone?: () => void }) {
+  const left = useRef(hops.length);
+  const finishOne = () => {
+    left.current -= 1;
+    if (left.current <= 0) onDone?.();
+  };
+  return (
+    <>
+      {hops.map((h) => (
+        <HopPiece
+          key={`${h.tokenIndex}-${h.path.length}-${h.from.x}-${h.from.y}`}
+          hop={h}
+          s={s}
+          onDone={finishOne}
+        />
+      ))}
+    </>
+  );
+}
+
 function Bevel({ size }: { size: number }) {
   return (
     <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
@@ -177,6 +233,7 @@ export function BoardView({ size, model, labels, onTokenPress, hop, onHopDone }:
   const inner = size - layout.boardBevel * 2;
   const s = inner / UNITS;
   const hit = C * 1.3 * s;
+  const hops = hopList(hop);
 
   const targets: { key: string; tokenIndex: number; x: number; y: number; r: number; label: string }[] = [];
   for (const p of model.pieces) {
@@ -231,7 +288,14 @@ export function BoardView({ size, model, labels, onTokenPress, hop, onHopDone }:
             style={[styles.hit, { left: t.x * s - hit, top: t.y * s - hit, width: hit * 2, height: hit * 2, borderRadius: hit }]}
           />
         ))}
-        {hop ? <HopPiece key={`${hop.tokenIndex}-${hop.cells.length}-${hop.from.x}`} hop={hop} s={s} onDone={onHopDone} /> : null}
+        {hops.length > 0 ? (
+          <HopLayer
+            key={hops.map((h) => `${h.tokenIndex}-${h.path.length}`).join('-')}
+            hops={hops}
+            s={s}
+            onDone={onHopDone}
+          />
+        ) : null}
       </View>
     </View>
   );

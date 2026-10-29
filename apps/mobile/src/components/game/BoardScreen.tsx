@@ -3,7 +3,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Color, GameState } from '@ludi/rules';
 import { buildBoardModel, type MoveLike } from '../board/boardModel';
-import { BoardView, type HopAnimation } from '../board/BoardView';
+import { BoardView, hopList, type HopAnimation } from '../board/BoardView';
 import { layout, TURN_ORDER, color, font } from '../../theme/tokens';
 import { useLudiFonts } from '../../theme/fonts';
 import { ScreenBackdrop } from './ScreenBackdrop';
@@ -29,7 +29,7 @@ export interface BoardScreenProps {
   lastRoll: readonly [number, number] | null;
   rollKey: number;
   timer?: TurnTimer | null;
-  hop?: HopAnimation | null;
+  hop?: readonly HopAnimation[] | null;
   onHopDone?: () => void;
   onRoll?: () => void;
   onMove?: (move: MoveLike) => void;
@@ -83,9 +83,11 @@ export function BoardScreen(props: BoardScreenProps) {
 
   const isMine = me === null || state.turn === me;
   const awaitingRoll = state.phase === 'awaiting_roll';
-  const canRoll = isMine && awaitingRoll && !hop && !!onRoll;
-  const activeMoves = isMine && !hop ? moves : [];
-  const hidden = hop ? [hop.tokenIndex] : [];
+  const hops = hopList(hop);
+  const hopping = hops.length > 0;
+  const canRoll = isMine && awaitingRoll && !hopping && !!onRoll;
+  const activeMoves = isMine && !hopping ? moves : [];
+  const hidden = hops.map((item) => item.tokenIndex);
   const [pick, setPick] = useState<{ rollKey: number; die: DieIndex } | null>(null);
   const picked = pick?.rollKey === rollKey ? pick.die : null;
   const active = activeDie(activeMoves, picked);

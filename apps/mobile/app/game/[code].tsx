@@ -17,7 +17,7 @@ import { useVideoStore } from '../../src/stores/videoStore';
 import { useToastStore } from '../../src/stores/toastStore';
 import { BoardScreen } from '../../src/components/game/BoardScreen';
 import type { MoveLike } from '../../src/components/board/boardModel';
-import { makeHop, type HopAnimation } from '../../src/components/board/BoardView';
+import { makeMoveHops, type HopAnimation } from '../../src/components/board/BoardView';
 import { useTurnTimer } from '../../src/components/game/useTurnTimer';
 import { WinScreen } from '../../src/components/win/WinScreen';
 import { winView } from '../../src/components/win/winModel';
@@ -121,7 +121,7 @@ export default function OnlineGameScreen() {
 
   const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
 
-  const [hop, setHop] = useState<HopAnimation | null>(null);
+  const [hop, setHop] = useState<HopAnimation[] | null>(null);
   const [lastRoll, setLastRoll] = useState<[number, number] | null>(null);
   const [rollKey, setRollKey] = useState(0);
   const [isRolling, setIsRolling] = useState(false);
@@ -233,9 +233,26 @@ export default function OnlineGameScreen() {
       if (!current) return;
       const before = {
         ...current,
-        tokens: current.tokens.map((t, i) => (i === payload.tokenIndex ? { ...t, pos: payload.from } : t)),
+        tokens: current.tokens.map((t, i) => {
+          if (i === payload.tokenIndex) return { ...t, pos: payload.from };
+          if (
+            payload.captured &&
+            t.color === payload.captured.color &&
+            t.index === payload.captured.index
+          ) {
+            return { ...t, pos: payload.to };
+          }
+          return t;
+        }),
       };
-      setHop(makeHop(before, payload.tokenIndex, payload.to));
+      const hops = makeMoveHops(before, {
+        tokenIndex: payload.tokenIndex,
+        dieIndex: payload.dieIndex,
+        steps: payload.steps,
+        resulting: payload.to,
+        captures: payload.captured,
+      });
+      setHop(hops.length > 0 ? hops : null);
     });
 
     socket.on('game:turnChanged', (payload) => {
@@ -340,7 +357,8 @@ export default function OnlineGameScreen() {
     setIsMoving(true);
 
     const from = gameState.tokens[tokenIndex].pos;
-    setHop(makeHop(gameState, tokenIndex, move.resulting));
+    const hops = makeMoveHops(gameState, move);
+    setHop(hops.length > 0 ? hops : null);
     applyOptimisticMove({ tokenIndex, dieIndex, from, to: move.resulting });
 
     socket.emit('game:move', { tokenIndex, dieIndex }, (response) => {

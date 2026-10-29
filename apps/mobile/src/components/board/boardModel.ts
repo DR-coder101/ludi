@@ -9,6 +9,14 @@ export interface MoveLike {
   dieIndex: 0 | 1;
   steps: number;
   resulting: TokenPos;
+  captures?: { color: Color; index: 0 | 1 | 2 | 3 };
+}
+
+export interface CaptureReturn {
+  tokenIndex: number;
+  color: Color;
+  from: CellPosition;
+  slot: number;
 }
 
 export interface BoardPiece {
@@ -89,6 +97,25 @@ export function hopCells(from: TokenPos, to: TokenPos, color: Color): CellPositi
   }
   const end = cellOf(to, color);
   return end ? [end] : [];
+}
+
+export function captureReturn(
+  state: GameState,
+  captured: { color: Color; index: 0 | 1 | 2 | 3 },
+): CaptureReturn | null {
+  const tokenIndex = state.tokens.findIndex(
+    (token) => token.color === captured.color && token.index === captured.index,
+  );
+  if (tokenIndex < 0) return null;
+  const token = state.tokens[tokenIndex];
+  const from = cellOf(token.pos, token.color);
+  if (!from) return null;
+  let slot = 0;
+  for (let i = 0; i < tokenIndex; i++) {
+    const other = state.tokens[i];
+    if (other.color === token.color && other.pos.zone === 'yard') slot += 1;
+  }
+  return { tokenIndex, color: token.color, from, slot };
 }
 
 function pickHighlight(

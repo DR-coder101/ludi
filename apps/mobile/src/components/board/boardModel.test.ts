@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { legalMoves } from '@ludi/rules';
-import { buildBoardModel, cellOf, hopCells } from './boardModel';
+import { applyMove, createGame, legalMoves, type Dice } from '@ludi/rules';
+import { buildBoardModel, captureReturn, cellOf, hopCells } from './boardModel';
 import { boardFixture } from '../../dev/boardFixtures';
 
 const rc = (c: { row: number; col: number } | null) => (c ? [c.row, c.col] : null);
@@ -33,6 +33,73 @@ describe('hopCells', () => {
 
   it('pops straight onto the start star from the yard', () => {
     expect(hopCells({ zone: 'yard' }, { zone: 'track', cell: 34 }, 'yellow').map(rc)).toEqual([[8, 1]]);
+  });
+});
+
+function captureSetup() {
+  const game = createGame({
+    playerColors: ['red', 'green'],
+    houseRules: {
+      maxConsecutiveSixes: 2,
+      extraRollOnCapture: false,
+      blockadeCanMoveTogether: false,
+      exactFinishBonus: false,
+      playForPlacements: false,
+    },
+  });
+  game.tokens[0].pos = { zone: 'track', cell: 5 };
+  game.tokens[4].pos = { zone: 'track', cell: 7 };
+  const state = {
+    ...game,
+    phase: 'awaiting_move' as const,
+    dice: [
+      { value: 2, used: false },
+      { value: 3, used: true },
+    ] as Dice,
+  };
+  const move = legalMoves(state).find((m) => m.tokenIndex === 0 && m.captures);
+  return { state, move };
+}
+
+describe('capture return to yard', () => {
+  it('keeps the captured piece in its home yard after the engine move', () => {
+    const { state, move } = captureSetup();
+    expect(move?.captures).toEqual({ color: 'green', index: 0 });
+    const next = applyMove(state, move!.tokenIndex, move!.dieIndex).state;
+    const model = buildBoardModel(next, []);
+    expect(model.yards.green.tokens).toContain(4);
+    expect(model.pieces.find((p) => p.tokenIndex === 4)).toBeUndefined();
+    expect(model.pieces.find((p) => p.row === 11 && p.col === 10)?.tokenIndex).toBe(0);
+  });
+
+  it('maps the captured piece from the capture square to that yard slot', () => {
+    const { state, move } = captureSetup();
+    const next = applyMove(state, move!.tokenIndex, move!.dieIndex).state;
+    const slot = buildBoardModel(next, []).yards.green.tokens.indexOf(4);
+    expect(slot).toBe(0);
+    expect(captureReturn(state, move!.captures!)).toEqual({
+      tokenIndex: 4,
+      color: 'green',
+      from: { row: 11, col: 10 },
+      slot: 0,
+    });
+  });
+
+  it('lands in the slot matching token order among yard pieces', () => {
+    const { state } = captureSetup();
+    state.tokens[4].pos = { zone: 'yard' };
+    state.tokens[6].pos = { zone: 'track', cell: 7 };
+    const move = legalMoves(state).find((m) => m.tokenIndex === 0 && m.captures);
+    expect(move?.captures).toEqual({ color: 'green', index: 2 });
+    const next = applyMove(state, move!.tokenIndex, move!.dieIndex).state;
+    const slot = buildBoardModel(next, []).yards.green.tokens.indexOf(6);
+    expect(slot).toBe(2);
+    expect(captureReturn(state, move!.captures!)).toEqual({
+      tokenIndex: 6,
+      color: 'green',
+      from: { row: 11, col: 10 },
+      slot: 2,
+    });
   });
 });
 
@@ -102,5 +169,13 @@ describe('buildBoardModel on the mockup fixtures', () => {
     const state = boardFixture('mid');
     const model = buildBoardModel(state, [], { hidden: [0] });
     expect(model.pieces.find((p) => p.row === 10 && p.col === 16)).toBeUndefined();
+  });
+
+  it('capture: draws the licked green piece in Negril yard after the move', () => {
+    const before = buildBoardModel(boardFixture('capture-before'), []);
+    expect(before.pieces.find((p) => p.row === 11 && p.col === 10)?.piece).toBe('black');
+    const model = buildBoardModel(boardFixture('capture'), []);
+    expect(model.yards.green.tokens).toContain(4);
+    expect(model.pieces.find((p) => p.row === 11 && p.col === 10)?.piece).toBe('red');
   });
 });
