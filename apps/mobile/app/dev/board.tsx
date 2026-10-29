@@ -3,9 +3,10 @@ import { Platform } from 'react-native';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { applyMove, legalMoves, rollDice, type GameState } from '@ludi/rules';
 import { BoardScreen } from '../../src/components/game/BoardScreen';
-import { makeHop, type HopAnimation } from '../../src/components/board/BoardView';
+import { makeMoveHops, type HopAnimation } from '../../src/components/board/BoardView';
 import {
   boardFixture,
+  CAPTURE_ROLL,
   MID_ROLL,
   MOCKUP_NAMES,
   VIDEO_FIXTURE_CALL,
@@ -14,12 +15,46 @@ import {
   type FixtureName,
 } from '../../src/dev/boardFixtures';
 
+function parseFixture(state: string | undefined): FixtureName {
+  switch (state) {
+    case 'mid':
+    case 'video':
+    case 'leave':
+    case 'capture':
+    case 'capture-before':
+      return state;
+    default:
+      return 'start';
+  }
+}
+
+function rollFor(name: FixtureName): [number, number] | null {
+  switch (name) {
+    case 'mid':
+      return MID_ROLL;
+    case 'video':
+    case 'leave':
+      return VIDEO_ROLL;
+    case 'capture':
+    case 'capture-before':
+      return CAPTURE_ROLL;
+    case 'start':
+      return null;
+    default: {
+      const _never: never = name;
+      return _never;
+    }
+  }
+}
+
 /** Ring fill in the mockups: dash 140 (start) and 110 (mid) of a 150.8 circumference. */
 const MOCKUP_TIMER: Record<FixtureName, number> = {
   start: 140 / 150.8,
   mid: 110 / 150.8,
   video: 140 / 150.8,
   leave: 140 / 150.8,
+  capture: 140 / 150.8,
+  'capture-before': 140 / 150.8,
 };
 /** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
 const PHONE_INSETS = { top: 47, bottom: 34 };
@@ -29,18 +64,15 @@ const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 export default function BoardPreview() {
   const router = useRouter();
   const params = useLocalSearchParams<{ state?: string }>();
-  const fixture: FixtureName =
-    params.state === 'mid' ? 'mid' : params.state === 'video' ? 'video' : params.state === 'leave' ? 'leave' : 'start';
+  const fixture = parseFixture(params.state);
   const [state, setState] = useState<GameState>(() => boardFixture(fixture));
-  const [lastRoll, setLastRoll] = useState<[number, number] | null>(
-    fixture === 'mid' ? MID_ROLL : fixture === 'video' || fixture === 'leave' ? VIDEO_ROLL : null,
-  );
+  const [lastRoll, setLastRoll] = useState<[number, number] | null>(rollFor(fixture));
   const [rollKey, setRollKey] = useState(0);
-  const [hop, setHop] = useState<{ anim: HopAnimation; next: GameState } | null>(null);
+  const [hop, setHop] = useState<{ hops: HopAnimation[]; next: GameState } | null>(null);
 
   useEffect(() => {
     setState(boardFixture(fixture));
-    setLastRoll(fixture === 'mid' ? MID_ROLL : fixture === 'video' || fixture === 'leave' ? VIDEO_ROLL : null);
+    setLastRoll(rollFor(fixture));
     setHop(null);
   }, [fixture]);
 
@@ -61,7 +93,7 @@ export default function BoardPreview() {
         lastRoll={lastRoll}
         rollKey={rollKey}
         timer={{ fraction: MOCKUP_TIMER[fixture], urgent: false }}
-        hop={hop?.anim ?? null}
+        hop={hop?.hops ?? null}
         onHopDone={() => {
           if (!hop) return;
           setState(hop.next);
@@ -74,9 +106,9 @@ export default function BoardPreview() {
           setState(result.state);
         }}
         onMove={(move) => {
-          const anim = makeHop(state, move.tokenIndex, move.resulting);
+          const hops = makeMoveHops(state, move);
           const next = applyMove(state, move.tokenIndex, move.dieIndex).state;
-          if (anim) setHop({ anim, next });
+          if (hops.length > 0) setHop({ hops, next });
           else setState(next);
         }}
         onMenu={() => router.back()}

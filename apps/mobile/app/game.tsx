@@ -6,7 +6,7 @@ import type { Color, GameState } from '@ludi/rules';
 import { legalMoves } from '@ludi/rules';
 import { BoardScreen } from '../src/components/game/BoardScreen';
 import type { MoveLike } from '../src/components/board/boardModel';
-import { makeHop, type HopAnimation } from '../src/components/board/BoardView';
+import { makeMoveHops, type HopAnimation } from '../src/components/board/BoardView';
 import { WinScreen } from '../src/components/win/WinScreen';
 import { winView } from '../src/components/win/winModel';
 import { useMatchStats } from '../src/components/win/useMatchStats';
@@ -26,7 +26,7 @@ import { RouteErrorBoundary } from '../src/nav/RouteErrorView';
 import { storage } from '../src/utils/storage';
 
 interface PendingMove {
-  anim: HopAnimation;
+  hops: HopAnimation[];
   next: GameState;
   captures: boolean;
 }
@@ -146,12 +146,12 @@ export default function GameScreen() {
     if (move.captures) match.capture(gameState.turn);
 
     const next = reduceLocalGame(game, { type: 'move', tokenIndex, dieIndex });
-    const anim = makeHop(gameState, tokenIndex, move.resulting);
-    if (!anim) {
+    const hops = makeMoveHops(gameState, move);
+    if (hops.length === 0) {
       setGame(next);
       return;
     }
-    setPending({ anim, next: next.state, captures: !!move.captures });
+    setPending({ hops, next: next.state, captures: !!move.captures });
   };
 
   const handleHopDone = () => {
@@ -189,7 +189,7 @@ export default function GameScreen() {
         roomCode={null}
         lastRoll={game.lastRoll}
         rollKey={game.rollKey}
-        hop={pending?.anim ?? null}
+        hop={pending?.hops ?? null}
         onHopDone={handleHopDone}
         onRoll={handleRoll}
         onMove={handleMove}

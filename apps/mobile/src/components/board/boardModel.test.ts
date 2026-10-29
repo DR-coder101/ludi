@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { applyMove, createGame, legalMoves } from '@ludi/rules';
+import { applyMove, createGame, legalMoves, type Dice } from '@ludi/rules';
 import { buildBoardModel, captureReturn, cellOf, hopCells } from './boardModel';
 import { boardFixture } from '../../dev/boardFixtures';
 
@@ -55,7 +55,7 @@ function captureSetup() {
     dice: [
       { value: 2, used: false },
       { value: 3, used: true },
-    ],
+    ] as Dice,
   };
   const move = legalMoves(state).find((m) => m.tokenIndex === 0 && m.captures);
   return { state, move };
@@ -82,6 +82,23 @@ describe('capture return to yard', () => {
       color: 'green',
       from: { row: 11, col: 10 },
       slot: 0,
+    });
+  });
+
+  it('lands in the slot matching token order among yard pieces', () => {
+    const { state } = captureSetup();
+    state.tokens[4].pos = { zone: 'yard' };
+    state.tokens[6].pos = { zone: 'track', cell: 7 };
+    const move = legalMoves(state).find((m) => m.tokenIndex === 0 && m.captures);
+    expect(move?.captures).toEqual({ color: 'green', index: 2 });
+    const next = applyMove(state, move!.tokenIndex, move!.dieIndex).state;
+    const slot = buildBoardModel(next, []).yards.green.tokens.indexOf(6);
+    expect(slot).toBe(2);
+    expect(captureReturn(state, move!.captures!)).toEqual({
+      tokenIndex: 6,
+      color: 'green',
+      from: { row: 11, col: 10 },
+      slot: 2,
     });
   });
 });
@@ -152,5 +169,13 @@ describe('buildBoardModel on the mockup fixtures', () => {
     const state = boardFixture('mid');
     const model = buildBoardModel(state, [], { hidden: [0] });
     expect(model.pieces.find((p) => p.row === 10 && p.col === 16)).toBeUndefined();
+  });
+
+  it('capture: draws the licked green piece in Negril yard after the move', () => {
+    const before = buildBoardModel(boardFixture('capture-before'), []);
+    expect(before.pieces.find((p) => p.row === 11 && p.col === 10)?.piece).toBe('black');
+    const model = buildBoardModel(boardFixture('capture'), []);
+    expect(model.yards.green.tokens).toContain(4);
+    expect(model.pieces.find((p) => p.row === 11 && p.col === 10)?.piece).toBe('red');
   });
 });

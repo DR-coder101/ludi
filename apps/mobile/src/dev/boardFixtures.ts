@@ -1,8 +1,8 @@
-import { createGame, type Color, type GameState, type TokenPos } from '@ludi/rules';
+import { applyMove, createGame, legalMoves, type Color, type Dice, type GameState, type TokenPos } from '@ludi/rules';
 import type { SeatVideo } from '../components/video/seatVideo';
 import type { CallBarProps } from '../components/video/CallBar';
 
-export type FixtureName = 'start' | 'mid' | 'video' | 'leave';
+export type FixtureName = 'start' | 'mid' | 'video' | 'leave' | 'capture' | 'capture-before';
 
 /** Players from the approved mockups, by engine colour. */
 export const MOCKUP_NAMES: Record<Color, string> = {
@@ -30,6 +30,9 @@ const MID_POSITIONS: Record<Color, TokenPos[]> = {
 
 /** The mid fixture's throw: a 6 (bonus roll earned) and a 3, both still to play. */
 export const MID_ROLL: [number, number] = [6, 3];
+
+/** Red spent 2 to capture green on track 7. The 3 was already used. */
+export const CAPTURE_ROLL: [number, number] = [2, 3];
 
 /** Approved 2026-10-09 video mockup: a 6 and a 2, pieces still in the yards. */
 export const VIDEO_ROLL: [number, number] = [6, 2];
@@ -64,6 +67,27 @@ export function boardFixture(name: FixtureName): GameState {
     },
   });
   if (name === 'start') return base;
+  if (name === 'capture' || name === 'capture-before') {
+    const state = {
+      ...base,
+      tokens: base.tokens.map((t) => {
+        if (t.color === 'red' && t.index === 0) return { ...t, pos: track(5) };
+        if (t.color === 'green' && t.index === 0) return { ...t, pos: track(7) };
+        return t;
+      }),
+      phase: 'awaiting_move' as const,
+      dice: [
+        { value: 2, used: false },
+        { value: 3, used: true },
+      ] as Dice,
+    };
+    if (name === 'capture-before') return state;
+    const move = legalMoves(state).find((m) => m.tokenIndex === 0 && m.captures);
+    if (!move) {
+      throw new Error('capture fixture needs a capture on track 7');
+    }
+    return applyMove(state, move.tokenIndex, move.dieIndex).state;
+  }
   if (name === 'video' || name === 'leave') {
     return {
       ...base,
