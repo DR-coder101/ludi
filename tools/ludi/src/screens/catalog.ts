@@ -413,7 +413,6 @@ const SCREEN_LAYOUT_BY_ID: Record<ScreenId, Omit<ScreenLayoutSpec, 'screenId'>> 
     board: false,
     controls: [
       { role: 'button', name: 'START GAME · 3 players', minTap: true },
-      // /dev/lobby omits onSelectSeat, so the open seat is a labeled view.
       { role: 'none', name: 'Montego Bay, open seat. Invite a friend', minTap: true },
       { role: 'none', name: 'Ocho Rios: Shanice, Ready', minTap: true },
       { role: 'none', name: 'Negril: Andre, Joined', minTap: true },

@@ -34,5 +34,4 @@ Preconditions:
 - `/dev` fixtures still apply iPhone 14 `PHONE_INSETS` on web. Do not change that for tablet CI.
 - `/dev/lobby` omits `onSelectSeat`, so the Montego Bay open seat is a labeled view. The check reads that label.
 - Capture uses `prefers-reduced-motion: reduce`. Do not expect press-scale or dice tumble in the baseline.
-- Current known failures are Create room and Join code at 42px tall, Roll the dice at 42px tall, and landscape START GAME below the 800px fold. Proof shots live in `artifacts/tablet-known-failures/`.
-- UI or layout fixes need a mockup Dean approved. This check records the phone layout at tablet size. It does not restyle the app.
+- Known layout rows live in `TABLET_KNOWN_FAILURES`. UI or layout fixes need a mockup Dean approved. This check records the phone layout at tablet size. It does not restyle the app.
