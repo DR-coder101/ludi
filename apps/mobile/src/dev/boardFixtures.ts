@@ -31,7 +31,6 @@ const MID_POSITIONS: Record<Color, TokenPos[]> = {
 /** The mid fixture's throw: a 6 (bonus roll earned) and a 3, both still to play. */
 export const MID_ROLL: [number, number] = [6, 3];
 
-/** Red spent 2 to capture green on track 7. The 3 was already used. */
 export const CAPTURE_ROLL: [number, number] = [2, 3];
 
 /** Approved 2026-10-09 video mockup: a 6 and a 2, pieces still in the yards. */

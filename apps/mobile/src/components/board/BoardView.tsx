@@ -34,20 +34,9 @@ function yardDrawPoint(color: Color, slot: number): { x: number; y: number } {
   return { x: dest.x, y: dest.y - 1 };
 }
 
-/** Hop for one engine move, starting from wherever the token is drawn now. */
 export function makeHop(state: GameState, tokenIndex: number, to: TokenPos): HopAnimation | null {
   const token = state.tokens[tokenIndex];
   if (!token) return null;
-  if (to.zone === 'yard') {
-    const home = captureReturn(state, { color: token.color, index: token.index });
-    if (!home) return null;
-    return {
-      tokenIndex,
-      color: token.color,
-      from: pieceCentre(home.from.row, home.from.col),
-      path: [yardDrawPoint(home.color, home.slot)],
-    };
-  }
   const cells = hopCells(token.pos, to, token.color);
   if (cells.length === 0) return null;
   let from: { x: number; y: number };
@@ -65,7 +54,19 @@ export function makeHop(state: GameState, tokenIndex: number, to: TokenPos): Hop
   return { tokenIndex, color: token.color, from, path: cells.map((c) => pieceCentre(c.row, c.col)) };
 }
 
-/** Capturer hops along its path. A capture also hops the licked token home. */
+function makeYardHop(state: GameState, tokenIndex: number): HopAnimation | null {
+  const token = state.tokens[tokenIndex];
+  if (!token) return null;
+  const home = captureReturn(state, { color: token.color, index: token.index });
+  if (!home) return null;
+  return {
+    tokenIndex,
+    color: token.color,
+    from: pieceCentre(home.from.row, home.from.col),
+    path: [yardDrawPoint(home.color, home.slot)],
+  };
+}
+
 export function makeMoveHops(state: GameState, move: MoveLike): HopAnimation[] {
   const hops: HopAnimation[] = [];
   const mover = makeHop(state, move.tokenIndex, move.resulting);
@@ -75,7 +76,7 @@ export function makeMoveHops(state: GameState, move: MoveLike): HopAnimation[] {
     (token) => token.color === move.captures!.color && token.index === move.captures!.index,
   );
   if (capturedIndex < 0) return hops;
-  const home = makeHop(state, capturedIndex, { zone: 'yard' });
+  const home = makeYardHop(state, capturedIndex);
   if (home) hops.push(home);
   return hops;
 }

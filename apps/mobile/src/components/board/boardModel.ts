@@ -12,7 +12,6 @@ export interface MoveLike {
   captures?: { color: Color; index: 0 | 1 | 2 | 3 };
 }
 
-/** Board mapping for sending a captured token back to its yard slot. */
 export interface CaptureReturn {
   tokenIndex: number;
   color: Color;
