@@ -32,6 +32,7 @@ import {
 } from './boardLayout';
 import type { BoardModel, YardView } from './boardModel';
 import { PieceDefs, PieceGlyph } from './PieceGlyph';
+import { blockadeMarks } from './occupancyVisual';
 import { JAMAICA } from './jamaica';
 import { islandTransform, MiniMap } from './MiniMap';
 import { accent, boardFont, color, font, PLACES, piece as PIECE, TURN_ORDER, type Corner, type PieceColor } from '../../theme/tokens';
@@ -524,6 +525,19 @@ export function BoardArt({ size, model, labels }: BoardArtProps) {
         fill="none"
       />
       <Highlight model={model} />
+      {blockadeMarks(model.pieces, C).map((mark) => (
+        <Rect
+          key={`block-${mark.key}`}
+          x={mark.ring.x}
+          y={mark.ring.y}
+          width={mark.ring.size}
+          height={mark.ring.size}
+          rx={mark.ring.rx}
+          fill="none"
+          stroke={color.hot}
+          strokeWidth={mark.ring.strokeWidth}
+        />
+      ))}
       {model.finished.map((f) => {
         const c = pieceCentre(f.row, f.col);
         return <PieceGlyph key={`home-${f.color}`} piece={f.piece} cx={c.x} cy={c.y} r={6.2} stack={f.count} />;

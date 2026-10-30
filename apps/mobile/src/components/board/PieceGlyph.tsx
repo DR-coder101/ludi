@@ -1,6 +1,7 @@
 import React from 'react';
 import { Circle, Defs, Ellipse, G, LinearGradient, RadialGradient, Stop, Text } from 'react-native-svg';
 import { color, font, piece as PIECE, type PieceColor } from '../../theme/tokens';
+import { occupancyVisual } from './occupancyVisual';
 
 const PIECES = Object.keys(PIECE) as PieceColor[];
 
@@ -28,12 +29,11 @@ interface PieceGlyphProps {
   cx: number;
   cy: number;
   r: number;
-  /** Count badge for stacked pieces (shown when > 1). */
+  /** Tokens of this colour on the cell. Two or more draw the blockade pair and xN badge. */
   stack?: number;
 }
 
-/** Stacked glossy disc: drop shadow, darker base, gradient face, groove ring, specular. */
-export const PieceGlyph = React.memo(function PieceGlyph({ piece, cx, cy, r, stack }: PieceGlyphProps) {
+function Disc({ piece, cx, cy, r }: { piece: PieceColor; cx: number; cy: number; r: number }) {
   const p = PIECE[piece];
   return (
     <G>
@@ -52,21 +52,59 @@ export const PieceGlyph = React.memo(function PieceGlyph({ piece, cx, cy, r, sta
       <Circle cx={cx} cy={cy} r={r * 0.62} fill="none" stroke={p.lo} strokeOpacity={0.55} strokeWidth={r * 0.12} />
       <Circle cx={cx} cy={cy} r={r * 0.52} fill="none" stroke={color.white} strokeOpacity={0.28} strokeWidth={r * 0.06} />
       <Ellipse cx={cx - r * 0.18} cy={cy - r * 0.42} rx={r * 0.55} ry={r * 0.3} fill="url(#spec)" opacity={0.8} />
-      {stack != null && stack > 1 ? (
-        <G>
-          <Circle cx={cx + r * 0.85} cy={cy - r * 0.85} r={r * 0.52} fill={color.hot} stroke={color.white} strokeWidth={0.9} />
-          <Text
-            x={cx + r * 0.85}
-            y={cy - r * 0.85 + r * 0.2}
-            fontFamily={font.sticker}
-            fontSize={r * 0.62}
-            fill={color.white}
-            textAnchor="middle"
-          >
-            {stack}
-          </Text>
-        </G>
-      ) : null}
     </G>
   );
+}
+
+function CountBadge({ cx, cy, r, label }: { cx: number; cy: number; r: number; label: string }) {
+  return (
+    <G>
+      <Circle cx={cx} cy={cy} r={r * 0.62} fill={color.hot} stroke={color.white} strokeWidth={0.9} />
+      <Text
+        x={cx}
+        y={cy + r * 0.18}
+        fontFamily={font.sticker}
+        fontSize={r * 0.5}
+        fill={color.white}
+        textAnchor="middle"
+      >
+        {label}
+      </Text>
+    </G>
+  );
+}
+
+/** Glossy disc. A same-colour stack becomes the offset pair plus xN badge. */
+export const PieceGlyph = React.memo(function PieceGlyph({ piece, cx, cy, r, stack }: PieceGlyphProps) {
+  const mark = occupancyVisual(stack);
+  switch (mark.kind) {
+    case 'single':
+      return <Disc piece={piece} cx={cx} cy={cy} r={r} />;
+    case 'blockade': {
+      const discR = r * mark.discScale;
+      return (
+        <G>
+          {mark.pair.map((offset, i) => (
+            <Disc
+              key={i}
+              piece={piece}
+              cx={cx + offset.dx * r}
+              cy={cy + offset.dy * r}
+              r={discR}
+            />
+          ))}
+          <CountBadge
+            cx={cx + r * 1.05}
+            cy={cy - r * 1.05}
+            r={r}
+            label={mark.badge}
+          />
+        </G>
+      );
+    }
+    default: {
+      const _never: never = mark;
+      return _never;
+    }
+  }
 });
