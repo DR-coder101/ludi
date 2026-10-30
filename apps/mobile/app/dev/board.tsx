@@ -22,6 +22,7 @@ function parseFixture(state: string | undefined): FixtureName {
     case 'leave':
     case 'capture':
     case 'capture-before':
+    case 'homes':
       return state;
     default:
       return 'start';
@@ -39,6 +40,7 @@ function rollFor(name: FixtureName): [number, number] | null {
     case 'capture-before':
       return CAPTURE_ROLL;
     case 'start':
+    case 'homes':
       return null;
     default: {
       const _never: never = name;
@@ -55,6 +57,7 @@ const MOCKUP_TIMER: Record<FixtureName, number> = {
   leave: 140 / 150.8,
   capture: 140 / 150.8,
   'capture-before': 140 / 150.8,
+  homes: 140 / 150.8,
 };
 /** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
 const PHONE_INSETS = { top: 47, bottom: 34 };

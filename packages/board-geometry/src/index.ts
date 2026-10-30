@@ -234,10 +234,10 @@ export const CENTER_TRIANGLES: Record<Color, CellPosition[]> = {
 
 /** Finished tokens sit on the centroid of their arrival triangle. */
 export const HOME_SPOTS: Record<Color, CellPosition> = {
-  red: { row: 10, col: 9 },
-  green: { row: 9, col: 10 },
-  yellow: { row: 8, col: 9 },
-  blue: { row: 9, col: 8 },
+  red: { row: 9, col: 10 },
+  green: { row: 10, col: 9 },
+  yellow: { row: 9, col: 8 },
+  blue: { row: 8, col: 9 },
 };
 
 export { TOTAL_JOURNEY_STEPS };
