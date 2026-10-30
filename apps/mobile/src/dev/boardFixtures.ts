@@ -2,7 +2,7 @@ import { applyMove, createGame, legalMoves, type Color, type Dice, type GameStat
 import type { SeatVideo } from '../components/video/seatVideo';
 import type { CallBarProps } from '../components/video/CallBar';
 
-export type FixtureName = 'start' | 'mid' | 'video' | 'leave' | 'capture' | 'capture-before';
+export type FixtureName = 'start' | 'mid' | 'video' | 'leave' | 'capture' | 'capture-before' | 'homes';
 
 /** Players from the approved mockups, by engine colour. */
 export const MOCKUP_NAMES: Record<Color, string> = {
@@ -15,6 +15,14 @@ export const MOCKUP_NAMES: Record<Color, string> = {
 const yard: TokenPos = { zone: 'yard' };
 const track = (cell: number): TokenPos => ({ zone: 'track', cell });
 const column = (step: number): TokenPos => ({ zone: 'homeColumn', step });
+const home: TokenPos = { zone: 'home' };
+
+const HOMES_POSITIONS: Record<Color, TokenPos[]> = {
+  red: [column(4), home, yard, yard],
+  green: [column(4), home, yard, yard],
+  yellow: [column(4), home, yard, yard],
+  blue: [column(4), home, yard, yard],
+};
 
 /**
  * Engine positions behind the mid fixture (cells from TRACK_CELLS after the clockwise transpose):
@@ -66,6 +74,12 @@ export function boardFixture(name: FixtureName): GameState {
     },
   });
   if (name === 'start') return base;
+  if (name === 'homes') {
+    return {
+      ...base,
+      tokens: base.tokens.map((t) => ({ ...t, pos: HOMES_POSITIONS[t.color][t.index] })),
+    };
+  }
   if (name === 'capture' || name === 'capture-before') {
     const state = {
       ...base,

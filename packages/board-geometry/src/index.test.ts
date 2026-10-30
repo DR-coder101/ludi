@@ -8,6 +8,7 @@ import {
 } from '@ludi/rules';
 import {
   BOARD_SIZE,
+  CENTER_TRIANGLES,
   COLOR_BY_TOWN,
   HOME_COLUMNS,
   TOWN_BY_COLOR,
@@ -189,6 +190,72 @@ describe('Dean clockwise layout', () => {
       expect(cell.col).toBeLessThan(BOARD_SIZE);
     }
   });
+});
+
+const FINISH: Record<Color, CellPosition> = {
+  red: { row: 9, col: 10 },
+  green: { row: 10, col: 9 },
+  yellow: { row: 9, col: 8 },
+  blue: { row: 8, col: 9 },
+};
+
+function manhattan(a: CellPosition, b: CellPosition): number {
+  return Math.abs(a.row - b.row) + Math.abs(a.col - b.col);
+}
+
+function isCentre(c: CellPosition): boolean {
+  return c.row >= 8 && c.row <= 10 && c.col >= 8 && c.col <= 10;
+}
+
+function area2(a: CellPosition, b: CellPosition, c: CellPosition): number {
+  return a.row * (b.col - c.col) + b.row * (c.col - a.col) + c.row * (a.col - b.col);
+}
+
+function inTriangle(p: CellPosition, tri: CellPosition[]): boolean {
+  const [a, b, c] = tri;
+  const A = area2(a, b, c);
+  const A1 = area2(p, b, c);
+  const A2 = area2(a, p, c);
+  const A3 = area2(a, b, p);
+  return Math.abs(A1) + Math.abs(A2) + Math.abs(A3) === Math.abs(A);
+}
+
+describe('home column steps and finish cells', () => {
+  it.each(COLORS)(
+    '%s maps home-column steps 1..7 and finish onto the approved cells',
+    (color) => {
+      const entry = TRACK_CELLS[HOME_COLUMN_ENTRY[color]];
+      const step1 = cellForToken(color, { zone: 'homeColumn', step: 1 });
+      expect(step1).toEqual(DEAN[color].home[0]);
+      expect(manhattan(entry, step1!)).toBe(1);
+
+      for (let step = 1; step <= 7; step++) {
+        expect(cellForToken(color, { zone: 'homeColumn', step })).toEqual(DEAN[color].home[step - 1]);
+      }
+
+      const step7 = cellForToken(color, { zone: 'homeColumn', step: 7 })!;
+      expect(step7).toEqual(DEAN[color].home[6]);
+      const centreTouch = [
+        { row: step7.row - 1, col: step7.col },
+        { row: step7.row + 1, col: step7.col },
+        { row: step7.row, col: step7.col - 1 },
+        { row: step7.row, col: step7.col + 1 },
+      ].some(isCentre);
+      expect(centreTouch).toBe(true);
+
+      const finish = cellForToken(color, { zone: 'home' });
+      expect(finish).toEqual(FINISH[color]);
+      expect(inTriangle(finish!, CENTER_TRIANGLES[color])).toBe(true);
+      for (const other of COLORS.filter((c) => c !== color)) {
+        expect(inTriangle(finish!, CENTER_TRIANGLES[other])).toBe(false);
+      }
+      expect(manhattan(step7, finish!)).toBe(1);
+
+      const pos = tokenPosForProgress(color, TOTAL_JOURNEY_STEPS);
+      expect(pos).toEqual({ zone: 'home' });
+      expect(cellForToken(color, pos!)).toEqual(FINISH[color]);
+    },
+  );
 });
 
 describe('every engine (colour, progress) maps to a cell', () => {
