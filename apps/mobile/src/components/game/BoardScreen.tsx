@@ -46,6 +46,7 @@ export interface BoardScreenProps {
 }
 
 const MAX_COLUMN = 520;
+const NOTICE_CHROME = 23;
 
 export function BoardScreen(props: BoardScreenProps) {
   const { state, moves, me, names, muted, roomCode, lastRoll, rollKey, hop, onHopDone } = props;
@@ -78,7 +79,8 @@ export function BoardScreen(props: BoardScreenProps) {
     layout.stripGap +
     layout.turnCardHeight +
     (dockH ? layout.stripGap + dockH : 0) +
-    bottomPad;
+    bottomPad +
+    (notice ? NOTICE_CHROME : 0);
   const boardSize = Math.floor(Math.max(240, Math.min(columnWidth - 24, height - chromeH)));
 
   const isMine = me === null || state.turn === me;
@@ -122,6 +124,11 @@ export function BoardScreen(props: BoardScreenProps) {
             <TopBar live={live} roomCode={roomCode} onLeave={() => setLeaving(true)} onProfile={onProfile} />
           </View>
           <View style={styles.boardWrap}>
+            {notice ? (
+              <View style={styles.notice} pointerEvents="none">
+                <Text style={styles.noticeText}>{notice}</Text>
+              </View>
+            ) : null}
             <BoardView
               size={boardSize}
               model={model}
@@ -158,11 +165,6 @@ export function BoardScreen(props: BoardScreenProps) {
       {leaving ? (
         <LeaveConfirm body={chrome.leaveBody} onLeave={onMenu} onStay={() => setLeaving(false)} />
       ) : null}
-      {notice ? (
-        <View style={styles.notice} pointerEvents="none">
-          <Text style={styles.noticeText}>{notice}</Text>
-        </View>
-      ) : null}
       {children}
     </View>
   );
@@ -193,9 +195,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   notice: {
-    position: 'absolute',
-    top: 120,
     alignSelf: 'center',
+    marginBottom: 4,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
