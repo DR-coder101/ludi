@@ -138,8 +138,6 @@ export const motion = {
   breatheMs: 1600,
   pressScale: 0.97,
   pressMs: 90,
-  /** Dice tumble before the face settles. */
-  diceRollMs: 650,
 } as const;
 
 export const layout = {
