@@ -3,6 +3,7 @@ import {
   ONBOARDING_KEY,
   createOnboardingController,
   onboardingModalProps,
+  rulesModalFrame,
   type OnboardingSession,
   type OnboardingStorage,
 } from './onboarding';
@@ -128,5 +129,13 @@ describe('first-run rules modal', () => {
 
     controller.dismiss();
     expect(controller.snapshot().visible).toBe(false);
+  });
+
+  it('keeps the card inside a small Android screen with a nav bar', () => {
+    const frame = rulesModalFrame({ width: 360, height: 640 }, { top: 24, bottom: 48 });
+    expect(frame.padTop).toBe(24);
+    expect(frame.padBottom).toBe(48);
+    expect(frame.maxCardHeight).toBe(568);
+    expect(frame.maxCardWidth).toBe(320);
   });
 });

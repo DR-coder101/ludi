@@ -196,7 +196,7 @@ export default function GameScreen() {
         onMenu={leaveBoard}
         onProfile={() => router.push('/profile')}
       >
-        {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
+        <OnboardingTooltip visible={shouldShowOnboarding} onDismiss={dismissOnboarding} />
         {gameState.phase === 'finished' && results ? (
           <WinScreen view={results} onRematch={handleRematch} onLobby={leaveBoard} />
         ) : null}
