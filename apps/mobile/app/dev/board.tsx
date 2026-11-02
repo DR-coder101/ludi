@@ -50,6 +50,7 @@ function rollFor(name: FixtureName): [number, number] | null {
   }
 }
 
+/** Ring fill in the mockups: dash 140 (start) and 110 (mid) of a 150.8 circumference. */
 const MOCKUP_TIMER: Record<FixtureName, number> = {
   start: 140 / 150.8,
   mid: 110 / 150.8,
@@ -59,7 +60,9 @@ const MOCKUP_TIMER: Record<FixtureName, number> = {
   'capture-before': 140 / 150.8,
   homes: 140 / 150.8,
 };
+/** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
 const PHONE_INSETS = { top: 47, bottom: 34 };
+/** Samsung 3-button nav plus status bar, used by the rules size check. */
 const ANDROID_NAV_INSETS = { top: 24, bottom: 48 };
 const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 

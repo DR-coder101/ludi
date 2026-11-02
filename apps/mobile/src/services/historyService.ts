@@ -1,8 +1,3 @@
-/**
- * Match history service
- * Wraps server match history API calls
- */
-
 import type { MatchHistoryResponse, MatchHistory } from '@ludi/protocol';
 import { authHeaders } from '../net/authHeaders';
 import { resolveSocketServerUrl } from '../net/socketUrl';

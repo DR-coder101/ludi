@@ -1,8 +1,3 @@
-/**
- * Profile service
- * Wraps server profile API calls for user profile management
- */
-
 import type { ProfileResponse, UserProfile } from '@ludi/protocol';
 import { authHeaders } from '../net/authHeaders';
 import { resolveSocketServerUrl } from '../net/socketUrl';

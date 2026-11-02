@@ -1,8 +1,3 @@
-/**
- * Authentication service
- * Wraps server auth API calls for guest and email authentication
- */
-
 import type { AuthResponse } from '@ludi/protocol';
 import { resolveSocketServerUrl } from '../net/socketUrl';
 
