@@ -50,28 +50,28 @@ function rollFor(name: FixtureName): [number, number] | null {
   }
 }
 
-/** Ring fill in the mockups: dash 140 (start) and 110 (mid) of a 150.8 circumference. */
+const MOCKUP_RING_CIRCUMFERENCE = 150.8;
+const MOCKUP_RING_START_DASH = 140;
+const MOCKUP_RING_MID_DASH = 110;
 const MOCKUP_TIMER: Record<FixtureName, number> = {
-  start: 140 / 150.8,
-  mid: 110 / 150.8,
-  video: 140 / 150.8,
-  leave: 140 / 150.8,
-  capture: 140 / 150.8,
-  'capture-before': 140 / 150.8,
-  homes: 140 / 150.8,
+  start: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  mid: MOCKUP_RING_MID_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  video: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  leave: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  capture: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  'capture-before': MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  homes: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
 };
-/** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
 const PHONE_INSETS = { top: 47, bottom: 34 };
-/** Samsung 3-button nav plus status bar, used by the rules size check. */
 const ANDROID_NAV_INSETS = { top: 24, bottom: 48 };
 const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 
-/** Visual QA for the board screen: /dev/board?state=start|mid. Pieces and dice stay playable. */
 export default function BoardPreview() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ state?: string; rules?: string }>();
+  const params = useLocalSearchParams<{ state?: string; rules?: string; notice?: string }>();
   const fixture = parseFixture(params.state);
   const showRules = params.rules === '1';
+  const showNotice = params.notice === '1';
   const [state, setState] = useState<GameState>(() => boardFixture(fixture));
   const [lastRoll, setLastRoll] = useState<[number, number] | null>(rollFor(fixture));
   const [rollKey, setRollKey] = useState(0);
@@ -124,6 +124,7 @@ export default function BoardPreview() {
         call={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_CALL : undefined}
         seats={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_SEATS : undefined}
         leaveOpen={fixture === 'leave'}
+        notice={showNotice ? 'Video is unavailable on this device.' : undefined}
         insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
       >
         {showRules ? (

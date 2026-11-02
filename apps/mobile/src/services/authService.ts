@@ -1,11 +1,7 @@
-/**
- * Authentication service
- * Wraps server auth API calls for guest and email authentication
- */
-
 import type { AuthResponse } from '@ludi/protocol';
+import { resolveSocketServerUrl } from '../net/socketUrl';
 
-const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+const SERVER_URL = resolveSocketServerUrl();
 
 export interface AuthService {
   createGuest(displayName?: string): Promise<{ userId: string; accessToken: string }>;
