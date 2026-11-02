@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { font } from '../theme/tokens';
 import {
   getOnboardingController,
   onboardingModalProps,
@@ -158,8 +159,9 @@ const styles = StyleSheet.create({
     flexGrow: 0,
   },
   title: {
+    fontFamily: font.bodyBold,
     fontSize: 28,
-    fontWeight: 'bold',
+    lineHeight: 34,
     color: '#D4AF37',
     textAlign: 'center',
     marginBottom: 24,
@@ -168,15 +170,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
+    fontFamily: font.bodyBold,
     fontSize: 18,
-    fontWeight: 'bold',
+    lineHeight: 24,
     color: '#D4AF37',
     marginBottom: 8,
   },
   text: {
+    fontFamily: font.body,
     fontSize: 15,
-    color: '#ccc',
     lineHeight: 22,
+    color: '#ccc',
   },
   button: {
     backgroundColor: '#D4AF37',
@@ -191,8 +195,9 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonText: {
+    fontFamily: font.bodyBold,
     fontSize: 18,
-    fontWeight: 'bold',
+    lineHeight: 22,
     color: '#1a1a1a',
     textAlign: 'center',
   },
