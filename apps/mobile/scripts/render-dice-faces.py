@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import argparse
 import json
 import struct
 import zlib
@@ -133,7 +134,6 @@ def downsample(rgba: np.ndarray, factor: int) -> np.ndarray:
 
 
 def render_die(value: int, size: int) -> np.ndarray:
-    front, right = SIDE_FACES[value]
     eye = np.array([1.35, 1.58, 1.92], dtype=np.float64)
     eye = eye / np.linalg.norm(eye) * 2.78
     target = np.array([0.0, -0.08, 0.0])
@@ -180,9 +180,10 @@ def render_die(value: int, size: int) -> np.ndarray:
     shade = np.clip(wrap * 0.66 + fill_amt + sky, 0.0, 0.94)
     color[...] = albedo * shade[..., None] + spec[..., None]
 
+    top, right = SIDE_FACES[value]
     for axis_id, face_value, need_pos in (
-        (AXIS_TOP, value, True),
-        (AXIS_FRONT, front, True),
+        (AXIS_FRONT, value, True),
+        (AXIS_TOP, top, True),
         (AXIS_RIGHT, right, True),
     ):
         on_face = hit & (axis == axis_id) & ((sign > 0) if need_pos else (sign < 0))
@@ -240,12 +241,12 @@ def blit(dst: np.ndarray, src: np.ndarray, x: int, y: int) -> None:
 def render_roll_strip(die: np.ndarray, shadow: np.ndarray) -> np.ndarray:
     cell = die.shape[0]
     frames = [
-        (-38, -28.0, 0.45),
-        (-12, 110.0, 0.62),
-        (0, 168.0, 1.0),
-        (-14, 188.0, 1.0),
-        (0, 205.0, 1.0),
-        (0, 220.0, 1.0),
+        (-38, 54.0, 0.45),
+        (-12, 180.0, 0.62),
+        (0, 252.0, 1.0),
+        (-14, 317.0, 1.0),
+        (0, 346.0, 1.0),
+        (0, 0.0, 1.0),
     ]
     strip = np.zeros((cell + 24, cell * len(frames), 4), dtype=np.uint8)
     for i, (dy, rot, grow) in enumerate(frames):
@@ -257,7 +258,7 @@ def render_roll_strip(die: np.ndarray, shadow: np.ndarray) -> np.ndarray:
     return strip
 
 
-def main() -> None:
+def main(preview: Path | None = None) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     hi = SIZE_1X * RENDER_SCALE
     strip = np.zeros((SIZE_1X * 3, SIZE_1X * 3 * 6, 4), dtype=np.uint8)
@@ -270,7 +271,6 @@ def main() -> None:
             name = f"face-{value}.png" if scale == 1 else f"face-{value}@{scale}x.png"
             write_png(OUT / name, rgba)
             print(f"wrote {name} {rgba.shape[1]}x{rgba.shape[0]}")
-    write_png(OUT / "faces-strip.png", strip)
     shadow_hi = render_shadow(hi)
     for scale in SCALES:
         factor = RENDER_SCALE // scale
@@ -283,9 +283,18 @@ def main() -> None:
     }
     (OUT / "pip-layout.json").write_text(json.dumps(layout, indent=2) + "\n")
     print(f"wrote {OUT / 'pip-layout.json'}")
-    write_png(OUT / "roll-strip.png", render_roll_strip(downsample(render_die(5, hi), 2), downsample(shadow_hi, 2)))
-    print("wrote roll-strip.png")
+    if preview is not None:
+        preview.mkdir(parents=True, exist_ok=True)
+        write_png(preview / "faces-strip.png", strip)
+        write_png(
+            preview / "roll-strip.png",
+            render_roll_strip(downsample(render_die(5, hi), 2), downsample(shadow_hi, 2)),
+        )
+        print(f"wrote previews in {preview}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--preview", type=Path, default=None)
+    args = parser.parse_args()
+    main(preview=args.preview)

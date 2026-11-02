@@ -9,6 +9,13 @@ export const DIE_ROLL_BEATS = {
   settle: 200,
 } as const;
 
+export const DIE_ROLL_SPIN_DEG = 360;
+
+export function dieRollDegrees(progress: number, dir: 1 | -1): number {
+  'worklet';
+  return progress * DIE_ROLL_SPIN_DEG * dir;
+}
+
 export const DIE_FACE_FILE: Record<DieFace, string> = {
   1: 'face-1.png',
   2: 'face-2.png',

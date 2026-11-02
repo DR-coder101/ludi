@@ -7,7 +7,9 @@ import {
   DIE_PIP_LAYOUT,
   DIE_ROLL_BEATS,
   DIE_ROLL_MS,
+  DIE_ROLL_SPIN_DEG,
   dieFace,
+  dieRollDegrees,
   isDieFace,
   type DieFace,
 } from './dieFace';
@@ -79,5 +81,20 @@ describe('die roll beats', () => {
     expect(DIE_ROLL_MS).toBeGreaterThanOrEqual(600);
     expect(DIE_ROLL_MS).toBeLessThanOrEqual(800);
     expect(Math.abs(DIE_ROLL_MS - 784)).toBeLessThanOrEqual(30);
+  });
+
+  it('lands the final rotation at 0 mod 360', () => {
+    const settled = (deg: number) => (((deg % 360) + 360) % 360 === 0);
+    expect(DIE_ROLL_SPIN_DEG % 360).toBe(0);
+    expect(settled(dieRollDegrees(1, 1))).toBe(true);
+    expect(settled(dieRollDegrees(1, -1))).toBe(true);
+    expect(dieRollDegrees(0, 1)).toBe(0);
+  });
+});
+
+describe('dice asset bundle', () => {
+  it('keeps preview strips out of assets/dice', () => {
+    expect(existsSync(join(diceDir, 'faces-strip.png'))).toBe(false);
+    expect(existsSync(join(diceDir, 'roll-strip.png'))).toBe(false);
   });
 });

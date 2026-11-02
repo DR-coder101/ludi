@@ -9,7 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { triggerHaptic } from '../../utils/gameAudio';
-import { DIE_ROLL_BEATS, DIE_ROLL_MS, dieFace } from './dieFace';
+import { DIE_ROLL_BEATS, DIE_ROLL_MS, dieFace, dieRollDegrees } from './dieFace';
 import { DIE_SHADOW_SOURCE, dieFaceSource } from './dieSprites';
 
 const EASE_OUT = Easing.bezier(0.23, 1, 0.32, 1);
@@ -77,7 +77,7 @@ export function DiceFace({ value, size, rollKey, idle, spin: dir = 1, buzz }: Di
     opacity: idle ? 0.95 : 1,
     transform: [
       { translateY: drop.value },
-      { rotate: `${tumble.value * 220 * dir}deg` },
+      { rotate: `${dieRollDegrees(tumble.value, dir)}deg` },
       { scale: squash.value },
     ],
   }));
