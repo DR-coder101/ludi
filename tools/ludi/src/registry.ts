@@ -565,14 +565,14 @@ const screensCheck: Command = {
     {
       name: 'target',
       type: 'enum',
-      summary: 'Phone Expo web, Android 10 inch tablet layout at 800x1280 and 1280x800, the OBS overlay, or the streamer admin panel',
-      values: ['web', 'tablet', 'overlay', 'admin'],
+      summary: 'Phone Expo web, Android 10 inch tablet layout, small-Android rules size check, the OBS overlay, or the streamer admin panel',
+      values: ['web', 'tablet', 'size', 'overlay', 'admin'],
       default: 'web',
     },
     {
       name: 'update-baselines',
       type: 'bool',
-      summary: 'Overwrite baselines/web, baselines/tablet, baselines/overlay, or baselines/admin from this capture',
+      summary: 'Overwrite baselines/web, baselines/tablet, baselines/size, baselines/overlay, or baselines/admin from this capture',
       default: false,
     },
     { name: 'port', type: 'int', summary: 'Static server port for the web export', default: 4173 },
@@ -644,7 +644,7 @@ const auth: Command = {
 
 const screens: Command = {
   name: 'screens',
-  summary: 'Expo web /dev screenshots, tablet layout at 800x1280 and 1280x800, the 1080x1920 overlay, and the streamer admin panel',
+  summary: 'Expo web /dev screenshots, tablet layout, small-Android rules size check, the 1080x1920 overlay, and the streamer admin panel',
   args: [],
   mutates: false,
   children: [screensDoctor, screensCheck],

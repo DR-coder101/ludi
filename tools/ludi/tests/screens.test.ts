@@ -18,6 +18,8 @@ import {
   adminScreensToRun,
   TABLET_VIEWPORTS,
   tabletShotsToRun,
+  SIZE_VIEWPORTS,
+  sizeShotsToRun,
   findRepoRoot,
 } from '../src/screens/catalog.js';
 import { comparePng } from '../src/screens/compare.js';
@@ -104,6 +106,23 @@ describe('screen catalog', () => {
       'board-video-landscape.png',
       'win-landscape.png',
     ]);
+  });
+
+  it('names the small Android rules size shots', () => {
+    expect(SIZE_VIEWPORTS).toEqual([
+      { id: 'small-android', width: 360, height: 640, deviceScaleFactor: 2 },
+      { id: 'portrait', width: 800, height: 1280, deviceScaleFactor: 1 },
+      { id: 'landscape', width: 1280, height: 800, deviceScaleFactor: 1 },
+    ]);
+    expect(sizeShotsToRun().map((shot) => shot.file)).toEqual([
+      'rules-small-android.png',
+      'rules-portrait.png',
+      'rules-landscape.png',
+    ]);
+    expect(sizeShotsToRun()[0]?.spec.path).toBe('/dev/board?state=start&rules=1');
+    expect(sizeShotsToRun()[0]?.layout.clipInsets).toEqual({ top: 24, bottom: 48 });
+    const board = readFileSync(join(findRepoRoot(), 'apps', 'mobile', 'app', 'dev', 'board.tsx'), 'utf8');
+    expect(board).toContain('const ANDROID_NAV_INSETS = { top: 24, bottom: 48 };');
   });
 
   it('keeps iPhone 14 web insets on every /dev fixture the 390×844 capture assumes', () => {
@@ -263,6 +282,33 @@ describe('ludi screens CLI', () => {
       'board-start-landscape.png',
       'board-video-landscape.png',
       'win-landscape.png',
+    ]);
+    expect(existsSync(join(runDir, 'web-dist'))).toBe(false);
+  });
+
+  it('size dry-run plans expo export plus three rules screenshots', () => {
+    const runDir = join(root, '.tmp-size-dry');
+    rmSync(runDir, { recursive: true, force: true });
+    const res = run([
+      'screens',
+      'check',
+      '--target',
+      'size',
+      '--dry-run',
+      '--output',
+      'json',
+      '--run-dir',
+      runDir,
+    ]);
+    expect(res.status).toBe(ExitCode.DRY_RUN);
+    const body = JSON.parse(res.stdout);
+    expect(body.ok).toBe(true);
+    const actions = body.planned_actions as Array<{ action: string; file?: string }>;
+    expect(actions[0]?.action).toBe('expo_export_web');
+    expect(actions.filter((action) => action.action === 'screenshot').map((action) => action.file)).toEqual([
+      'rules-small-android.png',
+      'rules-portrait.png',
+      'rules-landscape.png',
     ]);
     expect(existsSync(join(runDir, 'web-dist'))).toBe(false);
   });

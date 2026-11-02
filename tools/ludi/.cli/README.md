@@ -12,7 +12,7 @@ Agent-friendly control surface for the **Ludi server** (HTTP + Socket.IO) and **
 | Expo web `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win` at 390×844, plus the same routes at tablet 800×1280 and 1280×800 | `baselines/emulator/` (human context only) |
 | Ludi Live TikTok chat check (`ludi live tiktok-watch`, TikFinity default) | Twitch / YouTube adapters |
 
-Dean drives the Expo app against this server. Agents prove server behavior with `ludi play` / `ludi room`. Agents prove the five phone screens with `ludi screens check` against `baselines/web/`, and the tablet layout with `ludi screens check --target tablet` against `baselines/tablet/`.
+Dean drives the Expo app against this server. Agents prove server behavior with `ludi play` / `ludi room`. Agents prove the five phone screens with `ludi screens check` against `baselines/web/`, the tablet layout with `ludi screens check --target tablet` against `baselines/tablet/`, and the rules-modal size check with `ludi screens check --target size` against `baselines/size/`.
 
 ## Progressive discovery
 
@@ -53,6 +53,8 @@ Exports `apps/mobile` for web with `EXPO_PUBLIC_DEV_ROUTES=1`, screenshots the f
 `--update-baselines` overwrites the web baselines from the current capture. Do not copy emulator PNGs into `baselines/web`.
 
 `ludi screens check --target tablet` captures the same `/dev` fixtures at 800×1280 and 1280×800, diffs `baselines/tablet/`, and runs layout assertions. `--update-baselines` then writes those tablet PNGs.
+
+`ludi screens check --target size` captures `/dev/board?state=start&rules=1` at 360×640, 800×1280, and 1280×800, diffs `baselines/size/`, and asserts the close button stays on screen.
 
 ## Compose (shallow)
 

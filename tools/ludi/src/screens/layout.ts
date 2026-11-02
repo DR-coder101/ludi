@@ -5,7 +5,6 @@ import {
   type KnownFailure,
   type LayoutCheckId,
   type ScreenLayoutSpec,
-  type TabletViewportId,
 } from './catalog.js';
 
 const OVERFLOW_SLACK_PX = 1;
@@ -38,18 +37,27 @@ export type ExpoAppJson = {
   };
 };
 
-function fullyInside(box: Box, width: number, height: number): boolean {
+function fullyInside(
+  box: Box,
+  width: number,
+  height: number,
+  inset: { top?: number; right?: number; bottom?: number; left?: number } = {},
+): boolean {
+  const top = inset.top ?? 0;
+  const right = inset.right ?? 0;
+  const bottom = inset.bottom ?? 0;
+  const left = inset.left ?? 0;
   return (
-    box.x >= -VIEWPORT_EDGE_PX &&
-    box.y >= -VIEWPORT_EDGE_PX &&
-    box.x + box.width <= width + VIEWPORT_EDGE_PX &&
-    box.y + box.height <= height + VIEWPORT_EDGE_PX
+    box.x >= left - VIEWPORT_EDGE_PX &&
+    box.y >= top - VIEWPORT_EDGE_PX &&
+    box.x + box.width <= width - right + VIEWPORT_EDGE_PX &&
+    box.y + box.height <= height - bottom + VIEWPORT_EDGE_PX
   );
 }
 
 function findKnown(
   known: readonly KnownFailure[],
-  viewport: TabletViewportId,
+  viewport: string,
   screenId: ScreenLayoutSpec['screenId'],
   check: LayoutCheckId,
   name: string | undefined,
@@ -83,7 +91,7 @@ function result(opts: {
 
 function marked(
   known: readonly KnownFailure[],
-  viewport: TabletViewportId,
+  viewport: string,
   spec: ScreenLayoutSpec,
   check: LayoutCheckId,
   ok: boolean,
@@ -104,7 +112,7 @@ function marked(
 export function evaluateLayout(
   sample: LayoutSample,
   spec: ScreenLayoutSpec,
-  viewportId: TabletViewportId,
+  viewportId: string,
   known: readonly KnownFailure[],
 ): CheckResult[] {
   const vw = sample.viewport.width;
@@ -137,7 +145,7 @@ export function evaluateLayout(
 function boardCheck(
   sample: LayoutSample,
   spec: ScreenLayoutSpec,
-  viewportId: TabletViewportId,
+  viewportId: string,
   known: readonly KnownFailure[],
   vw: number,
   vh: number,
@@ -151,7 +159,7 @@ function boardCheck(
   const problems: string[] = [];
   if (delta > SQUARE_TOLERANCE_PX) problems.push(`not square |w-h|=${delta}`);
   if (side < BOARD_MIN_PX) problems.push(`side ${side} < ${BOARD_MIN_PX}`);
-  if (!fullyInside(board, vw, vh)) problems.push('outside viewport');
+  if (!fullyInside(board, vw, vh, spec.clipInsets)) problems.push('outside viewport');
   const ok = problems.length === 0;
   return marked(
     known,
@@ -168,7 +176,7 @@ function boardCheck(
 function controlChecks(
   sample: LayoutSample,
   spec: ScreenLayoutSpec,
-  viewportId: TabletViewportId,
+  viewportId: string,
   known: readonly KnownFailure[],
   name: string,
   minTap: boolean,
@@ -180,7 +188,7 @@ function controlChecks(
     return [marked(known, viewportId, spec, 'control', false, 'not found', name)];
   }
   const box: Box = { x: measured.x, y: measured.y, width: measured.width, height: measured.height };
-  const inside = fullyInside(box, vw, vh);
+  const inside = fullyInside(box, vw, vh, spec.clipInsets);
   const side = Math.min(box.width, box.height);
   const tapOk = !minTap || side >= MIN_TAP_DP;
   return [

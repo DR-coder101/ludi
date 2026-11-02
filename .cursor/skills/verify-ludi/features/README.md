@@ -6,7 +6,7 @@ Maintained source for verifying Ludi behavior agents can drive. Read this index,
 
 Primary: Ludi server over HTTP + Socket.IO (guest room, lobby, match, solo vs bots).
 
-Screens: Expo web export of `apps/mobile` at 390×844, driven by `ludi screens`. Routes are `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win`. Tablet layout uses the same routes at 800×1280 and 1280×800 (`ludi screens check --target tablet`). No simulator is required. There is no `/dev/capture` fixture.
+Screens: Expo web export of `apps/mobile` at 390×844, driven by `ludi screens`. Routes are `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win`. Tablet layout uses the same routes at 800×1280 and 1280×800 (`ludi screens check --target tablet`). Rules-modal size check uses `/dev/board?state=start&rules=1` at 360×640, 800×1280, and 1280×800 (`ludi screens check --target size`). No simulator is required. There is no `/dev/capture` fixture.
 
 `baselines/emulator/` holds owner-approved simulator shots for humans. `ludi screens check` compares against `baselines/web/`, which are Chromium captures of the same fixtures. They will not match the emulator files.
 
@@ -56,3 +56,4 @@ Each feature file: H1, one paragraph, then exactly `Sub-features`, `How to get t
 - [Overlay screens](./overlay-screens.md) covers the 1080×1920 live overlay demo fixtures vs `baselines/overlay/` and Wonder-diff vs `docs/live/wonder/`.
 - [Admin screens](./admin-screens.md) covers the streamer admin demo fixtures vs `baselines/admin/` and mockup-diff vs `docs/live/admin/`.
 - [Tablet screens](./tablet-screens.md) covers Android 10" tablet dp captures, layout assertions, and known phone-layout failures.
+- [Size screens](./size-screens.md) covers the rules modal close button on a small Android viewport and tablet portrait plus landscape.
