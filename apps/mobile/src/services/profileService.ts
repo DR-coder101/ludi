@@ -5,8 +5,9 @@
 
 import type { ProfileResponse, UserProfile } from '@ludi/protocol';
 import { authHeaders } from '../net/authHeaders';
+import { resolveSocketServerUrl } from '../net/socketUrl';
 
-const SERVER_URL = process.env.EXPO_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+const SERVER_URL = resolveSocketServerUrl();
 
 export interface ProfileService {
   getProfile(userId: string): Promise<UserProfile>;
