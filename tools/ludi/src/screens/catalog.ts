@@ -383,10 +383,18 @@ export type ControlSpec = {
   minTap: boolean;
 };
 
+export type ClipInsets = {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+};
+
 export type ScreenLayoutSpec = {
-  screenId: ScreenId;
+  screenId: string;
   board: boolean;
   controls: readonly ControlSpec[];
+  clipInsets?: ClipInsets;
 };
 
 export type KnownFailure = {
@@ -471,4 +479,65 @@ export function tabletShotsToRun(screen: string): TabletShot[] {
     }
   }
   return shots;
+}
+
+export const RULES_CLOSE_NAME = "Got it! Let's Play";
+
+export const SMALL_ANDROID = {
+  id: 'small-android',
+  width: 360,
+  height: 640,
+  deviceScaleFactor: 2,
+} as const;
+
+export type SizeViewportId = 'small-android' | TabletViewportId;
+
+export type SizeViewport = {
+  id: SizeViewportId;
+  width: number;
+  height: number;
+  deviceScaleFactor: number;
+};
+
+export const SIZE_VIEWPORTS: readonly SizeViewport[] = [
+  SMALL_ANDROID,
+  { id: 'portrait', width: 800, height: 1280, deviceScaleFactor: 1 },
+  { id: 'landscape', width: 1280, height: 800, deviceScaleFactor: 1 },
+];
+
+export const RULES_SCREEN = {
+  id: 'rules',
+  path: '/dev/board?state=start&rules=1',
+  waitFor: { role: 'button' as const, name: RULES_CLOSE_NAME },
+};
+
+export const RULES_LAYOUT: ScreenLayoutSpec = {
+  screenId: 'rules',
+  board: false,
+  controls: [{ role: 'button', name: RULES_CLOSE_NAME, minTap: true }],
+  clipInsets: { top: 24, bottom: 48 },
+};
+
+export type SizeShot = {
+  spec: typeof RULES_SCREEN;
+  viewport: SizeViewport;
+  layout: ScreenLayoutSpec;
+  file: string;
+};
+
+export function sizeBaselineDir(root = findRepoRoot()): string {
+  return join(skillDir(root), 'baselines', 'size');
+}
+
+export function isSizeTarget(target: string | undefined): boolean {
+  return target === 'size';
+}
+
+export function sizeShotsToRun(): SizeShot[] {
+  return SIZE_VIEWPORTS.map((viewport) => ({
+    spec: RULES_SCREEN,
+    viewport,
+    layout: RULES_LAYOUT,
+    file: `rules-${viewport.id}.png`,
+  }));
 }

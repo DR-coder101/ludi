@@ -10,7 +10,7 @@ Drive Ludi the way Dean's app does. The agent-reachable surface is the **`ludi`*
 Two modules:
 
 - Server: HTTP + Socket.IO (`ludi server`, `ludi session`, `ludi room`, `ludi match`, `ludi play`).
-- Screens: Expo web export of `apps/mobile` plus headless Chromium (`ludi screens`). Fixed phone size 390×844 @2x. Compares to committed **web** baselines. Tablet: the same `/dev` fixtures at Android 10" dp 800×1280 and 1280×800 (`ludi screens check --target tablet`). Pixelmatches **tablet** baselines and runs overflow, board-square, tap-size, and clip assertions. Overlay: Vite build of `apps/live-overlay` at 1080×1920 (`ludi screens check --target overlay`). Compares to committed **overlay** baselines and reports Wonder-diff. Admin: Vite build of `apps/live-admin` (`ludi screens check --target admin`). Compares to committed **admin** baselines and reports mockup-diff against `docs/live/admin/`.
+- Screens: Expo web export of `apps/mobile` plus headless Chromium (`ludi screens`). Fixed phone size 390×844 @2x. Compares to committed **web** baselines. Tablet: the same `/dev` fixtures at Android 10" dp 800×1280 and 1280×800 (`ludi screens check --target tablet`). Pixelmatches **tablet** baselines and runs overflow, board-square, tap-size, and clip assertions. Size: `/dev/board?state=start&rules=1` at 360×640, 800×1280, and 1280×800 (`ludi screens check --target size`). Pixelmatches **size** baselines and asserts the rules close button stays on screen. Overlay: Vite build of `apps/live-overlay` at 1080×1920 (`ludi screens check --target overlay`). Compares to committed **overlay** baselines and reports Wonder-diff. Admin: Vite build of `apps/live-admin` (`ludi screens check --target admin`). Compares to committed **admin** baselines and reports mockup-diff against `docs/live/admin/`.
 
 Never invent `ludi-verify` or `verify` as a command name. Subcommands hang under `ludi`.
 
@@ -41,6 +41,8 @@ pnpm -s ludi -- screens doctor --output json
 `ludi screens check` exports Expo web with `EXPO_PUBLIC_DEV_ROUTES=1`, serves the export, screenshots `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win`, then pixelmatches `baselines/web/`. Pass `--url http://127.0.0.1:4173` to reuse an export already being served.
 
 `ludi screens check --target tablet` exports Expo web with `EXPO_PUBLIC_DEV_ROUTES=1`, screenshots the five `/dev` fixtures at 800×1280 and 1280×800 (dpr 1), pixelmatches `baselines/tablet/`, and runs layout assertions. There is no `/dev/capture` fixture. Known layout failures live in `TABLET_KNOWN_FAILURES`. A listed failure that starts passing fails CI until the row is removed.
+
+`ludi screens check --target size` exports Expo web, screenshots `/dev/board?state=start&rules=1` at 360×640 @2x plus tablet 800×1280 and 1280×800, pixelmatches `baselines/size/`, and fails if `Got it! Let's Play` is missing, smaller than 44 dp, or clipped into the 24/48 Android nav insets.
 
 `ludi screens check --target overlay` builds `apps/live-overlay`, serves it, screenshots the five demo fixtures at 1080×1920, pixelmatches `baselines/overlay/`, reports Wonder-diff against `docs/live/wonder/`, and fails if a `[data-safe]` box leaves x 100-980 / y 40-1380.
 
@@ -120,6 +122,7 @@ pnpm -s ludi -- screens check --screen board-start --run-dir "$RUN_DIR" --output
 pnpm -s ludi -- screens check --target overlay --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- screens check --target admin --run-dir "$RUN_DIR" --output json
 pnpm -s ludi -- screens check --target tablet --run-dir "$RUN_DIR" --output json
+pnpm -s ludi -- screens check --target size --run-dir "$RUN_DIR" --output json
 ```
 
 Compose server recipes when a feature file says so: `ludi server` → `ludi session open` → `ludi room …` → `ludi match …`.

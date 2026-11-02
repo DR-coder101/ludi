@@ -425,7 +425,7 @@ export default function OnlineGameScreen() {
       ) : null}
       <ChatPanel hideToggle roomCode={roomCode} myPlayerId={myPlayerId || ''} roomPlayers={roomState.players} />
       {results ? null : toast}
-      {shouldShowOnboarding ? <OnboardingTooltip onDismiss={dismissOnboarding} /> : null}
+      <OnboardingTooltip visible={shouldShowOnboarding} onDismiss={dismissOnboarding} />
       {results ? (
         <WinScreen
           view={results}

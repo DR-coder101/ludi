@@ -160,6 +160,66 @@ describe('evaluateLayout', () => {
     ]);
   });
 
+  it('fails when Got it sits under a small Android nav bar', () => {
+    const spec: ScreenLayoutSpec = {
+      screenId: 'rules',
+      board: false,
+      controls: [{ role: 'button', name: "Got it! Let's Play", minTap: true }],
+      clipInsets: { top: 24, bottom: 48 },
+    };
+    const results = evaluateLayout(
+      {
+        viewport: { width: 360, height: 640 },
+        scrollWidth: 360,
+        clientWidth: 360,
+        board: null,
+        controls: [
+          { name: "Got it! Let's Play", found: true, x: 40, y: 600, width: 280, height: 40 },
+        ],
+      },
+      spec,
+      'small-android',
+      [],
+    );
+    expect(observed(results).find((row) => row.check === 'clip')).toEqual({
+      check: 'clip',
+      name: "Got it! Let's Play",
+      ok: false,
+      known: false,
+      detail: 'outside viewport',
+    });
+  });
+
+  it('passes when Got it sits above a small Android nav bar', () => {
+    const spec: ScreenLayoutSpec = {
+      screenId: 'rules',
+      board: false,
+      controls: [{ role: 'button', name: "Got it! Let's Play", minTap: true }],
+      clipInsets: { top: 24, bottom: 48 },
+    };
+    const results = evaluateLayout(
+      {
+        viewport: { width: 360, height: 640 },
+        scrollWidth: 360,
+        clientWidth: 360,
+        board: null,
+        controls: [
+          { name: "Got it! Let's Play", found: true, x: 47, y: 509, width: 266, height: 56 },
+        ],
+      },
+      spec,
+      'small-android',
+      [],
+    );
+    expect(observed(results).find((row) => row.check === 'clip')).toEqual({
+      check: 'clip',
+      name: "Got it! Let's Play",
+      ok: true,
+      known: false,
+      detail: 'inside',
+    });
+  });
+
   it('does not emit clip when the control is missing', () => {
     const results = evaluateLayout(
       sample({

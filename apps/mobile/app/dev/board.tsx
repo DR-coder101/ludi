@@ -3,6 +3,7 @@ import { Platform } from 'react-native';
 import { Redirect, Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { applyMove, legalMoves, rollDice, type GameState } from '@ludi/rules';
 import { BoardScreen } from '../../src/components/game/BoardScreen';
+import { OnboardingTooltip } from '../../src/components/OnboardingTooltip';
 import { makeMoveHops, type HopAnimation } from '../../src/components/board/BoardView';
 import {
   boardFixture,
@@ -61,13 +62,16 @@ const MOCKUP_TIMER: Record<FixtureName, number> = {
 };
 /** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
 const PHONE_INSETS = { top: 47, bottom: 34 };
+/** Samsung 3-button nav plus status bar, used by the rules size check. */
+const ANDROID_NAV_INSETS = { top: 24, bottom: 48 };
 const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 
 /** Visual QA for the board screen: /dev/board?state=start|mid. Pieces and dice stay playable. */
 export default function BoardPreview() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ state?: string }>();
+  const params = useLocalSearchParams<{ state?: string; rules?: string }>();
   const fixture = parseFixture(params.state);
+  const showRules = params.rules === '1';
   const [state, setState] = useState<GameState>(() => boardFixture(fixture));
   const [lastRoll, setLastRoll] = useState<[number, number] | null>(rollFor(fixture));
   const [rollKey, setRollKey] = useState(0);
@@ -121,7 +125,15 @@ export default function BoardPreview() {
         seats={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_SEATS : undefined}
         leaveOpen={fixture === 'leave'}
         insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
-      />
+      >
+        {showRules ? (
+          <OnboardingTooltip
+            visible
+            onDismiss={() => undefined}
+            insets={Platform.OS === 'web' ? ANDROID_NAV_INSETS : undefined}
+          />
+        ) : null}
+      </BoardScreen>
     </>
   );
 }

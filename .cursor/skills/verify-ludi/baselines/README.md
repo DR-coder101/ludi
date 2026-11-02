@@ -30,6 +30,18 @@ pnpm -s ludi -- screens check --target tablet --update-baselines --run-dir /tmp/
 
 A failing check writes `<id>.diff.png` under `"$RUN_DIR/evidence/tablet/"` and `tablet.json` with each layout row. There is no capture fixture on main.
 
+## `size/`
+
+Machine baselines for the first-run rules modal. `ludi screens check --target size` captures `/dev/board?state=start&rules=1` at 360×640 @2x (small Android) and at tablet 800×1280 / 1280×800, then pixelmatches these files. Layout assertions require `Got it! Let's Play` on screen and at least 44 dp.
+
+Regenerate:
+
+```bash
+pnpm -s ludi -- screens check --target size --update-baselines --run-dir /tmp/ludi-size --output json
+```
+
+A failing check writes `<id>.diff.png` under `"$RUN_DIR/evidence/size/"` and `size.json` with each layout row.
+
 ## `overlay/`
 
 Machine baselines for the 1080×1920 OBS overlay. `ludi screens check --target overlay` captures demo fixtures with `settle=1` and `prefers-reduced-motion: reduce`, then pixelmatches these files. Wonder-diff is informational and does not fail the check.

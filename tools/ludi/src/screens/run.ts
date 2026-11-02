@@ -18,6 +18,9 @@ import {
   screensToRun,
   tabletBaselineDir,
   tabletShotsToRun,
+  sizeBaselineDir,
+  sizeShotsToRun,
+  isSizeTarget,
   webBaselineDir,
   adminDir,
   adminBaselineDir,
@@ -31,6 +34,7 @@ import { serveExport } from './serve.js';
 import { planOverlayCheck, runOverlayCheck } from './overlay.js';
 import { planAdminCheck, runAdminCheck } from './admin.js';
 import { planTabletCheck, runTabletCheck } from './tablet.js';
+import { planSizeCheck, runSizeCheck } from './size.js';
 
 function fail(code: string, message: string, hint: string): Result {
   return err(code, message, hint);
@@ -88,6 +92,9 @@ export function planScreensCheck(args: {
     (isOverlayScreen(args.screen) ? 'overlay' : isAdminScreen(args.screen) ? 'admin' : 'web');
   if (isTabletTarget(target)) {
     return planTabletCheck(args);
+  }
+  if (isSizeTarget(target)) {
+    return planSizeCheck(args);
   }
   if (target === 'overlay' || isOverlayScreen(args.screen)) {
     return planOverlayCheck(args);
@@ -199,6 +206,14 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
     ok: tabletCount === tabletShots.length,
     detail: `${tabletCount}/${tabletShots.length} under ${tabletDir}`,
   });
+  const sizeDir = sizeBaselineDir(root);
+  const sizeShots = sizeShotsToRun();
+  const sizeCount = sizeShots.filter((shot) => existsSync(join(sizeDir, shot.file))).length;
+  checks.push({
+    name: 'size_baselines',
+    ok: sizeCount === sizeShots.length,
+    detail: `${sizeCount}/${sizeShots.length} under ${sizeDir}`,
+  });
   let chromiumOk = false;
   let chromiumDetail = 'playwright not loaded';
   try {
@@ -219,7 +234,8 @@ export async function runScreensDoctor(ctx: Ctx): Promise<Result> {
         c.name !== 'web_baselines' &&
         c.name !== 'overlay_baselines' &&
         c.name !== 'admin_baselines' &&
-        c.name !== 'tablet_baselines',
+        c.name !== 'tablet_baselines' &&
+        c.name !== 'size_baselines',
     )
     .every((c) => c.ok);
   if (!worthDriving) {
@@ -249,6 +265,9 @@ export async function runScreensCheck(
   );
   if (isTabletTarget(target)) {
     return runTabletCheck(args, ctx);
+  }
+  if (isSizeTarget(target)) {
+    return runSizeCheck(args, ctx);
   }
   if (target === 'overlay' || isOverlayScreen(screen)) {
     return runOverlayCheck({ ...args, screen: screen === 'all' ? 'overlay' : screen }, ctx);
