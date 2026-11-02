@@ -20,7 +20,7 @@ interface TurnCardProps {
   onPickDie?: (dieIndex: DieIndex) => void;
 }
 
-const DIE_SIZE = 40;
+const DIE_SIZE = 48;
 
 export function TurnCard({ copy, dice, rollKey, idle, activeDie, onRoll, onPickDie }: TurnCardProps) {
   const canRoll = idle && !!onRoll;
