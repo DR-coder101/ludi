@@ -50,20 +50,20 @@ function rollFor(name: FixtureName): [number, number] | null {
   }
 }
 
-/** Ring fill in the mockups: dash 140 (start) and 110 (mid) of a 150.8 circumference. */
+const MOCKUP_RING_CIRCUMFERENCE = 150.8;
+const MOCKUP_RING_START_DASH = 140;
+const MOCKUP_RING_MID_DASH = 110;
 const MOCKUP_TIMER: Record<FixtureName, number> = {
-  start: 140 / 150.8,
-  mid: 110 / 150.8,
-  video: 140 / 150.8,
-  leave: 140 / 150.8,
-  capture: 140 / 150.8,
-  'capture-before': 140 / 150.8,
-  homes: 140 / 150.8,
+  start: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  mid: MOCKUP_RING_MID_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  video: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  leave: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  capture: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  'capture-before': MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
+  homes: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
 };
-/** iPhone 14 safe area, so web screenshots line up with the 390×844 mockups. */
-const PHONE_INSETS = { top: 47, bottom: 34 };
-/** Samsung 3-button nav plus status bar, used by the rules size check. */
-const ANDROID_NAV_INSETS = { top: 24, bottom: 48 };
+const IPHONE14_MOCKUP_INSETS = { top: 47, bottom: 34 };
+const SAMSUNG_NAV_RULES_INSETS = { top: 24, bottom: 48 };
 const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 
 export default function BoardPreview() {
@@ -125,13 +125,13 @@ export default function BoardPreview() {
         seats={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_SEATS : undefined}
         leaveOpen={fixture === 'leave'}
         notice={showNotice ? 'Video is unavailable on this device.' : undefined}
-        insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
+        insets={Platform.OS === 'web' ? IPHONE14_MOCKUP_INSETS : undefined}
       >
         {showRules ? (
           <OnboardingTooltip
             visible
             onDismiss={() => undefined}
-            insets={Platform.OS === 'web' ? ANDROID_NAV_INSETS : undefined}
+            insets={Platform.OS === 'web' ? SAMSUNG_NAV_RULES_INSETS : undefined}
           />
         ) : null}
       </BoardScreen>
