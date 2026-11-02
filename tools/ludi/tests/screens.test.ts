@@ -19,10 +19,12 @@ import {
   TABLET_VIEWPORTS,
   tabletShotsToRun,
   SIZE_VIEWPORTS,
+  SCREEN_LAYOUT,
   sizeShotsToRun,
   findRepoRoot,
 } from '../src/screens/catalog.js';
 import { comparePng } from '../src/screens/compare.js';
+import { boxesOverlap } from '../src/screens/size.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -123,6 +125,26 @@ describe('screen catalog', () => {
     expect(sizeShotsToRun()[0]?.layout.clipInsets).toEqual({ top: 24, bottom: 48 });
     const board = readFileSync(join(findRepoRoot(), 'apps', 'mobile', 'app', 'dev', 'board.tsx'), 'utf8');
     expect(board).toContain('const ANDROID_NAV_INSETS = { top: 24, bottom: 48 };');
+    expect(board).toContain('onRules={() => setHelpOpen(true)}');
+    const local = readFileSync(join(findRepoRoot(), 'apps', 'mobile', 'app', 'game.tsx'), 'utf8');
+    const online = readFileSync(join(findRepoRoot(), 'apps', 'mobile', 'app', 'game', '[code].tsx'), 'utf8');
+    expect(local).toContain('onRules={openOnboarding}');
+    expect(online).toContain('onRules={openOnboarding}');
+    expect(
+      SCREEN_LAYOUT.find((layout) => layout.screenId === 'board-start')?.controls.map((control) => control.name),
+    ).toContain('Game rules');
+    expect(
+      SCREEN_LAYOUT.find((layout) => layout.screenId === 'board-video')?.controls.map((control) => control.name),
+    ).toContain('Game rules');
+  });
+
+  it('treats edge-touching boxes as clear and overlapping boxes as overlap', () => {
+    expect(
+      boxesOverlap({ x: 0, y: 0, width: 44, height: 44 }, { x: 44, y: 0, width: 40, height: 40 }),
+    ).toBe(false);
+    expect(
+      boxesOverlap({ x: 0, y: 0, width: 44, height: 44 }, { x: 20, y: 10, width: 40, height: 40 }),
+    ).toBe(true);
   });
 
   it('keeps iPhone 14 web insets on every /dev fixture the 390×844 capture assumes', () => {
@@ -303,12 +325,17 @@ describe('ludi screens CLI', () => {
     expect(res.status).toBe(ExitCode.DRY_RUN);
     const body = JSON.parse(res.stdout);
     expect(body.ok).toBe(true);
-    const actions = body.planned_actions as Array<{ action: string; file?: string }>;
+    const actions = body.planned_actions as Array<{ action: string; file?: string; control?: string }>;
     expect(actions[0]?.action).toBe('expo_export_web');
     expect(actions.filter((action) => action.action === 'screenshot').map((action) => action.file)).toEqual([
       'rules-small-android.png',
       'rules-portrait.png',
       'rules-landscape.png',
+    ]);
+    expect(actions.filter((action) => action.action === 'tap').map((action) => action.control)).toEqual([
+      'Game rules',
+      'Game rules',
+      'Game rules',
     ]);
     expect(existsSync(join(runDir, 'web-dist'))).toBe(false);
   });

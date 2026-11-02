@@ -357,6 +357,8 @@ export function isAdminScreen(id: string): boolean {
 }
 
 export const MIN_TAP_DP = 44;
+export const RULES_HELP_NAME = 'Game rules';
+export const RULES_HELP_PATH = '/dev/board?state=start';
 export const BOARD_MIN_PX = 240;
 export const SQUARE_TOLERANCE_PX = 1.5;
 export const BOARD_PROBE_FLOOR_PX = 200;
@@ -428,11 +430,17 @@ const SCREEN_LAYOUT_BY_ID: Record<ScreenId, Omit<ScreenLayoutSpec, 'screenId'>> 
   },
   'board-start': {
     board: true,
-    controls: [{ role: 'button', name: 'Roll the dice', minTap: true }],
+    controls: [
+      { role: 'button', name: 'Roll the dice', minTap: true },
+      { role: 'button', name: RULES_HELP_NAME, minTap: true },
+    ],
   },
   'board-video': {
     board: true,
-    controls: [{ role: 'button', name: 'Mute microphone', minTap: true }],
+    controls: [
+      { role: 'button', name: 'Mute microphone', minTap: true },
+      { role: 'button', name: RULES_HELP_NAME, minTap: true },
+    ],
   },
   win: {
     board: false,

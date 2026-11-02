@@ -54,7 +54,7 @@ Exports `apps/mobile` for web with `EXPO_PUBLIC_DEV_ROUTES=1`, screenshots the f
 
 `ludi screens check --target tablet` captures the same `/dev` fixtures at 800×1280 and 1280×800, diffs `baselines/tablet/`, and runs layout assertions. `--update-baselines` then writes those tablet PNGs.
 
-`ludi screens check --target size` captures `/dev/board?state=start&rules=1` at 360×640, 800×1280, and 1280×800, diffs `baselines/size/`, and asserts the close button stays on screen.
+`ludi screens check --target size` captures `/dev/board?state=start&rules=1` at 360×640, 800×1280, and 1280×800, diffs `baselines/size/`, asserts the close button stays on screen, and taps `Game rules` on `/dev/board?state=start`.
 
 ## Compose (shallow)
 

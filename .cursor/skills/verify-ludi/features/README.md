@@ -6,7 +6,7 @@ Maintained source for verifying Ludi behavior agents can drive. Read this index,
 
 Primary: Ludi server over HTTP + Socket.IO (guest room, lobby, match, solo vs bots).
 
-Screens: Expo web export of `apps/mobile` at 390×844, driven by `ludi screens`. Routes are `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win`. Tablet layout uses the same routes at 800×1280 and 1280×800 (`ludi screens check --target tablet`). Rules-modal size check uses `/dev/board?state=start&rules=1` at 360×640, 800×1280, and 1280×800 (`ludi screens check --target size`). No simulator is required. There is no `/dev/capture` fixture.
+Screens: Expo web export of `apps/mobile` at 390×844, driven by `ludi screens`. Routes are `/dev/home`, `/dev/lobby`, `/dev/board?state=start`, `/dev/board?state=video`, `/dev/win`. Tablet layout uses the same routes at 800×1280 and 1280×800 (`ludi screens check --target tablet`). Rules-modal size check uses `/dev/board?state=start&rules=1` at 360×640, 800×1280, and 1280×800 (`ludi screens check --target size`), then taps `Game rules` on `/dev/board?state=start`. No simulator is required. There is no `/dev/capture` fixture.
 
 `baselines/emulator/` holds owner-approved simulator shots for humans. `ludi screens check` compares against `baselines/web/`, which are Chromium captures of the same fixtures. They will not match the emulator files.
 

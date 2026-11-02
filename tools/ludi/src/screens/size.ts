@@ -1,6 +1,6 @@
 import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { Page } from 'playwright';
+import type { Browser, Page } from 'playwright';
 import { err, ok, planned, type Ctx, type Result } from '../command.js';
 import { ensureRunDir, resolveRunDir } from '../runDir.js';
 import { sleep } from '../defaults.js';
@@ -9,18 +9,66 @@ import { exportWeb } from './exportWeb.js';
 import { serveExport } from './serve.js';
 import { evaluateLayout, verdictFailsCi, type Box, type CheckResult, type LayoutSample } from './layout.js';
 import {
+  BOARD_PROBE_FLOOR_PX,
+  MIN_TAP_DP,
   RULES_CLOSE_NAME,
+  RULES_HELP_NAME,
+  RULES_HELP_PATH,
   SIZE_VIEWPORTS,
+  SQUARE_TOLERANCE_PX,
   findRepoRoot,
   mobileDir,
   sizeBaselineDir,
   sizeShotsToRun,
   type ControlSpec,
   type SizeShot,
+  type SizeViewport,
   type SizeViewportId,
 } from './catalog.js';
 
 type MeasuredControl = Box & { name: string; found: boolean };
+
+const HUD_CONTROLS: readonly ControlSpec[] = [
+  { role: 'button', name: 'Leave game', minTap: true },
+  { role: 'button', name: 'Profile', minTap: true },
+  { role: 'button', name: 'Roll the dice', minTap: true },
+];
+
+export type RulesHelpTapProof = {
+  viewport: SizeViewportId;
+  help: MeasuredControl;
+  board: Box | null;
+  tapOk: boolean;
+  inside: boolean;
+  overlaps: string[];
+  opened: boolean;
+  closed: boolean;
+};
+
+export function boxesOverlap(a: Box, b: Box): boolean {
+  return a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+}
+
+function helpInsideViewport(help: MeasuredControl, width: number, height: number): boolean {
+  if (!help.found) return false;
+  return (
+    help.x >= -0.5 &&
+    help.y >= -0.5 &&
+    help.x + help.width <= width + 0.5 &&
+    help.y + help.height <= height + 0.5
+  );
+}
+
+function tapProofFails(proof: RulesHelpTapProof): string[] {
+  const problems: string[] = [];
+  if (!proof.help.found) problems.push('Game rules not found');
+  if (!proof.tapOk) problems.push(`min side ${Math.min(proof.help.width, proof.help.height)} < ${MIN_TAP_DP}`);
+  if (!proof.inside) problems.push('Game rules outside viewport');
+  if (proof.overlaps.length) problems.push(`overlaps ${proof.overlaps.join(', ')}`);
+  if (!proof.opened) problems.push('tap did not open the modal');
+  if (!proof.closed) problems.push('close did not return to the board');
+  return problems;
+}
 
 type CapturedShot = {
   shot: SizeShot;
@@ -52,17 +100,33 @@ async function measureFrame(page: Page): Promise<{
   clientWidth: number;
   innerWidth: number;
   innerHeight: number;
+  board: Box | null;
 }> {
-  return page.evaluate(() => {
-    const doc = document.documentElement;
-    const body = document.body;
-    return {
-      scrollWidth: Math.max(doc.scrollWidth, body?.scrollWidth ?? 0),
-      clientWidth: Math.max(doc.clientWidth, body?.clientWidth ?? 0),
-      innerWidth: window.innerWidth,
-      innerHeight: window.innerHeight,
-    };
-  });
+  return page.evaluate(
+    ({ minSide, squareTol }) => {
+      const doc = document.documentElement;
+      const body = document.body;
+      let board: { x: number; y: number; width: number; height: number } | null = null;
+      let bestSide = 0;
+      for (const el of document.querySelectorAll('div, svg, canvas')) {
+        const rect = el.getBoundingClientRect();
+        const side = Math.min(rect.width, rect.height);
+        if (side < minSide) continue;
+        if (Math.abs(rect.width - rect.height) > squareTol) continue;
+        if (side <= bestSide) continue;
+        bestSide = side;
+        board = { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+      }
+      return {
+        scrollWidth: Math.max(doc.scrollWidth, body?.scrollWidth ?? 0),
+        clientWidth: Math.max(doc.clientWidth, body?.clientWidth ?? 0),
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        board,
+      };
+    },
+    { minSide: BOARD_PROBE_FLOOR_PX, squareTol: SQUARE_TOLERANCE_PX },
+  );
 }
 
 async function captureSize(opts: { baseUrl: string; shots: SizeShot[]; outDir: string }): Promise<CapturedShot[]> {
@@ -106,7 +170,7 @@ async function captureSize(opts: { baseUrl: string; shots: SizeShot[]; outDir: s
           viewport: { width: frame.innerWidth, height: frame.innerHeight },
           scrollWidth: frame.scrollWidth,
           clientWidth: frame.clientWidth,
-          board: null,
+          board: frame.board,
           controls,
         },
       });
@@ -183,7 +247,89 @@ export function planSizeCheck(args: {
       control: RULES_CLOSE_NAME,
     });
   }
+  for (const viewport of SIZE_VIEWPORTS) {
+    actions.push({
+      action: 'tap',
+      control: RULES_HELP_NAME,
+      path: RULES_HELP_PATH,
+      viewport: viewport.id,
+    });
+  }
   return planned(actions);
+}
+
+async function proveRulesHelpTap(
+  browser: Browser,
+  opts: { baseUrl: string; viewport: SizeViewport },
+): Promise<RulesHelpTapProof> {
+  const context = await browser.newContext({
+    viewport: { width: opts.viewport.width, height: opts.viewport.height },
+    deviceScaleFactor: opts.viewport.deviceScaleFactor,
+    reducedMotion: 'reduce',
+    colorScheme: 'dark',
+  });
+  try {
+    const page = await context.newPage();
+    page.setDefaultTimeout(30_000);
+    await page.goto(`${opts.baseUrl}${RULES_HELP_PATH}`, { waitUntil: 'domcontentloaded' });
+    await page
+      .waitForFunction(() => document.fonts.status === 'loaded', null, { timeout: 10_000 })
+      .catch(() => {});
+    await page.getByRole('button', { name: 'Roll the dice', exact: true }).waitFor({ state: 'visible' });
+    await sleep(400);
+
+    const help = await measureControl(page, { role: 'button', name: RULES_HELP_NAME, minTap: true });
+    const frame = await measureFrame(page);
+    const overlaps: string[] = [];
+    if (help.found && frame.board && boxesOverlap(help, frame.board)) overlaps.push('board');
+    for (const control of HUD_CONTROLS) {
+      const measured = await measureControl(page, control);
+      if (help.found && measured.found && boxesOverlap(help, measured)) overlaps.push(control.name);
+    }
+
+    const helpButton = page.getByRole('button', { name: RULES_HELP_NAME, exact: true });
+    const closeButton = page.getByRole('button', { name: RULES_CLOSE_NAME, exact: true });
+    let opened = false;
+    let closed = false;
+    if (help.found) {
+      await helpButton.click();
+      await closeButton.waitFor({ state: 'visible' });
+      opened = (await closeButton.count()) > 0;
+      await closeButton.click();
+      await helpButton.waitFor({ state: 'visible' });
+      await page.getByRole('button', { name: 'Roll the dice', exact: true }).waitFor({ state: 'visible' });
+      closed = (await helpButton.count()) > 0 && (await closeButton.count()) === 0;
+    }
+
+    return {
+      viewport: opts.viewport.id,
+      help,
+      board: frame.board,
+      tapOk: help.found && Math.min(help.width, help.height) >= MIN_TAP_DP,
+      inside: helpInsideViewport(help, frame.innerWidth, frame.innerHeight),
+      overlaps,
+      opened,
+      closed,
+    };
+  } finally {
+    await context.close();
+  }
+}
+
+async function proveHelpOnViewports(baseUrl: string): Promise<RulesHelpTapProof[]> {
+  const { chromium } = await import('playwright');
+  const browser = await chromium.launch({
+    args: ['--disable-dev-shm-usage', '--no-sandbox'],
+  });
+  try {
+    const proofs: RulesHelpTapProof[] = [];
+    for (const viewport of SIZE_VIEWPORTS) {
+      proofs.push(await proveRulesHelpTap(browser, { baseUrl, viewport }));
+    }
+    return proofs;
+  } finally {
+    await browser.close();
+  }
 }
 
 export async function runSizeCheck(args: Readonly<Record<string, unknown>>, ctx: Ctx): Promise<Result> {
@@ -232,14 +378,19 @@ export async function runSizeCheck(args: Readonly<Record<string, unknown>>, ctx:
     }
 
     let captured: CapturedShot[];
+    let tap: RulesHelpTapProof[];
     try {
       captured = await captureSize({ baseUrl, shots, outDir: evidenceDir });
+      tap = await proveHelpOnViewports(baseUrl);
     } catch (e) {
       return err('UPSTREAM_ERROR', (e as Error).message, `ludi screens doctor --run-dir ${run.root} --output json`);
     }
 
     const layout = layoutReports(captured);
     const layoutCi = layout.flatMap((shot) => shot.ci_fail.map((check) => ({ shot, check })));
+    const tapFailed = tap.flatMap((proof) =>
+      tapProofFails(proof).map((detail) => `${proof.viewport}: ${detail}`),
+    );
 
     if (update) {
       mkdirSync(baseDir, { recursive: true });
@@ -253,15 +404,18 @@ export async function runSizeCheck(args: Readonly<Record<string, unknown>>, ctx:
         viewports: SIZE_VIEWPORTS,
         results: [],
         layout,
+        tap,
         evidence: evidenceDir,
       };
       writeFileSync(join(run.evidence, 'size.json'), JSON.stringify(summary, null, 2) + '\n');
-      if (layoutCi.length) {
-        return err(
-          'CONFLICT',
-          `${layoutCi.length} size layout check(s) failed CI: ${layoutCi.map(({ shot, check }) => ciLabel(shot, check)).join(', ')}`,
-          `see ${join(run.evidence, 'size.json')}`,
-        );
+      if (layoutCi.length || tapFailed.length) {
+        const parts = [
+          layoutCi.length
+            ? `${layoutCi.length} size layout check(s) failed CI: ${layoutCi.map(({ shot, check }) => ciLabel(shot, check)).join(', ')}`
+            : '',
+          tapFailed.length ? `Game rules tap: ${tapFailed.join('; ')}` : '',
+        ].filter(Boolean);
+        return err('CONFLICT', parts.join('; '), `see ${join(run.evidence, 'size.json')}`);
       }
       return ok(summary);
     }
@@ -279,6 +433,7 @@ export async function runSizeCheck(args: Readonly<Record<string, unknown>>, ctx:
       viewports: SIZE_VIEWPORTS,
       results,
       layout,
+      tap,
       evidence: evidenceDir,
     };
     writeFileSync(join(run.evidence, 'size.json'), JSON.stringify(summary, null, 2) + '\n');
@@ -289,6 +444,9 @@ export async function runSizeCheck(args: Readonly<Record<string, unknown>>, ctx:
     }
     if (layoutCi.length) {
       problems.push(`layout: ${layoutCi.map(({ shot, check }) => ciLabel(shot, check)).join(', ')}`);
+    }
+    if (tapFailed.length) {
+      problems.push(`Game rules tap: ${tapFailed.join('; ')}`);
     }
     if (problems.length) {
       const firstDiff = pixelFailed.find((row) => row.diff)?.diff;
