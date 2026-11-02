@@ -62,8 +62,8 @@ const MOCKUP_TIMER: Record<FixtureName, number> = {
   'capture-before': MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
   homes: MOCKUP_RING_START_DASH / MOCKUP_RING_CIRCUMFERENCE,
 };
-const IPHONE14_MOCKUP_INSETS = { top: 47, bottom: 34 };
-const SAMSUNG_NAV_RULES_INSETS = { top: 24, bottom: 48 };
+const PHONE_INSETS = { top: 47, bottom: 34 };
+const ANDROID_NAV_INSETS = { top: 24, bottom: 48 };
 const ENABLED = __DEV__ || process.env.EXPO_PUBLIC_DEV_ROUTES === '1';
 
 export default function BoardPreview() {
@@ -125,13 +125,13 @@ export default function BoardPreview() {
         seats={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_SEATS : undefined}
         leaveOpen={fixture === 'leave'}
         notice={showNotice ? 'Video is unavailable on this device.' : undefined}
-        insets={Platform.OS === 'web' ? IPHONE14_MOCKUP_INSETS : undefined}
+        insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
       >
         {showRules ? (
           <OnboardingTooltip
             visible
             onDismiss={() => undefined}
-            insets={Platform.OS === 'web' ? SAMSUNG_NAV_RULES_INSETS : undefined}
+            insets={Platform.OS === 'web' ? ANDROID_NAV_INSETS : undefined}
           />
         ) : null}
       </BoardScreen>
