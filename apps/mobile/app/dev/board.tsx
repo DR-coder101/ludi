@@ -72,6 +72,7 @@ export default function BoardPreview() {
   const params = useLocalSearchParams<{ state?: string; rules?: string }>();
   const fixture = parseFixture(params.state);
   const showRules = params.rules === '1';
+  const [helpOpen, setHelpOpen] = useState(false);
   const [state, setState] = useState<GameState>(() => boardFixture(fixture));
   const [lastRoll, setLastRoll] = useState<[number, number] | null>(rollFor(fixture));
   const [rollKey, setRollKey] = useState(0);
@@ -81,6 +82,7 @@ export default function BoardPreview() {
     setState(boardFixture(fixture));
     setLastRoll(rollFor(fixture));
     setHop(null);
+    setHelpOpen(false);
   }, [fixture]);
 
   if (!ENABLED) return <Redirect href="/" />;
@@ -119,6 +121,7 @@ export default function BoardPreview() {
           else setState(next);
         }}
         onMenu={() => router.back()}
+        onRules={() => setHelpOpen(true)}
         voice={{ on: true, onToggle: () => {} }}
         chat={{ unread: 3, onToggle: () => {} }}
         call={fixture === 'video' || fixture === 'leave' ? VIDEO_FIXTURE_CALL : undefined}
@@ -126,10 +129,10 @@ export default function BoardPreview() {
         leaveOpen={fixture === 'leave'}
         insets={Platform.OS === 'web' ? PHONE_INSETS : undefined}
       >
-        {showRules ? (
+        {showRules || helpOpen ? (
           <OnboardingTooltip
             visible
-            onDismiss={() => undefined}
+            onDismiss={showRules ? () => undefined : () => setHelpOpen(false)}
             insets={Platform.OS === 'web' ? ANDROID_NAV_INSETS : undefined}
           />
         ) : null}

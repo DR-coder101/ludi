@@ -35,6 +35,7 @@ export interface BoardScreenProps {
   onMove?: (move: MoveLike) => void;
   onMenu?: () => void;
   onProfile?: () => void;
+  onRules?: () => void;
   voice?: { on: boolean; onToggle: () => void } | null;
   chat?: { unread: number; onToggle: () => void } | null;
   call?: CallBarProps | null;
@@ -49,7 +50,7 @@ const MAX_COLUMN = 520;
 
 export function BoardScreen(props: BoardScreenProps) {
   const { state, moves, me, names, muted, roomCode, lastRoll, rollKey, hop, onHopDone } = props;
-  const { onRoll, onMove, onMenu, onProfile, voice, chat, call, seats, notice, children } = props;
+  const { onRoll, onMove, onMenu, onProfile, onRules, voice, chat, call, seats, notice, children } = props;
   const fontsReady = useLudiFonts();
   const device = useSafeAreaInsets();
   const insets = props.insets ?? device;
@@ -119,7 +120,13 @@ export function BoardScreen(props: BoardScreenProps) {
       {fontsReady ? (
         <View style={[styles.column, { width: columnWidth, paddingBottom: bottomPad }]}>
           <View style={[styles.top, { paddingTop: insets.top + 7 }]}>
-            <TopBar live={live} roomCode={roomCode} onLeave={() => setLeaving(true)} onProfile={onProfile} />
+            <TopBar
+              live={live}
+              roomCode={roomCode}
+              onLeave={() => setLeaving(true)}
+              onProfile={onProfile}
+              onRules={onRules}
+            />
           </View>
           <View style={styles.boardWrap}>
             <BoardView

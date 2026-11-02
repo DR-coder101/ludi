@@ -119,7 +119,7 @@ export default function OnlineGameScreen() {
 
   const { visible, message, type, duration, showToast, hideToast } = useToastStore();
 
-  const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
+  const { shouldShow: shouldShowOnboarding, dismissOnboarding, openOnboarding } = useOnboarding();
 
   const [hop, setHop] = useState<HopAnimation[] | null>(null);
   const [lastRoll, setLastRoll] = useState<[number, number] | null>(null);
@@ -457,6 +457,7 @@ export default function OnlineGameScreen() {
       onMove={handleMove}
       onMenu={handleLeave}
       onProfile={() => router.push('/profile')}
+      onRules={openOnboarding}
       voice={{ on: micEnabled, onToggle: toggleMic }}
       chat={{ unread: unreadCount, onToggle: toggleChat }}
       call={
