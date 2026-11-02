@@ -1,6 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { boardFont, color, layout } from '../../theme/tokens';
+import { RULES_HELP_ICON, RULES_HELP_LABEL, RULES_HELP_SIZE } from '../onboarding';
 import { Button3D } from '../ui/Button3D';
 import { Icon } from './Icon';
 import { RoundButton } from './RoundButton';
@@ -10,9 +11,10 @@ interface TopBarProps {
   live?: boolean;
   onLeave?: () => void;
   onProfile?: () => void;
+  onRules?: () => void;
 }
 
-export function TopBar({ roomCode, live = false, onLeave, onProfile }: TopBarProps) {
+export function TopBar({ roomCode, live = false, onLeave, onProfile, onRules }: TopBarProps) {
   return (
     <View style={styles.bar}>
       <Button3D tone="red" compact label="Leave game" onPress={onLeave} style={styles.leave}>
@@ -40,7 +42,15 @@ export function TopBar({ roomCode, live = false, onLeave, onProfile }: TopBarPro
           )}
         </View>
       </View>
-      <RoundButton icon="user" size={layout.topButton} label="Profile" onPress={onProfile} />
+      <View style={styles.trailing}>
+        <RoundButton
+          icon={RULES_HELP_ICON}
+          size={RULES_HELP_SIZE}
+          label={RULES_HELP_LABEL}
+          onPress={onRules}
+        />
+        <RoundButton icon="user" size={layout.topButton} label="Profile" onPress={onProfile} />
+      </View>
     </View>
   );
 }
@@ -51,6 +61,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: 8,
+  },
+  trailing: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
   },
   leave: {

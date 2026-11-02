@@ -39,7 +39,7 @@ export default function GameScreen() {
   const router = useRouter();
   const { colors, resume } = useLocalSearchParams<{ colors: string; resume?: string }>();
 
-  const { shouldShow: shouldShowOnboarding, dismissOnboarding } = useOnboarding();
+  const { shouldShow: shouldShowOnboarding, dismissOnboarding, openOnboarding } = useOnboarding();
 
   const playerColors = useMemo(() => {
     if (!colors) return ['red', 'green'] as Color[];
@@ -195,6 +195,7 @@ export default function GameScreen() {
         onMove={handleMove}
         onMenu={leaveBoard}
         onProfile={() => router.push('/profile')}
+        onRules={openOnboarding}
       >
         <OnboardingTooltip visible={shouldShowOnboarding} onDismiss={dismissOnboarding} />
         {gameState.phase === 'finished' && results ? (

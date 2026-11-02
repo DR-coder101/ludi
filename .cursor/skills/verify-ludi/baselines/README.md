@@ -32,7 +32,7 @@ A failing check writes `<id>.diff.png` under `"$RUN_DIR/evidence/tablet/"` and `
 
 ## `size/`
 
-Machine baselines for the first-run rules modal. `ludi screens check --target size` captures `/dev/board?state=start&rules=1` at 360×640 @2x (small Android) and at tablet 800×1280 / 1280×800, then pixelmatches these files. Layout assertions require `Got it! Let's Play` on screen and at least 44 dp.
+Machine baselines for the first-run rules modal. `ludi screens check --target size` captures `/dev/board?state=start&rules=1` at 360×640 @2x (small Android) and at tablet 800×1280 / 1280×800, then pixelmatches these files. Layout assertions require `Got it! Let's Play` on screen and at least 44 dp. The same command taps `Game rules` on `/dev/board?state=start`.
 
 Regenerate:
 

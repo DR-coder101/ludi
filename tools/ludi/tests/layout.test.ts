@@ -404,7 +404,10 @@ describe('tablet catalog', () => {
         scrollWidth: 800,
         clientWidth: 800,
         board: { x: 152, y: 118, width: 496, height: 496 },
-        controls: [{ name: 'Roll the dice', found: true, x: 394, y: 1117, width: 120, height: 44 }],
+        controls: [
+          { name: 'Roll the dice', found: true, x: 394, y: 1117, width: 120, height: 44 },
+          { name: 'Game rules', found: true, x: 700, y: 20, width: 44, height: 44 },
+        ],
       },
       board,
       'portrait',

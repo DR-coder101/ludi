@@ -10,6 +10,7 @@ The rebuilt match screen is the 19×19 Jamaican plywood board plus two dice. Geo
 - `board-home-columns` are the four 7-cell centre lanes (`HOME_COLUMN_LENGTH`).
 - `board-yards` are four 8×8 corners. A colour missing from `playerColors` stays seated=false: faded yard, no video tile, empty slots (no pieces, no stars). That is 2-player with the unused yards empty.
 - `board-dice` always shows two dice. Come-out: a die showing 6 spends itself to move one yard token onto that colour's start cell (GAME_RULES.md §3). 6-6 brings out two. Prove the move on the server with [come-out](./come-out.md); the start screenshot proves the two-dice UI.
+- `board-rules-help` is the TopBar `Game rules` round button. It calls `openOnboarding` on `/game` and `/game/[code]`. Size check taps it on `/dev/board?state=start`.
 
 ## How to get to it (user POV)
 

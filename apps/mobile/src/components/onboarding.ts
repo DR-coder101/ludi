@@ -2,6 +2,9 @@ export const ONBOARDING_KEY = '@ludi_onboarding_shown';
 export const ONBOARDING_SEEN_VALUE = 'true';
 export const RULES_OVERLAY_PAD = 20;
 export const RULES_CARD_MAX_WIDTH = 400;
+export const RULES_HELP_LABEL = 'Game rules';
+export const RULES_HELP_ICON = 'dice' as const;
+export const RULES_HELP_SIZE = 44;
 
 export type OnboardingStorage = {
   getItem(key: string): Promise<string | null>;
