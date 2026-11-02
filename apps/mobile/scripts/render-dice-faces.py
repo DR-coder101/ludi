@@ -1,18 +1,10 @@
 #!/usr/bin/env python3
-"""Render Ludi 3/4 matte dice face sprites (1x/2x/3x PNG).
-
-Dean approved 2026-11-02: white cubes, very rounded edges, flat black round
-pips, matte plastic with a small shine, soft top/front light, soft shadow
-under, 3/4 view. Rerun from apps/mobile:
-
-    python3 scripts/render-dice-faces.py
-"""
-
 from __future__ import annotations
 
 import json
 import struct
 import zlib
+from math import lcm
 from pathlib import Path
 
 import numpy as np
@@ -21,11 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "dice"
 
 SIZE_1X = 80
-# Render at 6x so 1x/2x/3x downsample on integer pixels (80, 160, 240).
-RENDER_SCALE = 6
 SCALES = (1, 2, 3)
+RENDER_SCALE = lcm(*SCALES)
 
-# Standard Western pip layouts in face UV, origin centre, +u right, +v up.
 PIP_LAYOUT: dict[int, list[tuple[float, float]]] = {
     1: [(0.0, 0.0)],
     2: [(-0.42, 0.42), (0.42, -0.42)],
@@ -45,7 +35,10 @@ PIP_LAYOUT: dict[int, list[tuple[float, float]]] = {
 PIP_RADIUS = 0.155
 BOX = np.array([0.70, 0.70, 0.70], dtype=np.float64)
 ROUND = 0.34
-# Value lives on +Y (top). Front (+Z) and right (+X) fill the 3/4 silhouette.
+UV_INSET = 0.35
+AXIS_RIGHT = 0
+AXIS_TOP = 1
+AXIS_FRONT = 2
 SIDE_FACES = {
     1: (3, 2),
     2: (6, 3),
@@ -110,17 +103,16 @@ def normal_at(p: np.ndarray) -> np.ndarray:
 
 
 def face_uv(p: np.ndarray, axis: int) -> tuple[np.ndarray, np.ndarray]:
-    # Local UV on a cube face, scaled to the flat of the rounded box.
-    span = BOX[0] - ROUND * 0.35
-    if axis == 0:
-        u = p[..., 2] / span
-        v = p[..., 1] / span
-    elif axis == 1:
-        u = p[..., 0] / span
-        v = -p[..., 2] / span
+    span = BOX[0] - ROUND * UV_INSET
+    if axis == AXIS_RIGHT:
+        u = p[..., AXIS_FRONT] / span
+        v = p[..., AXIS_TOP] / span
+    elif axis == AXIS_TOP:
+        u = p[..., AXIS_RIGHT] / span
+        v = -p[..., AXIS_FRONT] / span
     else:
-        u = p[..., 0] / span
-        v = p[..., 1] / span
+        u = p[..., AXIS_RIGHT] / span
+        v = p[..., AXIS_TOP] / span
     return u, v
 
 
@@ -189,9 +181,9 @@ def render_die(value: int, size: int) -> np.ndarray:
     color[...] = albedo * shade[..., None] + spec[..., None]
 
     for axis_id, face_value, need_pos in (
-        (1, value, True),
-        (2, front, True),
-        (0, right, True),
+        (AXIS_TOP, value, True),
+        (AXIS_FRONT, front, True),
+        (AXIS_RIGHT, right, True),
     ):
         on_face = hit & (axis == axis_id) & ((sign > 0) if need_pos else (sign < 0))
         if not on_face.any():
